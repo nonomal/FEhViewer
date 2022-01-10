@@ -123,8 +123,8 @@ class SearchPageController extends DefaultTabViewController {
           change(null, status: RxStatus.loading());
           return;
         }
-        maxPage = rult.maxPage ?? 0;
-        nextPage = rult.nextPage ?? 1;
+        maxPage = rult.maxPage as int? ?? 0;
+        nextPage = rult.nextPage as int? ?? 1;
         change(rult.gallerys ?? [], status: RxStatus.success());
       } catch (err) {
         change(null, status: RxStatus.error(err.toString()));

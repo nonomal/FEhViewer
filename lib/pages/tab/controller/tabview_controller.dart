@@ -66,8 +66,8 @@ class TabViewController extends GetxController
 
       logger.v('_listItem ${_listItem?.length}');
 
-      maxPage = rult.maxPage ?? 0;
-      nextPage = rult.nextPage ?? 1;
+      maxPage = rult.maxPage as int? ?? 0;
+      nextPage = rult.nextPage as int? ?? 1;
       change(_listItem, status: RxStatus.success());
     } catch (err, stack) {
       logger.e('$err\n$stack');
@@ -95,8 +95,8 @@ class TabViewController extends GetxController
 
       final List<GalleryItem> rultList = rult.gallerys ?? [];
 
-      maxPage = rult.maxPage ?? 0;
-      nextPage = rult.nextPage ?? 1;
+      maxPage = rult.maxPage as int? ?? 0;
+      nextPage = rult.nextPage as int? ?? 1;
       change([], status: RxStatus.success());
       change(rultList, status: RxStatus.success());
       for (final item in rultList) {
@@ -141,8 +141,8 @@ class TabViewController extends GetxController
       if (rultList.isNotEmpty &&
           state?.indexWhere((GalleryItem e) => e.gid == rultList.first.gid) ==
               -1) {
-        maxPage = rult.maxPage ?? 0;
-        nextPage = rult.nextPage ?? 1;
+        maxPage = rult.maxPage as int? ?? 0;
+        nextPage = rult.nextPage as int? ?? 1;
       }
 
       final insertIndex = state?.length ?? 0;

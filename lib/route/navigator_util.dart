@@ -123,7 +123,7 @@ class NavigatorUtil {
 
         _gid = _image.gid ?? '0';
 
-        Get.replace(GalleryRepository(url: _galleryUrl, jumpSer: ser));
+        Get.replace(GalleryRepository(url: _galleryUrl, jumpSer: ser as int));
       }
 
       if (replace) {

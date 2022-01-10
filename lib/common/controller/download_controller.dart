@@ -449,7 +449,7 @@ class DownloadController extends GetxController {
       // 否则先请求解析html
       final GalleryImage imageFetched = await _fetchImageInfo(
         image.href!,
-        itemSer: image.ser,
+        itemSer: image.ser as int,
         image: image,
         gid: gid,
         cancelToken: cancelToken,
@@ -505,7 +505,7 @@ class DownloadController extends GetxController {
         logger.d('403 $gid.${image.ser}下载链接已经失效 需要更新 ${image.href}');
         final GalleryImage imageFetched = await _fetchImageInfo(
           image.href!,
-          itemSer: image.ser,
+          itemSer: image.ser as int,
           image: image,
           gid: gid,
           cancelToken: cancelToken,
@@ -599,15 +599,23 @@ class DownloadController extends GetxController {
       return image;
     }
 
-    final GalleryImage _imageCopyWith = image.copyWith(
-      sourceId: _image.sourceId,
-      imageUrl: _image.imageUrl,
-      imageWidth: _image.imageWidth,
-      imageHeight: _image.imageHeight,
-      originImageUrl: _image.originImageUrl,
-    );
+    // todo copyWith
+    // final GalleryImage _imageCopyWith = image.copyWith(
+    //   sourceId: _image.sourceId,
+    //   imageUrl: _image.imageUrl,
+    //   imageWidth: _image.imageWidth,
+    //   imageHeight: _image.imageHeight,
+    //   originImageUrl: _image.originImageUrl,
+    // );
+    image
+      ..sourceId = _image.sourceId ?? image.sourceId
+      ..imageUrl = _image.imageUrl ?? image.imageUrl
+      ..imageWidth = _image.imageWidth ?? image.imageWidth
+      ..imageHeight = _image.imageHeight ?? image.imageHeight
+      ..originImageUrl = _image.originImageUrl ?? image.originImageUrl;
 
-    return _imageCopyWith;
+    // return _imageCopyWith;
+    return image;
   }
 
   Future<List<GalleryImage>> _fetchImages({
@@ -957,7 +965,7 @@ class DownloadController extends GetxController {
       gid: gid,
       token: '',
       href: images.href,
-      ser: images.ser,
+      ser: images.ser as int,
       imageUrl: images.imageUrl,
       sourceId: images.sourceId,
       filePath: fileName,
@@ -981,7 +989,7 @@ class DownloadController extends GetxController {
                   gid: gid,
                   token: '',
                   href: e.href,
-                  ser: e.ser,
+                  ser: e.ser as int,
                   imageUrl: e.imageUrl,
                   sourceId: e.sourceId,
                 ))

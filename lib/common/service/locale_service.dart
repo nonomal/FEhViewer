@@ -31,8 +31,7 @@ class LocaleService extends ProfileService {
 
     localCode.value = _profile.locale;
     everProfile<String>(localCode, (String value) {
-      // _profile.locale = value;
-      Global.profile = _profile.copyWith(locale: value);
+      Global.profile.locale = value;
     });
   }
 }

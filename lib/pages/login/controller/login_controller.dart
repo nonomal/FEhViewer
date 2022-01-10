@@ -75,8 +75,10 @@ class LoginController extends GetxController {
       update();
     }
 
-    if (user != null && user.cookie.isNotEmpty) {
-      userController.user(user.copyWith(username: usernameController.text));
+    logger.d('user ${user?.toJson()}');
+
+    if (user != null && (user.passHash?.isNotEmpty ?? false)) {
+      userController.user(user..username = usernameController.text);
       Api.selEhProfile();
 
       asyncGetUserInfo(user.memberId!);
@@ -85,7 +87,7 @@ class LoginController extends GetxController {
     Get.back();
   }
 
-  // cookie登陆
+  /// cookie登陆
   Future<void> pressLoginCookie() async {
     if (loadingLogin) {
       return;
@@ -110,7 +112,6 @@ class LoginController extends GetxController {
     }
 
     FocusScope.of(Get.context!).requestFocus(FocusNode());
-    User user;
 
     final List<Cookie> cookies = <Cookie>[
       Cookie('ipb_member_id', memberId),
@@ -124,26 +125,32 @@ class LoginController extends GetxController {
     // 设置EH的cookie
     cookieJar.saveFromResponse(Uri.parse(EHConst.EH_BASE_URL), cookies);
 
-    userController.user(userController.user.value.copyWith(
-      username: memberId,
-      memberId: memberId,
-      passHash: _getCookiesValue(cookies, 'ipb_pass_hash'),
-      igneous: _getCookiesValue(cookies, 'igneous'),
-      hathPerks: _getCookiesValue(cookies, 'hath_perks'),
-      sk: _getCookiesValue(cookies, 'sk'),
-    ));
+    logger.d('cookies ${_getCookiesValue(cookies, 'ipb_pass_hash')}');
 
+    userController.user.update((user) {
+      user?.username = memberId;
+      user?.memberId = memberId;
+      user?.nickName = memberId;
+      user?.passHash = _getCookiesValue(cookies, 'ipb_pass_hash');
+      user?.igneous = _getCookiesValue(cookies, 'igneous');
+      user?.hathPerks = _getCookiesValue(cookies, 'hath_perks');
+      user?.sk = _getCookiesValue(cookies, 'sk');
+    });
+
+    logger.d('asyncGetUserInfo bf ${userController.user.toJson()}');
     await asyncGetUserInfo(memberId);
+    logger.d('asyncGetUserInfo aft ${userController.user.toJson()}');
+    // userController.update();
 
-    if (memberId.isNotEmpty) {
-      asyncGetUserInfo(memberId)
-          .then((_) => Get.back(result: true))
-          .then((_) => Api.selEhProfile())
-          .onError((error, stackTrace) {
-        logger.e('$error\n$stackTrace');
-        showToast('$error');
-      });
-    }
+    // if (memberId.isNotEmpty) {
+    //   asyncGetUserInfo(memberId)
+    //       .then((_) => Get.back(result: true))
+    //       .then((_) => Api.selEhProfile())
+    //       .onError((error, stackTrace) {
+    //     logger.e('$error\n$stackTrace');
+    //     showToast('$error');
+    //   });
+    // }
   }
 
   /// 网页登陆
@@ -171,14 +178,14 @@ class LoginController extends GetxController {
         return;
       }
 
-      userController.user(userController.user.value.copyWith(
-        username: memberId,
-        memberId: memberId,
-        passHash: _getCookiesValue(cookies, 'ipb_pass_hash'),
-        igneous: _getCookiesValue(cookies, 'igneous'),
-        hathPerks: _getCookiesValue(cookies, 'hath_perks'),
-        sk: _getCookiesValue(cookies, 'sk'),
-      ));
+      userController.user()
+        ..username = memberId
+        ..memberId = memberId
+        ..passHash = _getCookiesValue(cookies, 'ipb_pass_hash')
+        ..igneous = _getCookiesValue(cookies, 'igneous')
+        ..hathPerks = _getCookiesValue(cookies, 'hath_perks')
+        ..sk = _getCookiesValue(cookies, 'sk');
+      userController.update();
 
       if (memberId.isNotEmpty) {
         asyncGetUserInfo(memberId);
@@ -193,11 +200,16 @@ class LoginController extends GetxController {
     // 异步获取昵称和头像
     logger.d('异步获取昵称和头像');
     final info = await getUserInfo(memberId);
-    userController.user(userController.user.value.copyWith(
-      nickName: info?.nickName,
-      avatarUrl: info?.avatarUrl,
-    ));
-    userController.update();
+    // userController.user.update((user) {
+    //   user?.nickName = info?.nickName;
+    //   user?.avatarUrl = info?.avatarUrl;
+    // });
+    logger.d('bf ${userController.user.toJson()}');
+    userController.user()
+      ..nickName = info?.nickName
+      ..avatarUrl = info?.avatarUrl;
+
+    logger.d('aft ${userController.user.toJson()}');
   }
 
   Future<void> readCookieFromClipboard() async {

@@ -20,8 +20,10 @@ extension ExtGC on GalleryCache {
       EnumToString.fromString(ViewColumnMode.values, columnModeVal ?? '') ??
       ViewColumnMode.single;
 
-  GalleryCache copyWithMode(ViewColumnMode val) =>
-      copyWith(columnModeVal: EnumToString.convertToString(val));
+  set columnMode(ViewColumnMode val) =>
+      columnModeVal = EnumToString.convertToString(val);
+  // GalleryCache copyWithMode(ViewColumnMode val) =>
+  //     copyWith(columnModeVal: EnumToString.convertToString(val));
 }
 
 extension ExtTabList on TabConfig {
@@ -40,21 +42,23 @@ extension ExtTabList on TabConfig {
   void setItemList(Map<String, bool> map, List<String> nameList) {
     tabItemList.clear();
     for (final String name in nameList) {
-      tabItemList.add(TabItem(name: name, enable: map[name] ?? false));
+      tabItemList.add(TabItem()
+        ..name = name
+        ..enable = map[name] ?? false);
     }
   }
 }
 
 extension ExtComment on GalleryComment {
   // 提取评论纯文字部分内容
-  String get text => span.map((GalleryCommentSpan e) {
+  String get text => span.map((e) {
         if (e.imageUrl?.isNotEmpty ?? false) {
           return '[image]${e.href ?? ''} ';
         }
         return e.text ?? '';
       }).join();
 
-  String get textTranslate => span.map((GalleryCommentSpan e) {
+  String get textTranslate => span.map((e) {
         if (e.imageUrl?.isNotEmpty ?? false) {
           return '[image]${e.href ?? ''} ';
         }
@@ -67,60 +71,60 @@ extension ExtCommentSpan on GalleryCommentSpan {
       EnumToString.fromString(CommentSpanType.values, type ?? '') ??
       CommentSpanType.text;
 
-  // set sType(CommentSpanType val) => type = EnumToString.convertToString(val);
-  GalleryCommentSpan copyWithSpanType(CommentSpanType val) =>
-      copyWith(type: EnumToString.convertToString(val));
+  set sType(CommentSpanType val) => type = EnumToString.convertToString(val);
+  // GalleryCommentSpan copyWithSpanType(CommentSpanType val) =>
+  //     copyWith(type: EnumToString.convertToString(val));
 }
 
 extension ExtItem on GalleryItem {
-  Map<int, GalleryImage> get imageMap =>
+  Map<num, GalleryImage> get imageMap =>
       {for (GalleryImage v in galleryImages ?? []) v.ser: v};
 
   GalleryItem copyWithAll(GalleryItem item) {
-    return copyWith(
-        token: item.token,
-        showKey: item.showKey,
-        url: item.url,
-        imgUrl: item.imgUrl,
-        imgUrlL: item.imgUrlL,
-        imgHeight: item.imgHeight,
-        imgWidth: item.imgWidth,
-        japaneseTitle: item.japaneseTitle,
-        englishTitle: item.englishTitle,
-        category: item.category,
-        uploader: item.uploader,
-        posted: item.posted,
-        language: item.language,
-        filecount: item.filecount,
-        rating: item.rating,
-        ratingCount: item.ratingCount,
-        torrentcount: item.torrentcount,
-        torrents: item.torrents,
-        filesize: item.filesize,
-        filesizeText: item.filesizeText,
-        visible: item.visible,
-        parent: item.parent,
-        ratingFallBack: item.ratingFallBack,
-        numberOfReviews: item.numberOfReviews,
-        postTime: item.postTime,
-        favoritedCount: item.favoritedCount,
-        favTitle: item.favTitle,
-        favcat: item.favcat,
-        localFav: item.localFav,
-        simpleTags: item.simpleTags,
-        tagsFromApi: item.tagsFromApi?.toList(),
-        translated: item.translated,
-        tagGroup: item.tagGroup,
-        galleryComment: item.galleryComment,
-        galleryImages: item.galleryImages,
-        apikey: item.apikey,
-        apiuid: item.apiuid,
-        isRatinged: item.isRatinged,
-        colorRating: item.colorRating,
-        archiverLink: item.archiverLink,
-        torrentLink: item.torrentLink,
-        lastViewTime: item.lastViewTime,
-        pageOfList: item.pageOfList);
+    return this
+      ..token = item.token ?? token
+      ..showKey = item.showKey ?? showKey
+      ..url = item.url ?? url
+      ..imgUrl = item.imgUrl ?? imgUrl
+      ..imgUrlL = item.imgUrlL ?? imgUrlL
+      ..imgHeight = item.imgHeight ?? imgHeight
+      ..imgWidth = item.imgWidth ?? imgWidth
+      ..japaneseTitle = item.japaneseTitle ?? japaneseTitle
+      ..englishTitle = item.englishTitle ?? englishTitle
+      ..category = item.category ?? category
+      ..uploader = item.uploader ?? uploader
+      ..posted = item.posted ?? posted
+      ..language = item.language ?? language
+      ..filecount = item.filecount ?? filecount
+      ..rating = item.rating ?? rating
+      ..ratingCount = item.ratingCount ?? ratingCount
+      ..torrentcount = item.torrentcount ?? torrentcount
+      ..torrents = item.torrents ?? torrents
+      ..filesize = item.filesize ?? filesize
+      ..filesizeText = item.filesizeText ?? filesizeText
+      ..visible = item.visible ?? visible
+      ..parent = item.parent ?? parent
+      ..ratingFallBack = item.ratingFallBack ?? ratingFallBack
+      ..numberOfReviews = item.numberOfReviews ?? numberOfReviews
+      ..postTime = item.postTime ?? postTime
+      ..favoritedCount = item.favoritedCount ?? favoritedCount
+      ..favTitle = item.favTitle ?? favTitle
+      ..favcat = item.favcat ?? favcat
+      ..localFav = item.localFav ?? localFav
+      ..simpleTags = item.simpleTags ?? simpleTags
+      ..tagsFromApi = item.tagsFromApi?.toList() ?? tagsFromApi?.toList()
+      ..translated = item.translated ?? translated
+      ..tagGroup = item.tagGroup ?? tagGroup
+      ..galleryComment = item.galleryComment ?? galleryComment
+      ..galleryImages = item.galleryImages ?? galleryImages
+      ..apikey = item.apikey ?? apikey
+      ..apiuid = item.apiuid ?? apiuid
+      ..isRatinged = item.isRatinged ?? isRatinged
+      ..colorRating = item.colorRating ?? colorRating
+      ..archiverLink = item.archiverLink ?? archiverLink
+      ..torrentLink = item.torrentLink ?? torrentLink
+      ..lastViewTime = item.lastViewTime ?? lastViewTime
+      ..pageOfList = item.pageOfList ?? pageOfList;
   }
 }
 
@@ -298,7 +302,7 @@ extension ExtEhSettings on EhSettings {
 
     final _index = xn.indexWhere((element) => element.name == namespace);
     if (_index > -1) {
-      xn[_index] = xn[_index].copyWith(value: value);
+      xn[_index].value = value;
     }
   }
 
@@ -336,9 +340,12 @@ extension ExtEhSettings on EhSettings {
 
     final _index = xn.indexWhere((element) => element.ser == ser);
     if (_index > -1) {
-      xn[_index] = xn[_index].copyWith(value: value);
+      xn[_index].value = value;
     } else {
-      xn.add(EhSettingItem(ser: ser, value: value, type: 'xn'));
+      xn.add(EhSettingItem()
+        ..ser = ser
+        ..value = value
+        ..type = 'xn');
     }
   }
 
@@ -348,9 +355,12 @@ extension ExtEhSettings on EhSettings {
     }
     final _index = xl.indexWhere((element) => element.ser == ser);
     if (_index > -1) {
-      xl[_index] = xl[_index].copyWith(value: value);
+      xl[_index].value = value;
     } else {
-      xl.add(EhSettingItem(ser: ser, value: value, type: 'xl'));
+      xl.add(EhSettingItem()
+        ..ser = ser
+        ..value = value
+        ..type = 'xl');
     }
   }
 
@@ -360,9 +370,12 @@ extension ExtEhSettings on EhSettings {
     }
     final _index = favorites.indexWhere((element) => element.ser == ser);
     if (_index > -1) {
-      favorites[_index] = favorites[_index].copyWith(value: value);
+      favorites[_index].value = value;
     } else {
-      favorites.add(EhSettingItem(ser: ser, value: value, type: 'xl'));
+      favorites.add(EhSettingItem()
+        ..ser = ser
+        ..value = value
+        ..type = 'xl');
     }
   }
 
@@ -433,19 +446,21 @@ extension ExtEhSettings on EhSettings {
 extension ExtGalleryList on GalleryList {
   Future<GalleryList> get qrySimpleTagTranslate async {
     final trController = Get.find<TagTransController>();
-    final _gallerysF = gallerys?.map((e) async {
-          final _simpleTagsF = e.simpleTags?.map((e) async {
+    final _gallerysF = gallerys?.map((GalleryItem e) async {
+          final _simpleTagsF = e.simpleTags?.map((SimpleTag e) async {
                 final tr = await trController.getTagTranslateText(e.text!);
-                return e.copyWith(translat: tr ?? e.text);
+                return e..translat = tr ?? e.text;
               }) ??
-              [];
+              <Future<SimpleTag>>[];
           final _simpleTags = Future.wait<SimpleTag>(_simpleTagsF);
-          return e.copyWith(simpleTags: await _simpleTags);
+          return e..simpleTags = await _simpleTags;
         }) ??
         [];
 
     final _gallerys = Future.wait(_gallerysF);
-    return copyWith(gallerys: await _gallerys);
+    gallerys = await _gallerys;
+    return this;
+    // return copyWith(gallerys: await _gallerys);
   }
 }
 
@@ -496,8 +511,9 @@ extension ExtCustomProfile on CustomProfile {
       EnumToString.fromString(GalleryListType.values, listTypeValue ?? '') ??
       GalleryListType.gallery;
 
-  CustomProfile copyWithListType(GalleryListType value) =>
-      copyWith(listTypeValue: value.name);
+  set listType(GalleryListType value) => listTypeValue = value.name;
+  // CustomProfile copyWithListType(GalleryListType value) =>
+  //     copyWith(listTypeValue: value.name);
 
   ListModeEnum get listMode =>
       EnumToString.fromString(ListModeEnum.values, listModeValue ?? '') ??

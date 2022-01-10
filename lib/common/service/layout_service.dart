@@ -38,12 +38,12 @@ class LayoutServices extends GetxService {
     super.onInit();
 
     _ehLayout = hiveHelper.getEhLayout();
-    sideProportion = _ehLayout.sideProportion ?? 0.0;
+    sideProportion = _ehLayout.sideProportion as double? ?? 0.0;
 
     debounce<double>(
       _sideProportion,
       (double val) {
-        _ehLayout = _ehLayout.copyWith(sideProportion: val);
+        _ehLayout.sideProportion = val;
         hiveHelper.setEhLayout(_ehLayout);
       },
       time: const Duration(milliseconds: 3000),

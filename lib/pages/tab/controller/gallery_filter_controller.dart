@@ -19,14 +19,14 @@ class GalleryFilterController extends GetxController {
     endPageCtrl.text = _advanceSearchController.advanceSearch.value.endPage;
 
     statrPageCtrl.addListener(() {
-      _advanceSearchController.advanceSearch(_advanceSearchController
-          .advanceSearch.value
-          .copyWith(startPage: statrPageCtrl.text.trim()));
+      _advanceSearchController.advanceSearch(
+          _advanceSearchController.advanceSearch.value
+            ..startPage = statrPageCtrl.text.trim());
     });
     endPageCtrl.addListener(() {
-      _advanceSearchController.advanceSearch(_advanceSearchController
-          .advanceSearch.value
-          .copyWith(endPage: endPageCtrl.text.trim()));
+      _advanceSearchController.advanceSearch(
+          _advanceSearchController.advanceSearch.value
+            ..endPage = endPageCtrl.text.trim());
     });
   }
 }

@@ -36,12 +36,13 @@ class GalleryCacheController extends GetxController {
           logger.d('remote ${remote?.toJson()}');
           if (_localCache == null && remote != null) {
             logger.d('local null');
-            gCacheMap[gid] = GalleryCache(lastIndex: remote.lastIndex);
+            gCacheMap[gid] = GalleryCache()..lastIndex = remote.lastIndex;
           } else if (_localCache != null && remote != null) {
             logger.d('both not null');
             if ((remote.time ?? 0) > (_localCache.time ?? 0)) {
-              gCacheMap[gid] = _localCache.copyWith(
-                  lastIndex: remote.lastIndex, time: remote.time);
+              gCacheMap[gid] = _localCache
+                ..lastIndex = remote.lastIndex
+                ..time = remote.time;
             }
           }
         }
@@ -57,7 +58,10 @@ class GalleryCacheController extends GetxController {
     final GalleryCache? _ori = await getGalleryCache(gid, sync: false);
     final _time = DateTime.now().millisecondsSinceEpoch;
     if (_ori == null) {
-      final _newCache = GalleryCache(gid: gid, lastIndex: index, time: _time);
+      final _newCache = GalleryCache()
+        ..gid = gid
+        ..lastIndex = index
+        ..time = _time;
       gCacheMap[gid] = _newCache;
       if (saveToStore) {
         gStore.saveCache(_newCache);
@@ -66,7 +70,9 @@ class GalleryCacheController extends GetxController {
         }
       }
     } else {
-      final _newCache = _ori.copyWith(lastIndex: index, time: _time);
+      final _newCache = _ori
+        ..lastIndex = index
+        ..time = _time;
       gCacheMap[gid] = _newCache;
       if (saveToStore) {
         gStore.saveCache(_newCache);
@@ -88,11 +94,17 @@ class GalleryCacheController extends GetxController {
   Future<void> setColumnMode(String gid, ViewColumnMode columnMode) async {
     final GalleryCache? _ori = await getGalleryCache(gid, sync: false);
     if (_ori == null) {
-      gCacheMap[gid] = GalleryCache(gid: gid).copyWithMode(columnMode);
-      gStore.saveCache(GalleryCache(gid: gid).copyWithMode(columnMode));
+      // gCacheMap[gid] = GalleryCache(gid: gid).copyWithMode(columnMode);
+      // gStore.saveCache(GalleryCache(gid: gid).copyWithMode(columnMode));
+      final _cache = GalleryCache()
+        ..gid = gid
+        ..columnMode = columnMode;
+      gCacheMap[gid] = _cache;
+      gStore.saveCache(_cache);
     } else {
-      gCacheMap[gid] = _ori.copyWithMode(columnMode);
-      gStore.saveCache(_ori.copyWithMode(columnMode));
+      final _cache = _ori..columnMode = columnMode;
+      gCacheMap[gid] = _cache;
+      gStore.saveCache(_cache);
     }
   }
 }

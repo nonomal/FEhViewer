@@ -502,7 +502,7 @@ class TagGroupItem extends StatelessWidget {
                     tag.title,
                     translate: tag.tagTranslat,
                     type: tag.type,
-                    vote: tag.vote ?? 0,
+                    vote: tag.vote as int? ?? 0,
                   );
                 }
               },

@@ -84,18 +84,18 @@ class WebdavController extends GetxController {
   }
 
   set syncHistory(bool val) {
-    final _dav = webdavProfile.copyWith(syncHistory: val);
+    webdavProfile.syncHistory = val;
     _syncHistory = val;
     update();
-    Global.profile = Global.profile.copyWith(webdav: _dav);
+    Global.profile.webdav = webdavProfile;
     Global.saveProfile();
   }
 
   set syncReadProgress(bool val) {
-    final _dav = webdavProfile.copyWith(syncReadProgress: val);
+    webdavProfile.syncReadProgress = val;
     _syncReadProgress = val;
     update();
-    Global.profile = Global.profile.copyWith(webdav: _dav);
+    Global.profile.webdav = webdavProfile;
     Global.saveProfile();
   }
 
@@ -212,7 +212,9 @@ class WebdavController extends GetxController {
       final name = e.name?.substring(0, e.name?.lastIndexOf('.'));
       final gid = name?.split('_')[0];
       final time = int.parse(name?.split('_')[1] ?? '0');
-      return HistoryIndexGid(g: gid, t: time);
+      return HistoryIndexGid()
+        ..g = gid
+        ..t = time;
     }).toList();
     final _list = <HistoryIndexGid>[];
     for (final his in hisObjs) {
@@ -236,11 +238,10 @@ class WebdavController extends GetxController {
     logger.v('uploadHistory');
     final _path = path.join(Global.tempPath, his.gid);
     final File _file = File(_path);
-    final _his = his.copyWith(
-      galleryComment: [],
-      galleryImages: [],
-      tagGroup: [],
-    );
+    final _his = his
+      ..galleryComment = []
+      ..galleryImages = []
+      ..tagGroup = [];
 
     try {
       final _text = jsonEncode(_his);
@@ -313,10 +314,8 @@ class WebdavController extends GetxController {
 
     final _path = path.join(Global.tempPath, 'read', read.gid);
     final File _file = File(_path);
-    final _read = read.copyWith(
-      columnModeVal: '',
-    );
-    final _text = jsonEncode(_read);
+    read.columnModeVal = '';
+    final _text = jsonEncode(read);
     // final base64Text = base64Encode(utf8.encode(_text));
     final encrypted = _encrypter.encrypt(_text, iv: _iv);
     _file.writeAsStringSync(encrypted.base64);
@@ -407,9 +406,11 @@ class WebdavController extends GetxController {
     }
     if (rult) {
       // 保存账号 rebuild
-      WebdavProfile webdavUser =
-          WebdavProfile(url: url, user: user, password: pwd);
-      Global.profile = Global.profile.copyWith(webdav: webdavUser);
+      WebdavProfile webdavUser = WebdavProfile()
+        ..url = url
+        ..user = user
+        ..password = pwd;
+      Global.profile.webdav = webdavUser;
       Global.saveProfile();
       Get.replace(webdavUser);
       initClient();

@@ -37,7 +37,7 @@ Future<int?> syncReadProgress(
     final _cache =
         await Get.find<GalleryCacheController>().getGalleryCache('$gid');
     _needShowDialog = false;
-    return _cache?.lastIndex ?? 0;
+    return _cache?.lastIndex as int? ?? 0;
   }
 
   Future<int?> _showSyncDialog() async {
@@ -128,7 +128,7 @@ class DownloadGalleryItem extends GetView<DownloadViewController> {
         logger.d('lastIndex $lastIndex');
         lastIndex ??= (await Get.find<GalleryCacheController>()
                     .getGalleryCache('${galleryTask.gid}', sync: false))
-                ?.lastIndex ??
+                ?.lastIndex as int? ??
             0;
         logger.d('lastIndex $lastIndex');
 

@@ -5,12 +5,23 @@ import 'package:fehviewer/network/request.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-const kEhSettings = EhSettings(profilelist: [], xn: [], xl: [], favorites: []);
+// const kEhSettings = EhSettings(profilelist: [], xn: [], xl: [], favorites: []);
+
+EhSettings Function() defEhSettings = () => EhSettings()
+  ..profilelist = []
+  ..xn = []
+  ..xl = []
+  ..favorites = [];
 
 class EhMySettingsController extends GetxController {
   // Rx<EhSettings> ehSettings = const EhSettings().obs;
 
-  final _ehSetting = kEhSettings.obs;
+  final _ehSetting = (EhSettings()
+        ..profilelist = []
+        ..xn = []
+        ..xl = []
+        ..favorites = [])
+      .obs;
   EhSettings get ehSetting => _ehSetting.value;
   set ehSetting(EhSettings val) => _ehSetting.value = val;
 
@@ -51,7 +62,7 @@ class EhMySettingsController extends GetxController {
 
   Future<void> changeProfile(String profileSet) async {
     isLoading = true;
-    ehSetting = kEhSettings;
+    ehSetting = defEhSettings();
     try {
       await setCookie('sp', profileSet);
       ehConfigService.selectProfile = profileSet;
@@ -90,7 +101,7 @@ class EhMySettingsController extends GetxController {
     }
 
     isLoading = true;
-    ehSetting = kEhSettings;
+    ehSetting = defEhSettings();
     try {
       final uconfig = await renameEhProfile(_selected, name);
       loadData(refresh: true);
@@ -111,7 +122,7 @@ class EhMySettingsController extends GetxController {
     }
     final _selected = ehSetting.profileSelected!;
     isLoading = true;
-    ehSetting = kEhSettings;
+    ehSetting = defEhSettings();
     try {
       logger.d('setDefaultProfile $_selected');
       final uconfig = await setDefauleEhProfile(_selected);
@@ -133,7 +144,7 @@ class EhMySettingsController extends GetxController {
 
     final _selected = ehSetting.profileSelected!;
     isLoading = true;
-    ehSetting = kEhSettings;
+    ehSetting = defEhSettings();
     try {
       await setCookie('sp', _selected);
       ehConfigService.selectProfile = _selected;
@@ -156,7 +167,7 @@ class EhMySettingsController extends GetxController {
     }
 
     isLoading = true;
-    ehSetting = kEhSettings;
+    ehSetting = defEhSettings();
     try {
       final uconfig = await createEhProfile(name);
       isLoading = false;

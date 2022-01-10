@@ -146,72 +146,66 @@ class _UserItem extends State<UserItem> {
 const double kAvatarSize = 40.0;
 const double kNameTextSize = 11.0;
 
-class UserWidget extends GetView<UserController> {
-  Widget _buildAvastat() {
-    const Widget _defAvatar = Icon(
-      FontAwesomeIcons.solidUserCircle,
-      size: kAvatarSize,
-      color: CupertinoColors.systemGrey,
-    );
+const Widget _defAvatar = Icon(
+  FontAwesomeIcons.solidUserCircle,
+  size: kAvatarSize,
+  color: CupertinoColors.systemGrey,
+);
 
-    // logger.d('${controller.user().avatarUrl} ');
-    final String _avatarUrl = controller.user().avatarUrl ?? '';
-    return Obx(() {
-      if (controller.isLogin && _avatarUrl.isNotEmpty) {
-        return ClipOval(
-          child: EhNetworkImage(
-            imageUrl: _avatarUrl,
-            width: kAvatarSize,
-            height: kAvatarSize,
-            fit: BoxFit.cover,
-            errorWidget: (_, __, ___) => _defAvatar,
-            placeholder: (_, __) => _defAvatar,
-          ),
-        );
-      } else {
-        return _defAvatar;
-      }
-    });
+class UserWidget extends GetView<UserController> {
+  Widget _buildAvastat({String? avatarUrl}) {
+    if (avatarUrl?.isNotEmpty ?? false) {
+      return ClipOval(
+        child: EhNetworkImage(
+          imageUrl: avatarUrl!,
+          width: kAvatarSize,
+          height: kAvatarSize,
+          fit: BoxFit.cover,
+          errorWidget: (_, __, ___) => _defAvatar,
+          placeholder: (_, __) => _defAvatar,
+        ),
+      );
+    } else {
+      return _defAvatar;
+    }
   }
 
-  Widget _buildText() {
-    return Obx(() {
-      if (controller.isLogin) {
-        final String? _userName = controller.user().username;
-        final String? _nickName = controller.user().nickName;
-        return Text(
-          _nickName ?? _userName ?? '',
-          style: TextStyle(
-              fontSize: kNameTextSize,
-              fontWeight: FontWeight.normal,
-              color: CupertinoDynamicColor.resolve(
-                CupertinoColors.label,
-                Get.context!,
-              )),
-        ).paddingOnly(right: 6);
-      } else {
-        return const SizedBox();
-      }
-    });
+  Widget _buildText({String? text}) {
+    return Text(
+      text ?? '',
+      style: TextStyle(
+          fontSize: kNameTextSize,
+          fontWeight: FontWeight.normal,
+          color: CupertinoDynamicColor.resolve(
+            CupertinoColors.label,
+            Get.context!,
+          )),
+    ).paddingOnly(right: 6);
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        logger.d('controller.user ${controller.user.toJson()}');
         if (controller.isLogin) {
           controller.showLogOutDialog(context);
         } else {
           Get.toNamed(EHRoutes.login);
         }
       },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          _buildText(),
-          _buildAvastat(),
-        ],
-      ),
+      child: Obx(() {
+        final _userName = controller.user().username;
+        final _nickName = controller.user().nickName;
+        final _avatarUrl = controller.user().avatarUrl;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            _buildText(text: _nickName ?? _userName),
+            _buildAvastat(avatarUrl: _avatarUrl),
+          ],
+        );
+      }),
     );
   }
 }

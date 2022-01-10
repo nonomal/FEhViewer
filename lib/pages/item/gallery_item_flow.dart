@@ -62,7 +62,7 @@ class GalleryItemFlow extends StatelessWidget {
               constraints.maxWidth /
               (galleryItem.imgWidth ?? 0);
         } else {
-          return galleryItem.imgHeight;
+          return galleryItem.imgHeight as double?;
         }
       }
 

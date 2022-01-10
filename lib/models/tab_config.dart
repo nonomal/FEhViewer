@@ -1,38 +1,13 @@
-import 'package:flutter/foundation.dart';
-import 'tab_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+import "tab_item.dart";
+part 'tab_config.g.dart';
 
-@immutable
+@JsonSerializable()
 class TabConfig {
+  TabConfig();
+
+  late List<TabItem> tabItemList;
   
-  const TabConfig({
-    required this.tabItemList,
-  });
-
-  final List<TabItem> tabItemList;
-
-  factory TabConfig.fromJson(Map<String,dynamic> json) => TabConfig(
-    tabItemList: (json['tabItemList'] as List? ?? []).map((e) => TabItem.fromJson(e as Map<String, dynamic>)).toList()
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'tabItemList': tabItemList.map((e) => e.toJson()).toList()
-  };
-
-  TabConfig clone() => TabConfig(
-    tabItemList: tabItemList.map((e) => e.clone()).toList()
-  );
-
-    
-  TabConfig copyWith({
-    List<TabItem>? tabItemList
-  }) => TabConfig(
-    tabItemList: tabItemList ?? this.tabItemList,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is TabConfig && tabItemList == other.tabItemList;
-
-  @override
-  int get hashCode => tabItemList.hashCode;
+  factory TabConfig.fromJson(Map<String,dynamic> json) => _$TabConfigFromJson(json);
+  Map<String, dynamic> toJson() => _$TabConfigToJson(this);
 }

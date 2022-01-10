@@ -212,8 +212,8 @@ class DefaultTabViewController extends TabViewController {
       if (_itemList.isNotEmpty) {
         state?.insertAll(0, _itemList);
 
-        maxPage = rult.maxPage ?? 0;
-        nextPage = rult.nextPage ?? 1;
+        maxPage = rult.maxPage as int? ?? 0;
+        nextPage = rult.nextPage as int? ?? 1;
 
         lastTopitemIndex =
             state?.indexWhere((e) => e.gid == lastTopitemGid) ?? 0;
@@ -257,7 +257,7 @@ class DefaultTabViewController extends TabViewController {
 
       curPage = page;
       minPage = page;
-      nextPage = rult?.nextPage ?? page + 1;
+      nextPage = rult?.nextPage as int? ?? page + 1;
       logger.d('after loadFromPage nextPage is $nextPage');
       if (rult != null) {
         change(rult.gallerys, status: RxStatus.success());

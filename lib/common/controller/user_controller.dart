@@ -13,13 +13,13 @@ import 'package:get/get.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 
 class UserController extends ProfileController {
-  bool get isLogin => user.value.username?.isNotEmpty ?? false;
-  Rx<User> user = kDefUser.obs;
+  bool get isLogin => user.value.memberId?.isNotEmpty ?? false;
+  Rx<User> user = defUser().obs;
 
   final EhConfigService _ehConfigService = Get.find();
 
   void _logOut() {
-    user(kDefUser);
+    user(defUser());
     final WebviewCookieManager cookieManager = WebviewCookieManager();
     cookieManager.clearCookies();
   }
@@ -27,19 +27,19 @@ class UserController extends ProfileController {
   @override
   void onInit() {
     super.onInit();
-    user(Global.profile.user);
-    // logger.d('${user.toJson()}');
     everProfile<User>(
       user,
       (User value) {
-        Global.profile = Global.profile.copyWith(user: value);
+        logger.d('everProfile User  => ${value.toJson()}');
+        Global.profile.user = value;
         if (Get.isRegistered<FavoriteTabberController>()) {
-          logger.d('everProfile User  => update FavoriteTabberController');
           Get.find<FavoriteTabberController>().onInit();
           Get.find<FavoriteTabberController>().update();
         }
       },
     );
+
+    user(Global.profile.user);
   }
 
   Future<void> showLogOutDialog(BuildContext context) async {

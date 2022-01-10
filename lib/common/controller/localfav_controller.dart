@@ -16,12 +16,10 @@ class LocalFavController extends ProfileController {
             (GalleryItem element) => element.gid == galleryItem.gid) ==
         -1) {
       loacalFavs.insert(
-        0,
-        galleryItem.copyWith(
-          galleryImages: null,
-          galleryComment: null,
-        ),
-      );
+          0,
+          galleryItem
+            ..galleryImages = null
+            ..galleryComment = null);
     } else {
       showToast('Favorites already exist');
     }
@@ -46,9 +44,7 @@ class LocalFavController extends ProfileController {
     everProfile<List<GalleryItem>>(
       loacalFavs,
       (List<GalleryItem> value) {
-        Global.profile = Global.profile.copyWith(
-          localFav: Global.profile.localFav.copyWith(gallerys: value),
-        );
+        Global.profile.localFav.gallerys = value;
       },
     );
   }

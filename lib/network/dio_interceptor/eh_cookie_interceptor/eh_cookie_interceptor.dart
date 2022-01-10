@@ -42,22 +42,26 @@ class EhCookieInterceptor extends Interceptor {
     var cookies = response.headers[HttpHeaders.setCookieHeader];
 
     if (cookies != null) {
-      logger.v('set-cookie:${cookies}');
+      logger.d('set-cookie:${cookies}');
       final _cookies =
           cookies.map((str) => Cookie.fromSetCookieValue(str)).toList();
       logger.v('_set cookies ${_cookies}');
 
       final igneous = getCookiesValue(_cookies, 'igneous');
 
-      userController.user(userController.user.value.copyWith(
-        memberId: getCookiesValue(_cookies, 'ipb_member_id'),
-        passHash: getCookiesValue(_cookies, 'ipb_pass_hash'),
-        igneous: igneous != 'mystery' && igneous != '' ? igneous : null,
-        hathPerks: getCookiesValue(_cookies, 'hath_perks'),
-        sk: getCookiesValue(_cookies, 'sk'),
-      ));
+      userController.user(userController.user.value
+        ..memberId = getCookiesValue(_cookies, 'ipb_member_id') ??
+            userController.user().memberId
+        ..passHash = getCookiesValue(_cookies, 'ipb_pass_hash') ??
+            userController.user().passHash
+        ..igneous = igneous != 'mystery' && igneous != ''
+            ? igneous
+            : userController.user().igneous
+        ..hathPerks = getCookiesValue(_cookies, 'hath_perks') ??
+            userController.user().hathPerks
+        ..sk = getCookiesValue(_cookies, 'sk') ?? userController.user().sk);
 
-      logger.v('${userController.user.value.toJson()}');
+      logger.d('${userController.user.value.toJson()}');
     }
   }
 

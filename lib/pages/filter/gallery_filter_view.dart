@@ -199,21 +199,21 @@ class GalleryFilterView extends StatelessWidget {
           title: L10n.of(context).s_Search_Fav_Name,
           value: _advanceSearch.value.favSearchName,
           onChanged: (bool value) {
-            _advanceSearch(_advanceSearch.value.copyWith(favSearchName: value));
+            _advanceSearch(_advanceSearch.value..favSearchName = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Fav_Tags,
           value: _advanceSearch.value.favSearchTags,
           onChanged: (bool value) {
-            _advanceSearch(_advanceSearch.value.copyWith(favSearchTags: value));
+            _advanceSearch(_advanceSearch.value..favSearchTags = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Fav_Note,
           value: _advanceSearch.value.favSearchNote,
           onChanged: (bool value) {
-            _advanceSearch(_advanceSearch.value.copyWith(favSearchNote: value));
+            _advanceSearch(_advanceSearch.value..favSearchNote = value);
           },
         ),
       ];
@@ -228,72 +228,63 @@ class GalleryFilterView extends StatelessWidget {
           title: L10n.of(context).s_Search_Gallery_Name,
           value: _advanceSearch.value.searchGalleryName,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchGalleryName: value));
+            _advanceSearch(_advanceSearch.value..searchGalleryName = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Gallery_Tags,
           value: _advanceSearch.value.searchGalleryTags,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchGalleryTags: value));
+            _advanceSearch(_advanceSearch.value..searchGalleryTags = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Gallery_Description,
           value: _advanceSearch.value.searchGalleryDesc,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchGalleryDesc: value));
+            _advanceSearch(_advanceSearch.value..searchGalleryDesc = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Torrent_Filenames,
           value: _advanceSearch.value.searchToreenFilenames,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchToreenFilenames: value));
+            _advanceSearch(_advanceSearch.value..searchToreenFilenames = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Only_Show_Galleries_With_Torrents,
           value: _advanceSearch.value.onlyShowWhithTorrents,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(onlyShowWhithTorrents: value));
+            _advanceSearch(_advanceSearch.value..onlyShowWhithTorrents = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Low_Power_Tags,
           value: _advanceSearch.value.searchLowPowerTags,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchLowPowerTags: value));
+            _advanceSearch(_advanceSearch.value..searchLowPowerTags = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Search_Downvoted_Tags,
           value: _advanceSearch.value.searchDownvotedTags,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchDownvotedTags: value));
+            _advanceSearch(_advanceSearch.value..searchDownvotedTags = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Show_Expunged_Galleries,
           value: _advanceSearch.value.searchExpunged,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchExpunged: value));
+            _advanceSearch(_advanceSearch.value..searchExpunged = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).s_Minimum_Rating,
           value: _advanceSearch.value.searchWithminRating,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchWithminRating: value));
+            _advanceSearch(_advanceSearch.value..searchWithminRating = value);
           },
         ),
         AnimatedCrossFade(
@@ -325,9 +316,9 @@ class GalleryFilterView extends StatelessWidget {
                 child: Text(L10n.of(context).s_stars('5')),
               ),
             },
-            groupValue: _advanceSearch.value.minRating,
+            groupValue: _advanceSearch.value.minRating as int?,
             onValueChanged: (int? value) {
-              _advanceSearch(_advanceSearch.value.copyWith(minRating: value));
+              _advanceSearch(_advanceSearch.value..minRating = value ?? 0);
             },
           ),
         ),
@@ -336,8 +327,7 @@ class GalleryFilterView extends StatelessWidget {
           expand: false,
           value: advanceSearchController.advanceSearch.value.searchBetweenpage,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(searchBetweenpage: value));
+            _advanceSearch(_advanceSearch.value..searchBetweenpage = value);
           },
         ),
         AnimatedCrossFade(
@@ -403,23 +393,21 @@ class GalleryFilterView extends StatelessWidget {
           title: L10n.of(context).language,
           value: _advanceSearch.value.disableDFLanguage,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(disableDFLanguage: value));
+            _advanceSearch(_advanceSearch.value..disableDFLanguage = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).uploader,
           value: _advanceSearch.value.disableDFUploader,
           onChanged: (bool value) {
-            _advanceSearch(
-                _advanceSearch.value.copyWith(disableDFUploader: value));
+            _advanceSearch(_advanceSearch.value..disableDFUploader = value);
           },
         ),
         AdvanceSearchSwitchItem(
           title: L10n.of(context).tags,
           value: _advanceSearch.value.disableDFTags,
           onChanged: (bool value) {
-            _advanceSearch(_advanceSearch.value.copyWith(disableDFTags: value));
+            _advanceSearch(_advanceSearch.value..disableDFTags = value);
           },
         ),
         // const SizedBox(height: 50)

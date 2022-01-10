@@ -44,11 +44,16 @@ class HistoryController extends GetxController {
     final _hisViewController = Get.find<HistoryViewController>();
 
     final int nowTime = DateTime.now().millisecondsSinceEpoch;
-    final _item = galleryItem.copyWith(
-      lastViewTime: updateTime ? nowTime : null,
-      galleryImages: [],
-      galleryComment: [],
-    );
+    // todo copyWith
+    // final _item = galleryItem.copyWith(
+    //   lastViewTime: updateTime ? nowTime : null,
+    //   galleryImages: [],
+    //   galleryComment: [],
+    // );
+    final _item = galleryItem
+      ..lastViewTime = updateTime ? nowTime : null
+      ..galleryImages = []
+      ..galleryComment = [];
 
     final _eDelFlg =
         _delHistorys.firstWhereOrNull((eDel) => eDel.g == galleryItem.gid);
@@ -137,7 +142,9 @@ class HistoryController extends GetxController {
 
   void _addHistoryDelFlg(String gid) {
     final int nowTime = DateTime.now().millisecondsSinceEpoch;
-    final _del = HistoryIndexGid(t: nowTime, g: gid);
+    final _del = HistoryIndexGid()
+      ..t = nowTime
+      ..g = gid;
     _delHistorys.add(_del);
     hiveHelper.addHistoryDel(_del);
   }
@@ -173,7 +180,9 @@ class HistoryController extends GetxController {
     }
 
     final List<HistoryIndexGid?> listLocal = historys
-        .map((e) => HistoryIndexGid(t: e.lastViewTime, g: e.gid))
+        .map((e) => HistoryIndexGid()
+          ..t = e.lastViewTime
+          ..g = e.gid)
         .toList();
     logger.v('listLocal ${listLocal.length} \n${listLocal.map((e) => e?.g)}');
     logger.v('${jsonEncode(listLocal)} ');

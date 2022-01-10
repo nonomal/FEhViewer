@@ -92,7 +92,7 @@ class FavDialogController extends GetxController {
                     // 返回数据
                     Get.back(
                         result: favList[_favindex]
-                            .copyWith(note: _favnoteController.text));
+                          ..note = _favnoteController.text);
                   },
                 )
               ],
@@ -116,8 +116,7 @@ class FavDialogController extends GetxController {
                 };
                 // 返回数据
                 Get.back(
-                    result: favList[_favindex]
-                        .copyWith(note: _favnoteController.text));
+                    result: favList[_favindex]..note = _favnoteController.text);
               },
             ),
           ],
@@ -134,10 +133,10 @@ class FavDialogController extends GetxController {
         .map((Favcat fav) => FavcatAddListItem(
               text: fav.favTitle,
               favcat: fav.favId,
-              totNum: fav.totNum,
+              totNum: fav.totNum as int?,
               onTap: () {
                 // 返回数据
-                Get.back(result: fav.copyWith(note: _favnoteController.text));
+                Get.back(result: fav..note = _favnoteController.text);
               },
             ))).toList();
 
@@ -286,7 +285,9 @@ class FavDialogController extends GetxController {
       _favoriteSelectorController.decrease(oriFavcat);
     }
     _favoriteSelectorController.increase(_lastFavcat);
-    return Favcat(favTitle: _favTitle, favId: _lastFavcat);
+    return Favcat()
+      ..favTitle = _favTitle
+      ..favId = _lastFavcat;
   }
 
   /// 删除收藏

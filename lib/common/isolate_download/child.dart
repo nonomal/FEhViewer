@@ -182,7 +182,7 @@ Future<void> _downloadImageAll(
           _requestBean,
           sendPort,
           image,
-          maxSer: _images.map((e) => e.ser).reduce(math.max),
+          maxSer: _images.map((e) => e.ser as int).reduce(math.max),
         );
         logger.d('${image.ser} end');
       } else if (_imageTask != null &&
@@ -239,7 +239,7 @@ Future<void> _getUrlAndDownloadOneImage(
   final ProgessBean _progessBeanEnqueued = ProgessBean(updateImages: [
     GalleryImageTask(
       gid: _requestBean.galleryTask!.gid,
-      ser: image.ser,
+      ser: image.ser as int,
       imageUrl: _info.imageUrl,
       sourceId: _info.sourceId,
       filePath: _fileName,
@@ -297,7 +297,7 @@ Future<void> _getUrlAndDownloadOneImage(
   final ProgessBean _progessBeanComplete = ProgessBean(updateImages: [
     GalleryImageTask(
       gid: _requestBean.galleryTask!.gid,
-      ser: image.ser,
+      ser: image.ser as int,
       token: '',
       status: TaskStatus.complete.value,
     ),

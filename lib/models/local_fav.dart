@@ -1,38 +1,13 @@
-import 'package:flutter/foundation.dart';
-import 'gallery_item.dart';
+import 'package:json_annotation/json_annotation.dart';
+import "gallery_item.dart";
+part 'local_fav.g.dart';
 
-@immutable
+@JsonSerializable()
 class LocalFav {
+  LocalFav();
+
+  List<GalleryItem>? gallerys;
   
-  const LocalFav({
-    this.gallerys,
-  });
-
-  final List<GalleryItem>? gallerys;
-
-  factory LocalFav.fromJson(Map<String,dynamic> json) => LocalFav(
-    gallerys: json['gallerys'] != null ? (json['gallerys'] as List? ?? []).map((e) => GalleryItem.fromJson(e as Map<String, dynamic>)).toList() : null
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'gallerys': gallerys?.map((e) => e.toJson()).toList()
-  };
-
-  LocalFav clone() => LocalFav(
-    gallerys: gallerys?.map((e) => e.clone()).toList()
-  );
-
-    
-  LocalFav copyWith({
-    List<GalleryItem>? gallerys
-  }) => LocalFav(
-    gallerys: gallerys ?? this.gallerys,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is LocalFav && gallerys == other.gallerys;
-
-  @override
-  int get hashCode => gallerys.hashCode;
+  factory LocalFav.fromJson(Map<String,dynamic> json) => _$LocalFavFromJson(json);
+  Map<String, dynamic> toJson() => _$LocalFavToJson(this);
 }

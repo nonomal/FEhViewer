@@ -1,45 +1,14 @@
-import 'package:flutter/foundation.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'tab_item.g.dart';
 
-@immutable
+@JsonSerializable()
 class TabItem {
+  TabItem();
+
+  late String name;
+  bool? enable;
   
-  const TabItem({
-    required this.name,
-    this.enable,
-  });
-
-  final String name;
-  final bool? enable;
-
-  factory TabItem.fromJson(Map<String,dynamic> json) => TabItem(
-    name: json['name'] as String,
-    enable: json['enable'] != null ? json['enable'] as bool : null
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'enable': enable
-  };
-
-  TabItem clone() => TabItem(
-    name: name,
-    enable: enable
-  );
-
-    
-  TabItem copyWith({
-    String? name,
-    bool? enable
-  }) => TabItem(
-    name: name ?? this.name,
-    enable: enable ?? this.enable,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is TabItem && name == other.name && enable == other.enable;
-
-  @override
-  int get hashCode => name.hashCode ^ enable.hashCode;
+  factory TabItem.fromJson(Map<String,dynamic> json) => _$TabItemFromJson(json);
+  Map<String, dynamic> toJson() => _$TabItemToJson(this);
 }

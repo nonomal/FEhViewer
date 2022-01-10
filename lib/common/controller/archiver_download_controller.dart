@@ -47,7 +47,7 @@ class ArchiverDownloadController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    logger.d('ArchiverDownloadController onInit');
+    logger.v('ArchiverDownloadController onInit');
 
     IsolateNameServer.registerPortWithName(
         flutterDownloaderPort.sendPort, portName);
@@ -102,8 +102,9 @@ class ArchiverDownloadController extends GetxController {
       return;
     }
 
-    archiverTaskMap[_key] = archiverTaskMap[_key]!
-        .copyWith(status: status.value, progress: progress);
+    archiverTaskMap[_key]
+      ?..status = status.value
+      ..progress = progress;
 
     final _tag = archiverTaskMap[_key]!.tag;
     if (Get.isRegistered<DownloadViewController>()) {
@@ -133,16 +134,16 @@ class ArchiverDownloadController extends GetxController {
 
     final String? _taskId = await _downloadArchiverFile(url, _downloadPath);
 
-    archiverTaskMap[_tag] = kDefDownloadTaskInfo.copyWith(
-      tag: _tag,
-      gid: gid,
-      type: dlType,
-      taskId: _taskId,
-      title: title,
-      imgUrl: imgUrl,
-      galleryUrl: galleryUrl,
-      filePath: _downloadPath,
-    );
+    // todo copywith
+    archiverTaskMap[_tag] = defDownloadTaskInfo()
+      ..tag = _tag
+      ..gid = gid
+      ..type = dlType
+      ..taskId = _taskId
+      ..title = title
+      ..imgUrl = imgUrl
+      ..galleryUrl = galleryUrl
+      ..filePath = _downloadPath;
 
     _downloadViewAnimateListAdd();
     if (Get.isRegistered<DownloadViewController>()) {
@@ -232,10 +233,9 @@ class ArchiverDownloadController extends GetxController {
             .value;
 
         // 触发ever 保存到GS中
-        archiverTaskMap[_taskInfo.tag!] = _taskInfo.copyWith(
-          status: downloadTask.status.value,
-          progress: downloadTask.progress,
-        );
+        archiverTaskMap[_taskInfo.tag!]
+          ?..status = downloadTask.status.value
+          ..progress = downloadTask.progress;
 
         // 更新视图
         Get.find<DownloadViewController>().update([_taskInfo.tag ?? '']);

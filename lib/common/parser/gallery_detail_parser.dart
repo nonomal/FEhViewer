@@ -103,12 +103,14 @@ List<GalleryComment> parseGalleryComment(Document document) {
           // 如果数组最后一个是纯文本 直接追加文本
           if (commentSpansf.isNotEmpty &&
               (commentSpansf.last.sType == CommentSpanType.text)) {
-            // commentSpansf.last.text += _nodeText;
-            commentSpansf.last = commentSpansf.last
-                .copyWith(text: '${commentSpansf.last.text ?? ''}$_nodeText');
+            commentSpansf.last.text =
+                '${commentSpansf.last.text ?? ''}$_nodeText';
+            // commentSpansf.last = commentSpansf.last
+            //     .copyWith(text: '${commentSpansf.last.text ?? ''}$_nodeText');
           } else {
-            commentSpansf.add(GalleryCommentSpan(text: _nodeText)
-                .copyWithSpanType(CommentSpanType.text));
+            commentSpansf.add(GalleryCommentSpan()
+              ..text = _nodeText
+              ..sType = CommentSpanType.text);
           }
         } else if (node.nodeType == Node.ELEMENT_NODE) {
           // br标签 换行
@@ -116,15 +118,15 @@ List<GalleryComment> parseGalleryComment(Document document) {
             // 如果数组最后一个是纯文本 直接追加文本
             if (commentSpansf.isNotEmpty &&
                 (commentSpansf.last.sType == CommentSpanType.text)) {
-              // commentSpansf.last.text += '\n';
-              commentSpansf.last = commentSpansf.last
-                  .copyWith(text: '${commentSpansf.last.text ?? ''}\n');
+              commentSpansf.last.text = '${commentSpansf.last.text ?? ''}\n';
+              // commentSpansf.last = commentSpansf.last
+              //     .copyWith(text: '${commentSpansf.last.text ?? ''}\n');
             } else {
-              // commentSpansf.add(GalleryCommentSpan()
-              //   ..text = '\n'
-              //   ..sType = CommentSpanType.text);
-              commentSpansf.add(const GalleryCommentSpan(text: '\n')
-                  .copyWithSpanType(CommentSpanType.text));
+              commentSpansf.add(GalleryCommentSpan()
+                ..text = '\n'
+                ..sType = CommentSpanType.text);
+              // commentSpansf.add(const GalleryCommentSpan(text: '\n')
+              //     .copyWithSpanType(CommentSpanType.text));
             }
             continue;
           }
@@ -133,10 +135,10 @@ List<GalleryComment> parseGalleryComment(Document document) {
           if (node.localName == 'span' && node.children.isNotEmpty) {
             final Element? _nodeElm = node.children.first;
             final String _nodeHref = _nodeElm?.attributes['href'] ?? '';
-            final GalleryCommentSpan _commentSpan = GalleryCommentSpan(
-              text: _nodeElm?.text.trim() ?? _nodeHref,
-              href: _nodeHref,
-            ).copyWithSpanType(CommentSpanType.linkText);
+            final GalleryCommentSpan _commentSpan = GalleryCommentSpan()
+              ..text = _nodeElm?.text.trim() ?? _nodeHref
+              ..href = _nodeHref
+              ..sType = CommentSpanType.linkText;
 
             commentSpansf.add(_commentSpan);
             continue;
@@ -152,11 +154,11 @@ List<GalleryComment> parseGalleryComment(Document document) {
               final Element? _imgElm = _nodeElm?.children
                   .firstWhere((element) => element.localName == 'img');
               final _nodeImageUrl = _imgElm?.attributes['src'];
-              final GalleryCommentSpan _commentSpan = GalleryCommentSpan(
-                text: _nodeElm?.text.trim() ?? _nodeHref,
-                href: _nodeHref,
-                imageUrl: _nodeImageUrl,
-              ).copyWithSpanType(CommentSpanType.linkImage);
+              final GalleryCommentSpan _commentSpan = GalleryCommentSpan()
+                ..text = _nodeElm?.text.trim() ?? _nodeHref
+                ..href = _nodeHref
+                ..imageUrl = _nodeImageUrl
+                ..sType = CommentSpanType.linkImage;
 
               commentSpansf.add(_commentSpan);
               continue;
@@ -164,13 +166,16 @@ List<GalleryComment> parseGalleryComment(Document document) {
               // 如果数组最后一个是纯文本 直接追加文本
               if (commentSpansf.isNotEmpty &&
                   (commentSpansf.last.sType == CommentSpanType.text)) {
-                // commentSpansf.last.text += _nodeElm.text;
-                commentSpansf.last = commentSpansf.last.copyWith(
-                    text: '${commentSpansf.last.text}${_nodeElm?.text ?? ''}');
+                commentSpansf.last.text =
+                    '${commentSpansf.last.text}${_nodeElm?.text ?? ''}';
+                // commentSpansf.last = commentSpansf.last.copyWith(
+                //     text: '${commentSpansf.last.text}${_nodeElm?.text ?? ''}');
               } else {
                 commentSpansf.add(
-                    GalleryCommentSpan(text: _nodeElm?.text ?? _nodeHref)
-                        .copyWithSpanType(CommentSpanType.text));
+                  GalleryCommentSpan()
+                    ..text = _nodeElm?.text ?? _nodeHref
+                    ..sType = CommentSpanType.text,
+                );
               }
             }
           }
@@ -180,25 +185,25 @@ List<GalleryComment> parseGalleryComment(Document document) {
             final Element? _nodeElm = node;
             final String _nodeImageUrl = _nodeElm?.attributes['src'] ?? '';
 
-            final _commentSpan = GalleryCommentSpan(
-              text: _nodeElm?.text.trim() ?? _nodeImageUrl,
-              imageUrl: _nodeImageUrl,
-            ).copyWithSpanType(CommentSpanType.image);
+            final _commentSpan = GalleryCommentSpan()
+              ..text = _nodeElm?.text.trim() ?? _nodeImageUrl
+              ..imageUrl = _nodeImageUrl
+              ..sType = CommentSpanType.image;
 
             commentSpansf.add(_commentSpan);
           }
         }
       }
 
-      _galleryComment.add(GalleryComment(
-          id: _id,
-          canEdit: _canEdit,
-          canVote: _canVote,
-          vote: _vote,
-          name: postName,
-          span: commentSpansf,
-          time: postTimeLocal,
-          score: score));
+      _galleryComment.add(GalleryComment()
+        ..id = _id
+        ..canEdit = _canEdit
+        ..canVote = _canVote
+        ..vote = _vote
+        ..name = postName
+        ..span = commentSpansf
+        ..time = postTimeLocal
+        ..score = score);
     } catch (e, stack) {
       // logger.e('解析评论异常\n' + e.toString() + '\n' + stack.toString());
     }
@@ -236,15 +241,16 @@ Future<List<TagGroup>> parseGalleryTags(Document document) async {
           tagVote = -1;
         }
 
-        galleryTags.add(GalleryTag(
-          title: title,
-          type: type,
-          vote: tagVote,
-          tagTranslat: tagTranslat,
-        ));
+        galleryTags.add(GalleryTag()
+          ..title = title
+          ..type = type
+          ..vote = tagVote
+          ..tagTranslat = tagTranslat);
       }
 
-      _tagGroup.add(TagGroup(tagType: type, galleryTags: galleryTags));
+      _tagGroup.add(TagGroup()
+        ..tagType = type
+        ..galleryTags = galleryTags);
     } catch (e, stack) {
       // logger.e('解析tag数据异常\n' + e.toString() + '\n' + stack.toString());
       // rethrow;
@@ -371,30 +377,29 @@ Future<GalleryItem> parseGalleryDetail(String response) async {
   // uploader
   final _uploader = document.querySelector('#gdn > a')?.text.trim() ?? '';
 
-  final galleryItem = GalleryItem(
-    imgUrl: _imageUrl,
-    tagGroup: await parseGalleryTags(document),
-    galleryComment: parseGalleryComment(document),
-    galleryImages: parseGalleryImage(document),
-    favTitle: _favTitle,
-    favcat: _favcat,
-    apiuid: _apiuid,
-    apikey: _apikey,
-    archiverLink: _archiverLink,
-    colorRating: _colorRating,
-    isRatinged: _isRatinged,
-    favoritedCount: _favoritedCount,
-    ratingCount: _ratingCount,
-    ratingFallBack: _ratingFB,
-    rating: _ratingNum,
-    englishTitle: _englishTitle,
-    japaneseTitle: _japaneseTitle,
-    torrentcount: _torrentcount,
-    language: _language,
-    filesizeText: _fileSize,
-    category: _category,
-    uploader: _uploader,
-  );
+  final galleryItem = GalleryItem()
+    ..imgUrl = _imageUrl
+    ..tagGroup = await parseGalleryTags(document)
+    ..galleryComment = parseGalleryComment(document)
+    ..galleryImages = parseGalleryImage(document)
+    ..favTitle = _favTitle
+    ..favcat = _favcat
+    ..apiuid = _apiuid
+    ..apikey = _apikey
+    ..archiverLink = _archiverLink
+    ..colorRating = _colorRating
+    ..isRatinged = _isRatinged
+    ..favoritedCount = _favoritedCount
+    ..ratingCount = _ratingCount
+    ..ratingFallBack = _ratingFB
+    ..rating = _ratingNum
+    ..englishTitle = _englishTitle
+    ..japaneseTitle = _japaneseTitle
+    ..torrentcount = _torrentcount
+    ..language = _language
+    ..filesizeText = _fileSize
+    ..category = _category
+    ..uploader = _uploader;
 
   return galleryItem;
 }
@@ -429,15 +434,14 @@ List<GalleryImage> parseGalleryImage(Document document) {
       final Element? imgElem = pic.querySelector('img');
       final String picSer = imgElem?.attributes['alt']?.trim() ?? '';
 
-      galleryImages.add(GalleryImage(
-        ser: int.parse(picSer),
-        largeThumb: false,
-        href: picHref,
-        thumbUrl: picSrcUrl,
-        thumbHeight: double.parse(height),
-        thumbWidth: double.parse(width),
-        offSet: double.parse(offSet),
-      ));
+      galleryImages.add(GalleryImage()
+        ..ser = int.parse(picSer)
+        ..largeThumb = false
+        ..href = picHref
+        ..thumbUrl = picSrcUrl
+        ..thumbHeight = double.parse(height)
+        ..thumbWidth = double.parse(width)
+        ..offSet = double.parse(offSet));
     }
   } else {
     final List<Element> picLsit = document.querySelectorAll('#gdt > div.gdtl');
@@ -448,11 +452,11 @@ List<GalleryImage> parseGalleryImage(Document document) {
       final String picSer = imgElem?.attributes['alt']?.trim() ?? '';
       final String picSrcUrl = imgElem?.attributes['src']?.trim() ?? '';
 
-      galleryImages.add(GalleryImage(
-          ser: int.parse(picSer),
-          largeThumb: true,
-          href: picHref,
-          thumbUrl: picSrcUrl));
+      galleryImages.add(GalleryImage()
+        ..ser = int.parse(picSer)
+        ..largeThumb = true
+        ..href = picHref
+        ..thumbUrl = picSrcUrl);
     }
   }
 

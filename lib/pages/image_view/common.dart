@@ -96,11 +96,15 @@ class GalleryPara {
 
         _url = _imageFromApi?.imageUrl ?? '';
 
-        _image = _image.copyWith(
-          imageUrl: _url,
-          imageWidth: _imageFromApi?.imageWidth,
-          imageHeight: _imageFromApi?.imageHeight,
-        );
+        // _image = _image.copyWith(
+        //   imageUrl: _url,
+        //   imageWidth: _imageFromApi?.imageWidth,
+        //   imageHeight: _imageFromApi?.imageHeight,
+        // );
+        _image
+          ..imageUrl = _url
+          ..imageWidth = _imageFromApi?.imageWidth
+          ..imageHeight = _imageFromApi?.imageHeight;
 
         _processingSerSet.remove(_ser);
       }
@@ -119,7 +123,7 @@ class GalleryPara {
       if (_future != null) {
         final GalleryImage? value = await _future;
         // logger.d('yield rult ser ${value?.ser}  ${value?.toJson()}');
-        yield value?.copyWith(completeCache: true);
+        yield value?..completeCache = true;
         _map.remove(_url);
         continue;
       }
@@ -140,7 +144,7 @@ class GalleryPara {
     /// 预缓存图片
     try {
       await precacheImage(imageProvider, Get.context!);
-      return image.copyWith(completeCache: true);
+      return image..completeCache = true;
     } catch (e, stack) {
       logger.e('$e /n $stack');
       return null;

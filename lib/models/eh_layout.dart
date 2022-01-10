@@ -1,38 +1,13 @@
-import 'package:flutter/foundation.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'eh_layout.g.dart';
 
-@immutable
+@JsonSerializable()
 class EhLayout {
+  EhLayout();
+
+  num? sideProportion;
   
-  const EhLayout({
-    this.sideProportion,
-  });
-
-  final double? sideProportion;
-
-  factory EhLayout.fromJson(Map<String,dynamic> json) => EhLayout(
-    sideProportion: json['sideProportion'] != null ? json['sideProportion'] as double : null
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'sideProportion': sideProportion
-  };
-
-  EhLayout clone() => EhLayout(
-    sideProportion: sideProportion
-  );
-
-    
-  EhLayout copyWith({
-    double? sideProportion
-  }) => EhLayout(
-    sideProportion: sideProportion ?? this.sideProportion,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is EhLayout && sideProportion == other.sideProportion;
-
-  @override
-  int get hashCode => sideProportion.hashCode;
+  factory EhLayout.fromJson(Map<String,dynamic> json) => _$EhLayoutFromJson(json);
+  Map<String, dynamic> toJson() => _$EhLayoutToJson(this);
 }

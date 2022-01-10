@@ -169,9 +169,12 @@ class _GalleryInfoBarState extends State<GalleryInfoBar> {
                           children: <Widget>[
                             // 评分
                             GalleryRating(
-                              rating: controller.galleryItem?.rating ?? 0,
-                              ratingFB:
-                                  controller.galleryItem?.ratingFallBack ?? 0,
+                              rating:
+                                  controller.galleryItem?.rating as double? ??
+                                      0,
+                              ratingFB: controller.galleryItem?.ratingFallBack
+                                      as double? ??
+                                  0,
                               color: ThemeColors.colorRatingMap[
                                   controller.galleryItem?.colorRating?.trim() ??
                                       'ir'],

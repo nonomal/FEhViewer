@@ -298,9 +298,9 @@ class _ViewImageState extends State<ViewImage> with TickerProviderStateMixin {
                         //     .imageMap[widget.imageSer]!
                         //     .copyWith(filePath: _image.filePath!);
                         vState.galleryPageController.uptImageBySer(
-                            ser: _image.ser,
+                            ser: _image.ser as int,
                             image: vState.imageMap[widget.imageSer]!
-                                .copyWith(filePath: _image.filePath!));
+                              ..filePath = _image.filePath!);
 
                         // logger
                         //     .d('${vState.imageMap[widget.imageSer]?.toJson()}');
@@ -329,9 +329,8 @@ class _ViewImageState extends State<ViewImage> with TickerProviderStateMixin {
                           if (_tmpImage != null &&
                               !(_tmpImage.completeHeight ?? false)) {
                             vState.galleryPageController.uptImageBySer(
-                                ser: _image.ser,
-                                image:
-                                    _tmpImage.copyWith(completeHeight: true));
+                                ser: _image.ser as int,
+                                image: _tmpImage..completeHeight = true);
 
                             logger.v('upt _tmpImage ${_tmpImage.ser}');
                             Future.delayed(const Duration(milliseconds: 100))

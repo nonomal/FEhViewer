@@ -150,7 +150,8 @@ class ViewExtController extends GetxController {
       )
           .listen((GalleryImage? event) {
         if (event != null) {
-          _galleryPageController.uptImageBySer(ser: event.ser, image: event);
+          _galleryPageController.uptImageBySer(
+              ser: event.ser as int, image: event);
         }
       });
     }
@@ -248,7 +249,8 @@ class ViewExtController extends GetxController {
       )
           .listen((GalleryImage? event) {
         if (event != null) {
-          _galleryPageController.uptImageBySer(ser: event.ser, image: event);
+          _galleryPageController.uptImageBySer(
+              ser: event.ser as int, image: event);
         }
       });
     }
@@ -345,11 +347,10 @@ class ViewExtController extends GetxController {
         imageTask.filePath != null &&
         imageTask.filePath!.isNotEmpty &&
         imageTask.status == TaskStatus.complete.value) {
-      return GalleryImage(
-        ser: itemSer,
-        completeDownload: true,
-        filePath: path.join(dir, imageTask.filePath!),
-      );
+      return GalleryImage()
+        ..ser = itemSer
+        ..completeDownload = true
+        ..filePath = path.join(dir, imageTask.filePath!);
     }
   }
 
@@ -402,7 +403,8 @@ class ViewExtController extends GetxController {
     )
         .listen((GalleryImage? event) {
       if (event != null) {
-        _galleryPageController.uptImageBySer(ser: event.ser, image: event);
+        _galleryPageController.uptImageBySer(
+            ser: event.ser as int, image: event);
       }
     });
 
@@ -435,7 +437,7 @@ class ViewExtController extends GetxController {
     }
     _galleryPageController.uptImageBySer(
       ser: itemSer,
-      image: _currentImage.copyWith(imageUrl: ''),
+      image: _currentImage..imageUrl = '',
     );
 
     // 换源重载

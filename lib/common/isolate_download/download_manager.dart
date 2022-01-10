@@ -211,7 +211,7 @@ class DownloadManagerIsolate {
                       gid: _galleryTask.gid,
                       token: _galleryTask.token,
                       href: e.href,
-                      ser: e.ser,
+                      ser: e.ser as int,
                     ))
                 .toList();
             _imageTaskDao.insertImageTasks(_galleryImageTasks);

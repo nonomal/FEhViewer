@@ -18,8 +18,7 @@ class FavoriteTabberController extends DefaultTabViewController {
   Map<String, FavoriteSubListController> subControllerMap = {};
 
   FavConfig? get favConfig => Global.profile.favConfig;
-  set favConfig(FavConfig? val) =>
-      Global.profile = Global.profile.copyWith(favConfig: val);
+  set favConfig(FavConfig? val) => Global.profile.favConfig = val;
 
   final _currFavcat = 'a'.obs;
   String get currFavcat => _currFavcat.value;
@@ -46,10 +45,10 @@ class FavoriteTabberController extends DefaultTabViewController {
     }
 
     // index
-    index = favConfig?.lastIndex ?? 0;
+    index = favConfig?.lastIndex as int? ?? 0;
     ever<int>(_index, (value) {
-      favConfig =
-          favConfig?.copyWith(lastIndex: value) ?? FavConfig(lastIndex: value);
+      favConfig = (favConfig?..lastIndex = value) ?? FavConfig()
+        ..lastIndex = value;
       Global.saveProfile();
     });
   }

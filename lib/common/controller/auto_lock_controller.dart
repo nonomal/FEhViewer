@@ -10,8 +10,7 @@ import '../global.dart';
 
 class AutoLockController extends GetxController {
   AutoLock get autoLock => Global.profile.autoLock;
-  set autoLock(AutoLock val) =>
-      Global.profile = Global.profile.copyWith(autoLock: val);
+  set autoLock(AutoLock val) => Global.profile.autoLock = val;
   final EhConfigService _ehConfigService = Get.find();
 
   static final IOSAuthMessages iosStrings = IOSAuthMessages(
@@ -30,7 +29,7 @@ class AutoLockController extends GetxController {
   int get lastLeaveTime => _lastLeaveTime;
   set lastLeaveTime(int val) {
     _lastLeaveTime = val;
-    autoLock = autoLock.copyWith(lastLeaveTime: val);
+    autoLock.lastLeaveTime = val;
     Global.saveProfile();
   }
 
@@ -42,7 +41,7 @@ class AutoLockController extends GetxController {
   bool get isLocking => _isLocking;
   set isLocking(bool val) {
     _isLocking = val;
-    autoLock = autoLock.copyWith(isLocking: val);
+    autoLock.isLocking = val;
     Global.saveProfile();
   }
 

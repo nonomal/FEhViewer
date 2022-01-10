@@ -21,8 +21,7 @@ User parseUserProfile(String html) {
     }
   }
 
-  return kDefUser.copyWith(
-    avatarUrl: _avatarUrl,
-    nickName: nickName,
-  );
+  return defUser()
+    ..avatarUrl = _avatarUrl
+    ..nickName = nickName;
 }

@@ -832,8 +832,8 @@ class _FutureThumblState extends State<FutureThumbl> {
               } else {
                 return LayoutBuilder(builder:
                     (BuildContext context, BoxConstraints constraints) {
-                  final imageSize =
-                      Size(_image.thumbWidth!, _image.thumbHeight!);
+                  final imageSize = Size(_image.thumbWidth! as double,
+                      _image.thumbHeight! as double);
                   final size =
                       Size(constraints.maxWidth, constraints.maxHeight);
                   final FittedSizes fittedSizes =

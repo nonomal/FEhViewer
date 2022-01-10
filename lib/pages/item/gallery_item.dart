@@ -166,10 +166,10 @@ class GalleryItemWidget extends StatelessWidget {
                               // 评分
                               Expanded(
                                   child: _Rating(
-                                rating:
-                                    galleryItemController.galleryItem.rating,
+                                rating: galleryItemController.galleryItem.rating
+                                    as double?,
                                 ratingFallBack: galleryItemController
-                                    .galleryItem.ratingFallBack,
+                                    .galleryItem.ratingFallBack as double?,
                                 colorRating: galleryItemController
                                     .galleryItem.colorRating,
                               )),
@@ -256,7 +256,7 @@ class _CoverImage extends StatelessWidget {
             (_item.imgHeight ?? 0) * coverImageWidth / (_item.imgWidth ?? 0);
       } else {
         // 否者返回实际高度
-        coverImageHeigth = _item.imgHeight;
+        coverImageHeigth = _item.imgHeight as double?;
       }
     }
 
@@ -279,8 +279,8 @@ class _CoverImage extends StatelessWidget {
 
     Widget image = CoverImg(
       imgUrl: _item.imgUrl ?? '',
-      width: _item.imgWidth,
-      height: _item.imgHeight,
+      width: _item.imgWidth as double?,
+      height: _item.imgHeight as double?,
       fit: _fit,
     );
 

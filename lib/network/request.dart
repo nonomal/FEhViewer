@@ -280,7 +280,7 @@ Future<GalleryImage?> fetchImageInfo(
   );
 
   if (httpResponse.ok && httpResponse.data is GalleryImage) {
-    return (httpResponse.data as GalleryImage).copyWith(href: href);
+    return (httpResponse.data as GalleryImage)..href = href;
   } else {
     logger.d('error.runtimeType: ${httpResponse.error.runtimeType}');
   }

@@ -48,7 +48,7 @@ class ThemeService extends ProfileService {
         EnumToString.fromString(ThemesModeEnum.values, Global.profile.theme) ??
             ThemesModeEnum.system;
     everFromEunm(_themeModel, (String value) {
-      Global.profile = Global.profile.copyWith(theme: value);
+      Global.profile.theme = value;
     });
   }
 }

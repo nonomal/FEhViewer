@@ -39,7 +39,7 @@ class QuickSearchController extends ProfileController {
 
     everProfile<List<String>>(searchTextList, (List<String> value) {
       // _profile.searchText = value;
-      Global.profile = Global.profile.copyWith(searchText: value);
+      Global.profile.searchText = value;
     });
   }
 }

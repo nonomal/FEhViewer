@@ -53,7 +53,7 @@ class CustomSubListController extends TabViewController {
     logger.d('${jsonEncode(profile)}');
 
     final fetchConfig = FetchParams(
-      cats: profile?.cats,
+      cats: profile?.cats as int?,
       refresh: refresh,
       cancelToken: cancelToken,
       searchText: profile?.searchText?.join(' '),
@@ -93,7 +93,7 @@ class CustomSubListController extends TabViewController {
     final fetchConfig = FetchParams(
       page: nextPage,
       fromGid: state?.last.gid ?? '0',
-      cats: profile?.cats,
+      cats: profile?.cats as int?,
       refresh: true,
       cancelToken: cancelToken,
       searchText: profile?.searchText?.join(' '),
@@ -115,7 +115,7 @@ class CustomSubListController extends TabViewController {
     cancelToken = CancelToken();
     final fetchConfig = FetchParams(
       page: page,
-      cats: profile?.cats,
+      cats: profile?.cats as int?,
       refresh: true,
       cancelToken: cancelToken,
       searchText: profile?.searchText?.join(' '),
@@ -131,7 +131,7 @@ class CustomSubListController extends TabViewController {
 
       curPage = page;
       minPage = page;
-      nextPage = rult?.nextPage ?? page + 1;
+      nextPage = rult?.nextPage as int? ?? page + 1;
       logger.d('after loadFromPage nextPage is $nextPage');
       if (rult != null) {
         change(rult.gallerys, status: RxStatus.success());

@@ -54,7 +54,8 @@ class GalleryItemFlowLarge extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(0, 0, 4, 0),
           child: StaticRatingBar(
             size: 14.0,
-            rate: galleryItemController.galleryItem.ratingFallBack ?? 0,
+            rate: galleryItemController.galleryItem.ratingFallBack as double? ??
+                0,
             radiusRatio: 1.5,
             colorLight: ThemeColors.colorRatingMap[
                 galleryItemController.galleryItem.colorRating?.trim() ?? 'ir'],
@@ -120,7 +121,7 @@ class GalleryItemFlowLarge extends StatelessWidget {
               constraints.maxWidth /
               (galleryItem.imgWidth ?? 0);
         } else {
-          return galleryItem.imgHeight;
+          return galleryItem.imgHeight as double?;
         }
       }
 

@@ -6,12 +6,10 @@ import 'package:get/get.dart';
 
 class ProfileController extends GetxController {
   EhConfig get ehConfig => Global.profile.ehConfig;
-  set ehConfig(EhConfig val) =>
-      Global.profile = Global.profile.copyWith(ehConfig: val);
+  set ehConfig(EhConfig val) => Global.profile.ehConfig = val;
 
   DownloadConfig get downloadConfig => Global.profile.downloadConfig;
-  set downloadConfig(DownloadConfig val) =>
-      Global.profile.copyWith(downloadConfig: val);
+  set downloadConfig(DownloadConfig val) => Global.profile.downloadConfig = val;
 
   Worker everProfile<T>(RxInterface<T> listener, ValueChanged<T> onChange) {
     return ever<T>(listener, (value) {

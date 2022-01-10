@@ -170,8 +170,8 @@ class GalleryItemSimpleWidget extends StatelessWidget {
               // 圆角
               borderRadius: BorderRadius.circular(6),
               child: CoverImg(
-                  height: _item.imgHeight,
-                  width: _item.imgWidth,
+                  height: _item.imgHeight as double?,
+                  width: _item.imgWidth as double?,
                   imgUrl: galleryItemController.galleryItem.imgUrl ?? ''),
             ),
           ),
@@ -187,7 +187,8 @@ class GalleryItemSimpleWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(0, 0, 4, 0),
           child: StaticRatingBar(
             size: 16.0,
-            rate: galleryItemController.galleryItem.ratingFallBack ?? 0,
+            rate: galleryItemController.galleryItem.ratingFallBack as double? ??
+                0,
             radiusRatio: 1.5,
             colorLight: ThemeColors.colorRatingMap[
                 galleryItemController.galleryItem.colorRating?.trim() ?? 'ir'],

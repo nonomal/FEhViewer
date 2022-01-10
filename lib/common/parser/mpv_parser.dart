@@ -24,9 +24,9 @@ Mpv parserMpvPage(String html) {
     imageList.add(_mpvImage);
   }
 
-  return Mpv(
-    imagelist: imageList,
-    gid: int.parse(gidStr),
-    mpvkey: mpvkey,
-  );
+  return Mpv()
+    ..imagelist= imageList
+    ..gid= int.parse(gidStr)
+    ..mpvkey= mpvkey
+  ;
 }

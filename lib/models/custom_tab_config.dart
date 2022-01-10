@@ -1,45 +1,14 @@
-import 'package:flutter/foundation.dart';
-import 'custom_profile.dart';
+import 'package:json_annotation/json_annotation.dart';
+import "custom_profile.dart";
+part 'custom_tab_config.g.dart';
 
-@immutable
+@JsonSerializable()
 class CustomTabConfig {
+  CustomTabConfig();
+
+  List<CustomProfile>? profiles;
+  num? lastIndex;
   
-  const CustomTabConfig({
-    this.profiles,
-    this.lastIndex,
-  });
-
-  final List<CustomProfile>? profiles;
-  final int? lastIndex;
-
-  factory CustomTabConfig.fromJson(Map<String,dynamic> json) => CustomTabConfig(
-    profiles: json['profiles'] != null ? (json['profiles'] as List? ?? []).map((e) => CustomProfile.fromJson(e as Map<String, dynamic>)).toList() : null,
-    lastIndex: json['lastIndex'] != null ? json['lastIndex'] as int : null
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'profiles': profiles?.map((e) => e.toJson()).toList(),
-    'lastIndex': lastIndex
-  };
-
-  CustomTabConfig clone() => CustomTabConfig(
-    profiles: profiles?.map((e) => e.clone()).toList(),
-    lastIndex: lastIndex
-  );
-
-    
-  CustomTabConfig copyWith({
-    List<CustomProfile>? profiles,
-    int? lastIndex
-  }) => CustomTabConfig(
-    profiles: profiles ?? this.profiles,
-    lastIndex: lastIndex ?? this.lastIndex,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is CustomTabConfig && profiles == other.profiles && lastIndex == other.lastIndex;
-
-  @override
-  int get hashCode => profiles.hashCode ^ lastIndex.hashCode;
+  factory CustomTabConfig.fromJson(Map<String,dynamic> json) => _$CustomTabConfigFromJson(json);
+  Map<String, dynamic> toJson() => _$CustomTabConfigToJson(this);
 }

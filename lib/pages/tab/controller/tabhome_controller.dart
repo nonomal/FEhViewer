@@ -157,7 +157,7 @@ class TabHomeController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _tabConfig = gStore.tabConfig ?? (const TabConfig(tabItemList: []));
+    _tabConfig = gStore.tabConfig ?? (TabConfig()..tabItemList = []);
 
     if (_tabConfig.tabMap.isNotEmpty) {
       final List<String> _tabConfigNames =
@@ -182,7 +182,9 @@ class TabHomeController extends GetxController {
       // logger.d('add tab $_addTabs');
 
       for (final viewName in _addTabs) {
-        _tabConfig.tabItemList.add(TabItem(name: viewName, enable: false));
+        _tabConfig.tabItemList.add(TabItem()
+          ..name = viewName
+          ..enable = false);
       }
 
       tabMap(_tabConfig.tabMap);

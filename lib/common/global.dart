@@ -77,7 +77,7 @@ class Global {
 
   // static Profile profile = kDefProfile.copyWith(
   //     ehConfig: kDefEhConfig.copyWith(safeMode: Platform.isIOS));
-  static Profile profile = kDefProfile.copyWith(ehConfig: kDefEhConfig);
+  static Profile profile = defProfile()..ehConfig = defEhConfig();
 
   static List<GalleryCache> galleryCaches = <GalleryCache>[];
 
@@ -101,7 +101,7 @@ class Global {
   static bool canCheckBiometrics = false;
 
   User get user => profile.user;
-  set user(User val) => profile = profile.copyWith(user: val);
+  set user(User val) => profile.user = val;
 
   static Future<EhDatabase> getDatabase({String? path}) async {
     return await $FloorEhDatabase
@@ -209,7 +209,9 @@ class Global {
     await _checkReset();
 
     _initProfile();
-    Get.lazyPut(() => profile.webdav ?? const WebdavProfile(url: ''),
+    Get.lazyPut(
+        () => profile.webdav ?? WebdavProfile()
+          ..url = '',
         fenix: true);
 
     if (profile.dnsConfig.enableDomainFronting ?? false) {
@@ -236,7 +238,7 @@ class Global {
 
     if (double.parse(cleanVer) < EHConst.cleanDataVer) {
       logger.d('clean');
-      profile = kDefProfile;
+      profile = defProfile();
       saveProfile();
       StorageUtil().setString(CLEAN_VER, '${EHConst.cleanDataVer}');
     }

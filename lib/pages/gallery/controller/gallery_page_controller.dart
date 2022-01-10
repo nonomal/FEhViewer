@@ -62,13 +62,12 @@ class GalleryPageController extends GetxController
   }) {
     isRatinged = true;
 
-    galleryItem = galleryItem?.copyWith(
-      isRatinged: true,
-      ratingFallBack: ratingUsr,
-      rating: ratingAvg,
-      ratingCount: ratingCnt.toString(),
-      colorRating: colorRating,
-    );
+    galleryItem = galleryItem
+      ?..isRatinged = true
+      ..ratingFallBack = ratingUsr
+      ..rating = ratingAvg
+      ..ratingCount = ratingCnt.toString()
+      ..colorRating = colorRating;
 
     logger.d('update GetIds.PAGE_VIEW_HEADER');
     update([GetIds.PAGE_VIEW_HEADER]);
@@ -85,7 +84,8 @@ class GalleryPageController extends GetxController
   }
 
   List<GalleryImage> get images => galleryItem?.galleryImages ?? [];
-  Map<int, GalleryImage> get imageMap => galleryItem?.imageMap ?? {};
+  Map<int, GalleryImage> get imageMap =>
+      galleryItem?.imageMap as Map<int, GalleryImage>? ?? {};
   set imageMap(Map<int, GalleryImage> val) {}
   int get filecount => int.parse(galleryItem?.filecount ?? '0');
 
@@ -159,8 +159,10 @@ class GalleryPageController extends GetxController
       final String gid = urlRult?.group(3) ?? '';
       final String token = urlRult?.group(4) ?? '';
 
-      galleryItem =
-          GalleryItem(url: galleryRepository!.url, gid: gid, token: token);
+      galleryItem = GalleryItem()
+        ..url = galleryRepository!.url
+        ..gid = gid
+        ..token = token;
     } else {
       galleryItem = galleryRepository!.item!;
     }
@@ -168,9 +170,8 @@ class GalleryPageController extends GetxController
     _loadData();
 
     // 初始
-    _galleryCacheController
-        .getGalleryCache(galleryItem?.gid ?? '')
-        .then((_galleryCache) => lastIndex = _galleryCache?.lastIndex ?? 0);
+    _galleryCacheController.getGalleryCache(galleryItem?.gid ?? '').then(
+        (_galleryCache) => lastIndex = _galleryCache?.lastIndex as int? ?? 0);
 
     logger.v('GalleryPageController $pageCtrlDepth onInit end');
   }
@@ -213,7 +214,7 @@ class GalleryPageController extends GetxController
 
   void setImageAfterRequest(List<GalleryImage>? images) {
     if (images?.isNotEmpty ?? false) {
-      galleryItem = galleryItem?.copyWith(galleryImages: images);
+      galleryItem?.galleryImages = images;
     }
 
     _firstPageImage =
@@ -238,8 +239,7 @@ class GalleryPageController extends GetxController
 
   /// 是否存在本地收藏中
   set localFav(bool value) {
-    // galleryItem.localFav = value;
-    galleryItem = galleryItem?.copyWith(localFav: value);
+    galleryItem?.localFav = value;
   }
 
   bool get localFav => galleryItem?.localFav ?? false;
@@ -259,11 +259,11 @@ class GalleryPageController extends GetxController
 
       // 检查画廊是否包含在本地收藏中
       final bool _localFav = _isInLocalFav(galleryItem?.gid ?? '0');
-      galleryItem = galleryItem?.copyWith(localFav: _localFav);
+      galleryItem?.localFav = _localFav;
 
       final String? _oriColorRating = galleryItem?.colorRating;
       final String? _oriRatingCount = galleryItem?.ratingCount;
-      final double? _oriRatingFallBack = galleryItem?.ratingFallBack;
+      final double? _oriRatingFallBack = galleryItem?.ratingFallBack as double?;
       final bool? _oriIsRatinged = galleryItem?.isRatinged;
 
       time.showTime('start get galleryItem');
@@ -289,12 +289,13 @@ class GalleryPageController extends GetxController
           // 评分状态更新
           isRatinged = galleryItem?.isRatinged ?? false;
         } else {
-          galleryItem = galleryItem?.copyWith(
-            ratingFallBack: galleryItem?.ratingFallBack ?? _oriRatingFallBack,
-            ratingCount: galleryItem?.ratingCount ?? _oriRatingCount,
-            colorRating: _oriColorRating,
-            // isRatinged: _oriIsRatinged,
-          );
+          galleryItem
+                ?..ratingFallBack =
+                    galleryItem?.ratingFallBack ?? _oriRatingFallBack
+                ..ratingCount = galleryItem?.ratingCount ?? _oriRatingCount
+                ..colorRating = _oriColorRating
+              // isRatinged: _oriIsRatinged,
+              ;
 
           // 评分状态更新
           isRatinged = galleryItem?.isRatinged ?? false;
@@ -307,8 +308,7 @@ class GalleryPageController extends GetxController
         }
       } catch (_) {}
 
-      galleryItem = galleryItem?.copyWith(
-          imgUrl: galleryItem?.imgUrl ?? galleryItem?.imgUrlL);
+      galleryItem?.imgUrl = galleryItem?.imgUrl ?? galleryItem?.imgUrlL;
 
       // 加入历史
       if (galleryItem != null && galleryItem?.gid != null) {
@@ -626,13 +626,12 @@ class GalleryPageController extends GetxController
             return _curImages;
           }
 
-          final GalleryImage _imageCopyWith = _curImages.copyWith(
-            sourceId: _image.sourceId,
-            imageUrl: _image.imageUrl,
-            imageWidth: _image.imageWidth,
-            imageHeight: _image.imageHeight,
-            originImageUrl: _image.originImageUrl,
-          );
+          final GalleryImage _imageCopyWith = _curImages
+            ..sourceId = _image.sourceId
+            ..imageUrl = _image.imageUrl
+            ..imageWidth = _image.imageWidth
+            ..imageHeight = _image.imageHeight
+            ..originImageUrl = _image.originImageUrl;
 
           logger.v('_imageCopyWith ${_imageCopyWith.toJson()}');
 
@@ -658,7 +657,7 @@ class GalleryPageController extends GetxController
       fileCount: int.parse(galleryItem?.filecount ?? '0'),
       title: title,
       coverUrl: galleryItem?.imgUrl,
-      rating: galleryItem?.rating,
+      rating: galleryItem?.rating as double?,
       uploader: galleryItem?.uploader,
       category: galleryItem?.category,
     );

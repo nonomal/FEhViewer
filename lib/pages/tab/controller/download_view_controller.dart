@@ -102,7 +102,7 @@ class DownloadViewController extends GetxController {
   // Archiver恢复任务
   Future<void> resumeArchiverDownload(int index) async {
     final String? _oriTaskid = archiverTasks[index].taskId;
-    final int? _oriStatus = archiverTasks[index].status;
+    final int? _oriStatus = archiverTasks[index].status as int?;
 
     String? _newTaskId = '';
     if (_oriStatus == DownloadTaskStatus.paused.value) {
@@ -115,17 +115,15 @@ class DownloadViewController extends GetxController {
     if (_newTaskId != null &&
         _newTaskId.isNotEmpty &&
         archiverTasks[index].tag != null) {
-      _archiverDownloadController.archiverTaskMap[archiverTasks[index].tag!] =
-          _archiverDownloadController
-              .archiverTaskMap[archiverTasks[index].tag!]!
-              .copyWith(taskId: _newTaskId);
+      _archiverDownloadController
+          .archiverTaskMap[archiverTasks[index].tag!]?.taskId = _newTaskId;
     }
   }
 
   // Archiver重试任务
   Future<void> retryArchiverDownload(int index) async {
     final String? _oriTaskid = archiverTasks[index].taskId;
-    final int? _oriStatus = archiverTasks[index].status;
+    final int? _oriStatus = archiverTasks[index].status as int?;
 
     String? _newTaskId = '';
     if (_oriStatus == DownloadTaskStatus.paused.value) {
@@ -138,10 +136,12 @@ class DownloadViewController extends GetxController {
     if (_newTaskId != null &&
         _newTaskId.isNotEmpty &&
         archiverTasks[index].tag != null) {
-      _archiverDownloadController.archiverTaskMap[archiverTasks[index].tag!] =
-          _archiverDownloadController
-              .archiverTaskMap[archiverTasks[index].tag!]!
-              .copyWith(taskId: _newTaskId);
+      // _archiverDownloadController.archiverTaskMap[archiverTasks[index].tag!] =
+      //     _archiverDownloadController
+      //         .archiverTaskMap[archiverTasks[index].tag!]!
+      //         .copyWith(taskId: _newTaskId);
+      _archiverDownloadController
+          .archiverTaskMap[archiverTasks[index].tag!]?.taskId = _newTaskId;
     }
   }
 

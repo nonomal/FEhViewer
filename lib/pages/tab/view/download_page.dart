@@ -328,8 +328,8 @@ Widget _downloadArciverItemBuilder(BuildContext context, int _taskIndex) {
         behavior: HitTestBehavior.opaque,
         child: DownloadArchiverItem(
           title: _taskInfo.title ?? '',
-          progress: _taskInfo.progress ?? 0,
-          status: DownloadTaskStatus(_taskInfo.status ?? 0),
+          progress: _taskInfo.progress as int? ?? 0,
+          status: DownloadTaskStatus(_taskInfo.status as int? ?? 0),
           index: _taskIndex,
           coverUrl: _taskInfo.imgUrl,
           galleryUrl: _taskInfo.galleryUrl,

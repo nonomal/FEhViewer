@@ -8,11 +8,11 @@ class AdvanceSearchController extends ProfileController {
   bool get enableAdvance => _enableAdvance.value;
   set enableAdvance(bool val) => _enableAdvance.value = val;
 
-  Rx<AdvanceSearch> advanceSearch = kDefAdvanceSearch.obs;
+  Rx<AdvanceSearch> advanceSearch = defAdvanceSearch().obs;
 
   // 重置高级搜索
   void reset() {
-    advanceSearch(kDefAdvanceSearch);
+    advanceSearch(defAdvanceSearch());
   }
 
   /// 高级搜索参数拼接
@@ -56,15 +56,11 @@ class AdvanceSearchController extends ProfileController {
   void onInit() {
     super.onInit();
     _enableAdvance.value = Global.profile.enableAdvanceSearch;
-    everProfile<bool>(
-        _enableAdvance,
-        (bool value) => Global.profile =
-            Global.profile.copyWith(enableAdvanceSearch: value));
+    everProfile<bool>(_enableAdvance,
+        (bool value) => Global.profile.enableAdvanceSearch = value);
 
     advanceSearch.value = Global.profile.advanceSearch;
-    everProfile<AdvanceSearch>(
-        advanceSearch,
-        (AdvanceSearch value) =>
-            Global.profile = Global.profile.copyWith(advanceSearch: value));
+    everProfile<AdvanceSearch>(advanceSearch,
+        (AdvanceSearch value) => Global.profile.advanceSearch = value);
   }
 }

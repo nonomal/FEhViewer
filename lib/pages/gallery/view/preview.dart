@@ -95,8 +95,8 @@ class PreviewContainer extends StatelessWidget {
         // 缩略小图 需要切割
         return LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final imageSize =
-                Size(galleryImage.thumbWidth!, galleryImage.thumbHeight!);
+            final imageSize = Size(galleryImage.thumbWidth! as double,
+                galleryImage.thumbHeight! as double);
             final size = Size(constraints.maxWidth, constraints.maxHeight);
             final FittedSizes fittedSizes =
                 applyBoxFit(BoxFit.contain, imageSize, size);

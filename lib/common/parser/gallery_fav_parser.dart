@@ -60,7 +60,9 @@ class GalleryFavParser {
       final String favId =
           divs[0].querySelector('input')?.attributes['value']?.trim() ?? '';
       final String favTitle = divs[2].text.trim();
-      favList.add(Favcat(favId: favId, favTitle: favTitle));
+      favList.add(Favcat()
+        ..favId = favId
+        ..favTitle = favTitle);
     }
 
     return favList.sublist(0, 10);
@@ -78,8 +80,7 @@ class GalleryFavParser {
       if (gid != null && gid.isNotEmpty && token != null && token.isNotEmpty) {
         // Global.profile.user.favcat = await gallerySelfavcat(gid, token);
         final favcat = await gallerySelfavcat(gid, token);
-        Global.profile = Global.profile
-            .copyWith(user: Global.profile.user.copyWith(favcat: favcat));
+        Global.profile.user.favcat = favcat;
       }
     }
 
@@ -90,7 +91,6 @@ class GalleryFavParser {
   static Future<void> saveFavcatToProfile(String gid, String token) async {
     // Global.profile.user.favcat = await gallerySelfavcat(gid, token);
     final favcat = await gallerySelfavcat(gid, token);
-    Global.profile = Global.profile
-        .copyWith(user: Global.profile.user.copyWith(favcat: favcat));
+    Global.profile.user.favcat = favcat;
   }
 }

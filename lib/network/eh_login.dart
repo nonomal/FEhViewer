@@ -117,15 +117,15 @@ class EhUserManager {
         await cookieJar.loadForRequest(Uri.parse(EHConst.EX_BASE_URL));
     logger.d('${_cookiesEx.map((e) => '$e').join('\n')} ');
 
-    final User user = kDefUser.copyWith(
-      avatarUrl: _avatarUrl,
-      username: nickame,
-      memberId: cookieMapEx['ipb_member_id'],
-      passHash: cookieMapEx['ipb_pass_hash'],
-      igneous: cookieMapEx['igneous'],
-      hathPerks: cookieMapEx['hath_perks'],
-      sk: cookieMapEx['sk'],
-    );
+    final User user = defUser()
+      ..avatarUrl = _avatarUrl
+      ..username = nickame
+      ..nickName = nickame
+      ..memberId = cookieMapEx['ipb_member_id']
+      ..passHash = cookieMapEx['ipb_pass_hash']
+      ..igneous = cookieMapEx['igneous']
+      ..hathPerks = cookieMapEx['hath_perks']
+      ..sk = cookieMapEx['sk'];
 
     return user;
   }
@@ -169,27 +169,18 @@ class EhUserManager {
       cookieMapEx[cookie.name] = cookie.value;
     }
 
-    final Map<String, String> cookie = {
-      'ipb_member_id': cookieMapEx['ipb_member_id'] ?? '',
-      'ipb_pass_hash': cookieMapEx['ipb_pass_hash'] ?? '',
-      'igneous': cookieMapEx['igneous'] ?? '',
-      'hath_perks': cookieMapEx['hath_perks'] ?? '',
-      'sk': cookieMapEx['sk'] ?? '',
-    };
-
     final List<Cookie> _cookiesEx =
         await cookieJar.loadForRequest(Uri.parse(EHConst.EX_BASE_URL));
     logger.d('${_cookiesEx.map((e) => '$e').join('\n')} ');
 
-    final User user = kDefUser.copyWith(
-      avatarUrl: userinfo.avatarUrl,
-      username: userinfo.username,
-      memberId: cookieMapEx['ipb_member_id'],
-      passHash: cookieMapEx['ipb_pass_hash'],
-      igneous: cookieMapEx['igneous'],
-      hathPerks: cookieMapEx['hath_perks'],
-      sk: cookieMapEx['sk'],
-    );
+    final User user = defUser()
+      ..avatarUrl = userinfo.avatarUrl
+      ..username = userinfo.username
+      ..memberId = cookieMapEx['ipb_member_id']
+      ..passHash = cookieMapEx['ipb_pass_hash']
+      ..igneous = cookieMapEx['igneous']
+      ..hathPerks = cookieMapEx['hath_perks']
+      ..sk = cookieMapEx['sk'];
 
     return user;
   }
@@ -247,23 +238,17 @@ class EhUserManager {
       cookieMapEx[cookie.name] = cookie.value;
     }
 
-    final Map<String, String> cookie = {
-      'ipb_member_id': cookieMapEx['ipb_member_id'] ?? '',
-      'ipb_pass_hash': cookieMapEx['ipb_pass_hash'] ?? '',
-      'igneous': igneous.isNotEmpty ? igneous : cookieMapEx['igneous'] ?? '',
-      'hath_perks': cookieMapEx['hath_perks'] ?? '',
-      'sk': cookieMapEx['sk'] ?? '',
-    };
+    final User user = defUser()
+      ..avatarUrl = userinfo.avatarUrl
+      ..username = userinfo.username
+      ..nickName = userinfo.nickName
+      ..memberId = cookieMapEx['ipb_member_id']
+      ..passHash = cookieMapEx['ipb_pass_hash']
+      ..igneous = cookieMapEx['igneous']
+      ..hathPerks = cookieMapEx['hath_perks']
+      ..sk = cookieMapEx['sk'];
 
-    final User user = kDefUser.copyWith(
-      avatarUrl: userinfo.avatarUrl,
-      username: userinfo.username,
-      memberId: cookieMapEx['ipb_member_id'],
-      passHash: cookieMapEx['ipb_pass_hash'],
-      igneous: cookieMapEx['igneous'],
-      hathPerks: cookieMapEx['hath_perks'],
-      sk: cookieMapEx['sk'],
-    );
+    logger.d('user ${user.toJson()}');
 
     return user;
   }
@@ -279,7 +264,7 @@ class EhUserManager {
     final Document document = parse(response);
 
     final Element? profilenameElm = document.querySelector('#profilename');
-    final String username = profilenameElm?.text ?? '';
+    final String nickName = profilenameElm?.text ?? '';
 
     final Element? avatarElm =
         profilenameElm?.nextElementSibling?.nextElementSibling;
@@ -293,12 +278,11 @@ class EhUserManager {
       }
     }
 
-    logger.d('username $username   ${avatarElm?.outerHtml}');
+    logger.d('nickName $nickName   ${avatarElm?.outerHtml}');
 
-    return kDefUser.copyWith(
-      avatarUrl: _avatarUrl,
-      username: username,
-    );
+    return defUser()
+      ..avatarUrl = _avatarUrl
+      ..nickName = nickName;
   }
 
   /// 获取里站cookie
@@ -322,20 +306,11 @@ class EhUserManager {
       cookieMapEx[cookie.name] = cookie.value;
     }
 
-    final Map<String, String> cookie = {
-      'ipb_member_id': cookieMapEx['ipb_member_id'] ?? '',
-      'ipb_pass_hash': cookieMapEx['ipb_pass_hash'] ?? '',
-      'igneous': cookieMapEx['igneous'] ?? '',
-      'hath_perks': cookieMapEx['hath_perks'] ?? '',
-      'sk': cookieMapEx['sk'] ?? '',
-    };
-
-    userController.user(userController.user.value.copyWith(
-      memberId: cookieMapEx['ipb_member_id'],
-      passHash: cookieMapEx['ipb_pass_hash'],
-      igneous: cookieMapEx['igneous'],
-      hathPerks: cookieMapEx['hath_perks'],
-      sk: cookieMapEx['sk'],
-    ));
+    userController.user()
+      ..memberId = cookieMapEx['ipb_member_id']
+      ..passHash = cookieMapEx['ipb_pass_hash']
+      ..igneous = cookieMapEx['igneous']
+      ..hathPerks = cookieMapEx['hath_perks']
+      ..sk = cookieMapEx['sk'];
   }
 }

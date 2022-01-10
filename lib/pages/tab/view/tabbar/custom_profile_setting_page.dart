@@ -77,50 +77,47 @@ class _CustomProfileSettingPageState extends State<CustomProfileSettingPage> {
 
     logger.d('searchWithminRating $searchWithminRating $minRating');
 
-    customProfile = customProfile.copyWith(
-      enableAdvance: enableAdvance,
-      searchText: searchText,
-      listModeValue: listMode.name,
-      advSearch: customProfile.advSearch?.copyWith(
-            searchGalleryName: searchGalleryName,
-            searchGalleryTags: searchGalleryTags,
-            searchGalleryDesc: searchGalleryDesc,
-            searchToreenFilenames: searchToreenFilenames,
-            onlyShowWhithTorrents: onlyShowWhithTorrents,
-            searchLowPowerTags: searchLowPowerTags,
-            searchDownvotedTags: searchDownvotedTags,
-            searchExpunged: searchExpunged,
-            searchWithminRating: searchWithminRating,
-            minRating: minRating,
-            searchBetweenpage: searchBetweenpage,
-            startPage: startPage,
-            endPage: endPage,
-            disableDFLanguage: disableDFLanguage,
-            disableDFUploader: disableDFUploader,
-            disableDFTags: disableDFTags,
-          ) ??
-          AdvanceSearch(
-            searchGalleryName: searchGalleryName,
-            searchGalleryTags: searchGalleryTags,
-            searchGalleryDesc: searchGalleryDesc,
-            searchToreenFilenames: searchToreenFilenames,
-            onlyShowWhithTorrents: onlyShowWhithTorrents,
-            searchLowPowerTags: searchLowPowerTags,
-            searchDownvotedTags: searchDownvotedTags,
-            searchExpunged: searchExpunged,
-            searchWithminRating: searchWithminRating,
-            minRating: minRating,
-            searchBetweenpage: searchBetweenpage,
-            startPage: startPage ?? '',
-            endPage: endPage ?? '',
-            disableDFLanguage: disableDFLanguage,
-            disableDFUploader: disableDFUploader,
-            disableDFTags: disableDFTags,
-            favSearchName: true,
-            favSearchTags: true,
-            favSearchNote: true,
-          ),
-    );
+    customProfile
+      ..enableAdvance = enableAdvance
+      ..searchText = searchText
+      ..listModeValue = listMode.name
+      ..advSearch = (customProfile.advSearch
+            ?..searchGalleryName = searchGalleryName
+            ..searchGalleryTags = searchGalleryTags
+            ..searchGalleryDesc = searchGalleryDesc
+            ..searchToreenFilenames = searchToreenFilenames
+            ..onlyShowWhithTorrents = onlyShowWhithTorrents
+            ..searchLowPowerTags = searchLowPowerTags
+            ..searchDownvotedTags = searchDownvotedTags
+            ..searchExpunged = searchExpunged
+            ..searchWithminRating = searchWithminRating
+            ..minRating = minRating
+            ..searchBetweenpage = searchBetweenpage
+            ..startPage = startPage ?? ''
+            ..endPage = endPage ?? ''
+            ..disableDFLanguage = disableDFLanguage
+            ..disableDFUploader = disableDFUploader
+            ..disableDFTags = disableDFTags) ??
+          (AdvanceSearch()
+            ..searchGalleryName = searchGalleryName
+            ..searchGalleryTags = searchGalleryTags
+            ..searchGalleryDesc = searchGalleryDesc
+            ..searchToreenFilenames = searchToreenFilenames
+            ..onlyShowWhithTorrents = onlyShowWhithTorrents
+            ..searchLowPowerTags = searchLowPowerTags
+            ..searchDownvotedTags = searchDownvotedTags
+            ..searchExpunged = searchExpunged
+            ..searchWithminRating = searchWithminRating
+            ..minRating = minRating
+            ..searchBetweenpage = searchBetweenpage
+            ..startPage = startPage ?? ''
+            ..endPage = endPage ?? ''
+            ..disableDFLanguage = disableDFLanguage
+            ..disableDFUploader = disableDFUploader
+            ..disableDFTags = disableDFTags
+            ..favSearchName = true
+            ..favSearchTags = true
+            ..favSearchNote = true);
 
     logger.d('${jsonEncode(customProfile)}');
 
@@ -172,7 +169,7 @@ class _CustomProfileSettingPageState extends State<CustomProfileSettingPage> {
     searchExpunged = customProfile.advSearch?.searchExpunged ?? searchExpunged;
     searchWithminRating =
         customProfile.advSearch?.searchWithminRating ?? searchWithminRating;
-    minRating = customProfile.advSearch?.minRating ?? minRating;
+    minRating = customProfile.advSearch?.minRating as int? ?? minRating;
     searchBetweenpage =
         customProfile.advSearch?.searchBetweenpage ?? searchBetweenpage;
     startPage = customProfile.advSearch?.startPage ?? startPage;
@@ -316,8 +313,9 @@ class _CustomProfileSettingPageState extends State<CustomProfileSettingPage> {
                     hideLine: true,
                     onChanged: (value) {
                       logger.d('onChanged name value $value');
-                      customProfile = customProfile.copyWith(
-                          name: value.replaceAll('\n', '').trim());
+                      // customProfile = customProfile.copyWith(
+                      //     name: value.replaceAll('\n', '').trim());
+                      customProfile.name = value.replaceAll('\n', '').trim();
                     },
                     placeholder: L10n.of(context).groupName,
                   ),
@@ -350,9 +348,8 @@ class _CustomProfileSettingPageState extends State<CustomProfileSettingPage> {
                         },
                         groupValue: _listType,
                         onValueChanged: (GalleryListType? value) {
-                          customProfile = customProfile.copyWith(
-                              listTypeValue:
-                                  value?.name ?? GalleryListType.gallery.name);
+                          customProfile.listTypeValue =
+                              value?.name ?? GalleryListType.gallery.name;
                           setState(() {
                             _listType = value ?? GalleryListType.gallery;
                           });
@@ -517,13 +514,13 @@ class _CustomProfileSettingPageState extends State<CustomProfileSettingPage> {
             child: Column(
               children: [
                 GalleryCatFilter(
-                  catNum: customProfile.cats ?? 0,
+                  catNum: customProfile.cats as int? ?? 0,
                   maxCrossAxisExtent: 150,
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
                   onCatNumChanged: (int value) {
                     logger.d('onCatNumChanged $value');
-                    customProfile = customProfile.copyWith(cats: value);
+                    customProfile.cats = value;
                   },
                 ),
                 // Divider(

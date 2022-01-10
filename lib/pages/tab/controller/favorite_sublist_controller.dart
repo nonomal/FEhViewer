@@ -42,8 +42,9 @@ class FavoriteSubListController extends TabViewController {
       logger.v('本地收藏');
       final List<GalleryItem> localFav = _localFavController.loacalFavs;
 
-      return Future<GalleryList>.value(
-          GalleryList(gallerys: localFav, maxPage: 1));
+      return Future<GalleryList>.value(GalleryList()
+        ..gallerys = localFav
+        ..maxPage = 1);
     }
   }
 
@@ -79,7 +80,7 @@ class FavoriteSubListController extends TabViewController {
 
       curPage = page;
       minPage = page;
-      nextPage = rult?.nextPage ?? page + 1;
+      nextPage = rult?.nextPage as int? ?? page + 1;
       logger.d('after loadFromPage nextPage is $nextPage');
       if (rult != null) {
         change(rult.gallerys, status: RxStatus.success());

@@ -22,10 +22,10 @@ class FavoriteSelectorController extends GetxController
   List<Favcat> get favcatList => userController.isLogin
       ? _favcatList.value
       : [
-          Favcat(
-              favTitle: L10n.current.local_favorite,
-              favId: 'l',
-              totNum: _localFavController.loacalFavs.length)
+          Favcat()
+            ..favTitle = L10n.current.local_favorite
+            ..favId = 'l'
+            ..totNum = _localFavController.loacalFavs.length
         ];
 
   final LocalFavController _localFavController = Get.find();
@@ -34,7 +34,7 @@ class FavoriteSelectorController extends GetxController
     int _totnum = 0;
     for (final Favcat favcat in state ?? []) {
       if (favcat.favId != 'a' && favcat.favId != 'l') {
-        _totnum += favcat.totNum ?? 0;
+        _totnum += favcat.totNum as int? ?? 0;
       }
     }
     return _totnum;
@@ -54,24 +54,23 @@ class FavoriteSelectorController extends GetxController
     });
 
     ever<List<Favcat>>(_favcatList, (value) {
-      Global.profile = Global.profile
-          .copyWith(user: Global.profile.user.copyWith(favcat: value));
+      Global.profile.user.favcat = value;
       Global.saveProfile();
     });
   }
 
   void increase(String favId) {
     final _index = _favcatList.indexWhere((element) => element.favId == favId);
-    final int _num = (_favcatList[_index].totNum ?? 0) + 1;
-    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num);
+    final int _num = (_favcatList[_index].totNum as int? ?? 0) + 1;
+    _favcatList[_index]..totNum = _num;
     logger.v(' $_num');
     change(_favcatList, status: RxStatus.success());
   }
 
   void decrease(String favId) {
     final _index = _favcatList.indexWhere((element) => element.favId == favId);
-    final int _num = (_favcatList[_index].totNum ?? 1) - 1;
-    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num);
+    final int _num = (_favcatList[_index].totNum as int? ?? 1) - 1;
+    _favcatList[_index].totNum = _num;
     change(_favcatList, status: RxStatus.success());
   }
 
@@ -86,15 +85,13 @@ class FavoriteSelectorController extends GetxController
 
     final _indexAll = _favcatList.indexWhere((element) => element.favId == 'a');
     if (_indexAll > -1) {
-      _favcatList[_indexAll] =
-          _favcatList[_indexAll].copyWith(totNum: _allNetworkFavcatCount);
+      _favcatList[_indexAll].totNum = _allNetworkFavcatCount;
     }
 
     final _indexLocal =
         _favcatList.indexWhere((element) => element.favId == 'l');
     if (_indexLocal > -1) {
-      _favcatList[_indexLocal] = _favcatList[_indexLocal]
-          .copyWith(totNum: _localFavController.loacalFavs.length);
+      _favcatList[_indexLocal].totNum = _localFavController.loacalFavs.length;
     }
 
     if (isUpdate) {
@@ -126,7 +123,10 @@ class FavoriteSelectorController extends GetxController
         final String favId = catmap['favcat'] ?? '';
 
         _favcatList.add(
-          Favcat(favTitle: favTitle, favId: favId, totNum: 0),
+          Favcat()
+            ..favTitle = favTitle
+            ..favId = favId
+            ..totNum = 0,
         );
       }
 
@@ -136,16 +136,16 @@ class FavoriteSelectorController extends GetxController
     if (!_favcatList.any((element) => element.favId == 'a')) {
       _favcatList.insert(
           0,
-          Favcat(
-              favTitle: L10n.current.all_Favorites,
-              favId: 'a',
-              totNum: _allNetworkFavcatCount));
+          Favcat()
+            ..favTitle = L10n.current.all_Favorites
+            ..favId = 'a'
+            ..totNum = _allNetworkFavcatCount);
     }
     if (!_favcatList.any((element) => element.favId == 'l')) {
-      _favcatList.add(Favcat(
-          favTitle: L10n.current.local_favorite,
-          favId: 'l',
-          totNum: _localFavController.loacalFavs.length));
+      _favcatList.add(Favcat()
+        ..favTitle = L10n.current.local_favorite
+        ..favId = 'l'
+        ..totNum = _localFavController.loacalFavs.length);
     }
   }
 }

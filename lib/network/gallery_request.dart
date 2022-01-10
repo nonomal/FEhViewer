@@ -688,20 +688,35 @@ class Api {
         _translated = EHUtils.getLangeage(tags[0] as String);
       }
 
-      galleryItems[i] = galleryItems[i].copyWith(
-        englishTitle: _englishTitle,
-        japaneseTitle: _japaneseTitle,
-        rating: _rating,
-        imgUrlL: _imgUrlL,
-        filecount: _filecount,
-        uploader: _uploader,
-        category: _category,
-        tagsFromApi: _tagsFromApi,
-        filesize: _filesize,
-        torrentcount: _torrentcount,
-        torrents: _torrents,
-        translated: _translated,
-      );
+      // todo copyWith
+      // galleryItems[i] = galleryItems[i].copyWith(
+      //   englishTitle: _englishTitle,
+      //   japaneseTitle: _japaneseTitle,
+      //   rating: _rating,
+      //   imgUrlL: _imgUrlL,
+      //   filecount: _filecount,
+      //   uploader: _uploader,
+      //   category: _category,
+      //   tagsFromApi: _tagsFromApi,
+      //   filesize: _filesize,
+      //   torrentcount: _torrentcount,
+      //   torrents: _torrents,
+      //   translated: _translated,
+      // );
+
+      galleryItems[i]
+        ..englishTitle = _englishTitle
+        ..japaneseTitle = _japaneseTitle
+        ..rating = _rating
+        ..imgUrlL = _imgUrlL
+        ..filecount = _filecount
+        ..uploader = _uploader
+        ..category = _category
+        ..tagsFromApi = _tagsFromApi
+        ..filesize = _filesize
+        ..torrentcount = _torrentcount
+        ..torrents = _torrents
+        ..translated = _translated;
     }
 
     return galleryItems;
@@ -943,7 +958,8 @@ class Api {
       final fEhProfile = ehProfiles[fepIndex];
       await cleanCookie('sp');
       // await setCookie('sp', '1');
-      await operatorProfile(type: ProfileOpType.select, set: fEhProfile.value);
+      await operatorProfile(
+          type: ProfileOpType.select, set: fEhProfile.value as int?);
       showCookie();
       return true;
     } else if (ehProfiles.isNotEmpty) {
@@ -968,8 +984,9 @@ class Api {
     final String gid = urlRult?.group(3) ?? '';
     final String token = urlRult?.group(4) ?? '';
 
-    final GalleryItem tempGalleryItem =
-        galleryItem.copyWith(gid: gid, token: token);
+    final GalleryItem tempGalleryItem = galleryItem
+      ..gid = gid
+      ..token = token;
 
     final List<GalleryItem> reqGalleryItems = <GalleryItem>[tempGalleryItem];
 
@@ -1283,12 +1300,11 @@ class Api {
 
 //    logger.v('$imageUrl');
 
-    final GalleryImage _reImage = GalleryImage(
-      imageUrl: imageUrl,
-      ser: index + 1,
-      imageWidth: width,
-      imageHeight: height,
-    );
+    final GalleryImage _reImage = GalleryImage()
+      ..imageUrl = imageUrl
+      ..ser = index + 1
+      ..imageWidth = width
+      ..imageHeight = height;
 
     return _reImage;
   }
@@ -1320,7 +1336,7 @@ class Api {
 
     // logger.d('$response ');
 
-    return paraImage(response).copyWith(href: href);
+    return paraImage(response)..href = href;
   }
 
   static Future<void> download(

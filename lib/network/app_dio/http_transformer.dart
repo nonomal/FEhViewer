@@ -197,7 +197,7 @@ class GalleryMpvImageHttpTransformer extends HttpTransformer {
 
     // 请求 api 获取大图信息
     final galleryImage = await mpvLoadImageDispatch(
-      gid: mpvPage.gid!,
+      gid: mpvPage.gid! as int,
       mpvkey: mpvPage.mpvkey!,
       page: _page,
       imgkey: mpvImage.k!,
@@ -323,13 +323,13 @@ class UserLoginTransformer extends HttpTransformer {
       cookieMap[cookie.name] = cookie.value;
     }
 
-    final User user = kDefUser.copyWith(
-      memberId: cookieMap['ipb_member_id'],
-      passHash: cookieMap['ipb_pass_hash'],
-      igneous: cookieMap['igneous'],
-      hathPerks: cookieMap['hath_perks'],
-      sk: cookieMap['sk'],
-    );
+    final User user = defUser()
+      ..memberId = cookieMap['ipb_member_id']
+      ..passHash = cookieMap['ipb_pass_hash']
+      ..igneous = cookieMap['igneous']
+      ..hathPerks = cookieMap['hath_perks']
+      ..sk = cookieMap['sk'];
+    // logger.d('${cookieMap} user ${user.toJson()}');
     return DioHttpResponse<User>.success(user);
   }
 }

@@ -11,14 +11,16 @@ import '../../fetch_list.dart';
 import 'custom_sublist_controller.dart';
 import '../default_tabview_controller.dart';
 
-final CustomProfile profileChinese = CustomProfile(
-    uuid: generateUuidv4(), name: '汉语', searchText: ['l:chinese']);
+final CustomProfile profileChinese = CustomProfile()
+  ..uuid = generateUuidv4()
+  ..name = '汉语'
+  ..searchText = ['l:chinese'];
 
 /// 控制所有自定义列表
 class CustomTabbarController extends DefaultTabViewController {
   CustomTabConfig? get customTabConfig => Global.profile.customTabConfig;
   set customTabConfig(CustomTabConfig? val) =>
-      Global.profile = Global.profile.copyWith(customTabConfig: val);
+      Global.profile.customTabConfig = val;
 
   RxList<CustomProfile> profiles = <CustomProfile>[].obs;
   Map<String, CustomProfile> get profileMap {
@@ -68,31 +70,33 @@ class CustomTabbarController extends DefaultTabViewController {
 
     profiles.value = customTabConfig?.profiles ??
         [
-          CustomProfile(
-                  name: L10n.of(Get.context!).tab_popular,
-                  uuid: generateUuidv4())
-              .copyWithListType(GalleryListType.popular),
-          CustomProfile(
-                  name: L10n.of(Get.context!).tab_gallery,
-                  uuid: generateUuidv4())
-              .copyWithListType(GalleryListType.gallery),
-          CustomProfile(
-                  name: L10n.of(Get.context!).tab_watched,
-                  uuid: generateUuidv4())
-              .copyWithListType(GalleryListType.watched),
+          CustomProfile()
+            ..name = L10n.of(Get.context!).tab_popular
+            ..uuid = generateUuidv4()
+            ..listType = GalleryListType.popular,
+          CustomProfile()
+            ..name = L10n.of(Get.context!).tab_gallery
+            ..uuid = generateUuidv4()
+            ..listType = GalleryListType.gallery,
+          CustomProfile()
+            ..name = L10n.of(Get.context!).tab_watched
+            ..uuid = generateUuidv4()
+            ..listType = GalleryListType.watched,
           if (Get.find<LocaleService>().isLanguageCodeZh) profileChinese,
         ];
 
     ever<List<CustomProfile>>(profiles, (value) {
-      customTabConfig = customTabConfig?.copyWith(profiles: value) ??
-          CustomTabConfig(profiles: value);
+      customTabConfig =
+          (customTabConfig?..profiles = value) ?? CustomTabConfig()
+            ..profiles = value;
       Global.saveProfile();
     });
 
-    index = customTabConfig?.lastIndex ?? 0;
+    index = customTabConfig?.lastIndex as int? ?? 0;
     ever<int>(_index, (value) {
-      customTabConfig = customTabConfig?.copyWith(lastIndex: value) ??
-          CustomTabConfig(lastIndex: value);
+      customTabConfig =
+          (customTabConfig?..lastIndex = value) ?? CustomTabConfig()
+            ..lastIndex = value;
       Global.saveProfile();
     });
 
@@ -164,8 +168,9 @@ class CustomTabbarController extends DefaultTabViewController {
     final profile = profileMap[uuid];
     logger.d('${profile.runtimeType}');
 
-    Get.replace<CustomProfile>(
-        profileMap[uuid] ?? CustomProfile(name: '', uuid: generateUuidv4()));
+    Get.replace<CustomProfile>(profileMap[uuid] ?? CustomProfile()
+      ..name = ''
+      ..uuid = generateUuidv4());
 
     if (isLayoutLarge && topRoute == EHRoutes.customProfileSetting) {
       await Get.offNamed(

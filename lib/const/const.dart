@@ -91,116 +91,110 @@ LoadStateChanged defLoadStateChanged = (ExtendedImageState state) {
   }
 };
 
-const AdvanceSearch kDefAdvanceSearch = AdvanceSearch(
-  searchGalleryName: true,
-  searchGalleryTags: true,
-  searchGalleryDesc: false,
-  searchToreenFilenames: false,
-  onlyShowWhithTorrents: false,
-  searchLowPowerTags: false,
-  searchDownvotedTags: false,
-  searchExpunged: false,
-  searchWithminRating: false,
-  minRating: 2,
-  searchBetweenpage: false,
-  startPage: '',
-  endPage: '',
-  disableDFLanguage: false,
-  disableDFUploader: false,
-  disableDFTags: false,
-  favSearchName: true,
-  favSearchTags: true,
-  favSearchNote: true,
-);
+final AdvanceSearch Function() defAdvanceSearch = () => AdvanceSearch()
+  ..searchGalleryName = true
+  ..searchGalleryTags = true
+  ..searchGalleryDesc = false
+  ..searchToreenFilenames = false
+  ..onlyShowWhithTorrents = false
+  ..searchLowPowerTags = false
+  ..searchDownvotedTags = false
+  ..searchExpunged = false
+  ..searchWithminRating = false
+  ..minRating = 2
+  ..searchBetweenpage = false
+  ..startPage = ''
+  ..endPage = ''
+  ..disableDFLanguage = false
+  ..disableDFUploader = false
+  ..disableDFTags = false
+  ..favSearchName = true
+  ..favSearchTags = true
+  ..favSearchNote = true;
 
-const User kDefUser = User(
-  username: '',
-  avatarUrl: '',
-  favcat: [],
-);
+final User Function() defUser = () => User()
+  ..username = ''
+  ..avatarUrl = ''
+  ..favcat = [];
 
-const DownloadArchiverTaskInfo kDefDownloadTaskInfo = DownloadArchiverTaskInfo(
-  tag: '',
-  gid: '',
-  type: '',
-  title: '',
-  taskId: '',
-  dowmloadType: '',
-  status: 0,
-  progress: 0,
-);
+final defDownloadTaskInfo = () => DownloadArchiverTaskInfo()
+  ..tag = ''
+  ..gid = ''
+  ..type = ''
+  ..title = ''
+  ..taskId = ''
+  ..dowmloadType = ''
+  ..status = 0
+  ..progress = 0;
 
-const GalleryImage kDefGalleryImage = GalleryImage(
-  largeThumb: false,
-  completeCache: false,
-  startPrecache: false,
-  ser: -1,
-  href: '',
-  imageUrl: '',
-  thumbUrl: '',
-  thumbHeight: -1,
-  thumbWidth: -1,
-  imageHeight: -1,
-  imageWidth: -1,
-  offSet: -1,
-  sourceId: '',
-);
+final GalleryImage Function() defGalleryImage = () => GalleryImage()
+  ..largeThumb = false
+  ..completeCache = false
+  ..startPrecache = false
+  ..ser = -1
+  ..href = ''
+  ..imageUrl = ''
+  ..thumbUrl = ''
+  ..thumbHeight = -1
+  ..thumbWidth = -1
+  ..imageHeight = -1
+  ..imageWidth = -1
+  ..offSet = -1
+  ..sourceId = '';
 
-const EhConfig kDefEhConfig = EhConfig(
-  jpnTitle: false,
-  tagTranslat: false,
-  tagTranslatVer: '',
-  favoritesOrder: '',
-  siteEx: false,
-  galleryImgBlur: false,
-  favPicker: false,
-  favLongTap: false,
-  lastFavcat: '0',
-  lastShowFavcat: 'a',
-  lastShowFavTitle: '',
-  listMode: '',
-  safeMode: false,
-  catFilter: 0,
-  maxHistory: 100,
-  searchBarComp: true,
-  pureDarkTheme: false,
-  viewModel: '',
-  clipboardLink: false,
-  commentTrans: false,
-  autoLockTimeOut: -1,
-  showPageInterval: true,
-  orientation: '',
-  vibrate: true,
-  tagIntroImgLv: '',
-  toplist: '15',
-);
+final EhConfig Function() defEhConfig = () => EhConfig()
+  ..jpnTitle = false
+  ..tagTranslat = false
+  ..tagTranslatVer = ''
+  ..favoritesOrder = ''
+  ..siteEx = false
+  ..galleryImgBlur = false
+  ..favPicker = false
+  ..favLongTap = false
+  ..lastFavcat = '0'
+  ..lastShowFavcat = 'a'
+  ..lastShowFavTitle = ''
+  ..listMode = ''
+  ..safeMode = false
+  ..catFilter = 0
+  ..maxHistory = 100
+  ..searchBarComp = true
+  ..pureDarkTheme = false
+  ..viewModel = ''
+  ..clipboardLink = false
+  ..commentTrans = false
+  ..autoLockTimeOut = -1
+  ..showPageInterval = true
+  ..orientation = ''
+  ..vibrate = true
+  ..tagIntroImgLv = ''
+  ..toplist = '15';
 
-const Profile kDefProfile = Profile(
-  user: kDefUser,
-  locale: '',
-  lastLogin: '',
-  theme: '',
-  searchText: [],
-  localFav: LocalFav(gallerys: []),
-  enableAdvanceSearch: false,
-  autoLock: AutoLock(lastLeaveTime: -1, isLocking: false),
-  dnsConfig: DnsConfig(
-    enableDoH: false,
-    enableCustomHosts: false,
-    enableDomainFronting: false,
-    hosts: [],
-    dohCache: [],
-  ),
-  downloadConfig: DownloadConfig(
-    preloadImage: 5,
-    multiDownload: -1,
-    downloadLocation: '',
-    downloadOrigImage: false,
-  ),
-  ehConfig: kDefEhConfig,
-  advanceSearch: kDefAdvanceSearch,
-  favConfig: FavConfig(lastIndex: 0),
-);
+final Profile Function() defProfile = () => Profile()
+  ..user = defUser()
+  ..locale = ''
+  ..lastLogin = ''
+  ..theme = ''
+  ..searchText = []
+  ..localFav = (LocalFav()..gallerys = [])
+  ..enableAdvanceSearch = false
+  ..autoLock = (AutoLock()
+    ..lastLeaveTime = -1
+    ..isLocking = false)
+  ..dnsConfig = (DnsConfig()
+    ..enableDoH = false
+    ..enableCustomHosts = false
+    ..enableDomainFronting = false
+    ..hosts = []
+    ..dohCache = [])
+  ..downloadConfig = (DownloadConfig()
+    ..preloadImage = 5
+    ..multiDownload = -1
+    ..downloadLocation = ''
+    ..downloadOrigImage = false)
+  ..ehConfig = defEhConfig()
+  ..advanceSearch = defAdvanceSearch()
+  ..favConfig = (FavConfig()..lastIndex = 0);
 
 final RegExp regGalleryUrl =
     RegExp(r'https?://e[-x]hentai.org/g/[0-9]+/[0-9a-z]+/?');

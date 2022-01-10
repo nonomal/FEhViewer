@@ -70,10 +70,10 @@ GalleryList parseGalleryList(
     for (final dom.Element elm in favorites) {
       final List<dom.Element> divs = elm.querySelectorAll('div');
       if (divs.isNotEmpty && divs.length >= 3) {
-        final Favcat favcat = Favcat(
-            favId: '$_favId',
-            favTitle: divs[2].text,
-            totNum: int.parse(divs[0].text));
+        final Favcat favcat = Favcat()
+          ..favId = '$_favId'
+          ..favTitle = divs[2].text
+          ..totNum = int.parse(divs[0].text);
         favcatList.add(favcat);
         _favId += 1;
       }
@@ -139,11 +139,11 @@ GalleryList parseGalleryList(
         color = matches.elementAt(0)[0] ?? '';
         backgroundColor = matches.elementAt(3)[0] ?? '';
       }
-      simpleTags.add(SimpleTag(
-          text: tagText,
-          translat: tagText,
-          color: color,
-          backgrondColor: backgroundColor));
+      simpleTags.add(SimpleTag()
+        ..text = tagText
+        ..translat = tagText
+        ..color = color
+        ..backgrondColor = backgroundColor);
     }
 
     /// 判断获取语言标识
@@ -152,12 +152,11 @@ GalleryList parseGalleryList(
       if (simpleTags.isNotEmpty) {
         final SimpleTag? _langTag = simpleTags.firstWhere(
             (SimpleTag element) => EHConst.iso936.keys.contains(element.text),
-            orElse: () => const SimpleTag(
-                  text: '',
-                  translat: '',
-                  color: '',
-                  backgrondColor: '',
-                ));
+            orElse: () => SimpleTag()
+              ..text = ''
+              ..translat = ''
+              ..color = ''
+              ..backgrondColor = '');
 
         _translated = EHUtils.getLangeage(_langTag?.text ?? '');
       }
@@ -251,26 +250,25 @@ GalleryList parseGalleryList(
     }
 
     void _addIiem() {
-      _gallaryItems.add(GalleryItem(
-        gid: gid,
-        token: token,
-        englishTitle: title,
-        imgUrl: imgUrl,
-        imgHeight: imageHeight,
-        imgWidth: imageWidth,
-        url: _path,
-        category: category,
-        simpleTags: simpleTags,
-        postTime: postTimeLocal,
-        ratingFallBack: ratingFB,
-        colorRating: _colorRating,
-        isRatinged: isRatinged,
-        favTitle: favTitle,
-        favcat: favcat,
-        uploader: _uplader,
-        filecount: _filecount,
-        translated: _translated,
-      ));
+      _gallaryItems.add(GalleryItem()
+        ..gid = gid
+        ..token = token
+        ..englishTitle = title
+        ..imgUrl = imgUrl
+        ..imgHeight = imageHeight
+        ..imgWidth = imageWidth
+        ..url = _path
+        ..category = category
+        ..simpleTags = simpleTags
+        ..postTime = postTimeLocal
+        ..ratingFallBack = ratingFB
+        ..colorRating = _colorRating
+        ..isRatinged = isRatinged
+        ..favTitle = favTitle
+        ..favcat = favcat
+        ..uploader = _uplader
+        ..filecount = _filecount
+        ..translated = _translated);
     }
 
     _addIiem();
@@ -286,10 +284,9 @@ GalleryList parseGalleryList(
   }
 
   // return Tuple2(_gallaryItems, _maxPage);
-  return GalleryList(
-    gallerys: _gallaryItems,
-    maxPage: _maxPage,
-    favList: favcatList,
-    nextPage: _nextPage,
-  );
+  return GalleryList()
+    ..gallerys = _gallaryItems
+    ..maxPage = _maxPage
+    ..favList = favcatList
+    ..nextPage = _nextPage;
 }

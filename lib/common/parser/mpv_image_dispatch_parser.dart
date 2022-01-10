@@ -19,13 +19,13 @@ GalleryImage parserMpvImageDispatch(String json) {
   final ser = match?.group(3) ?? '1';
   final gid = match?.group(2) ?? '0';
 
-  return GalleryImage(
-    ser: int.parse(ser),
-    gid: gid,
-    imageUrl: imageUrl,
-    sourceId: '$sourceId',
-    imageWidth: double.parse(width),
-    imageHeight: double.parse(height),
-    originImageUrl: originImageUrl,
-  );
+  return GalleryImage()
+    ..ser= int.parse(ser)
+    ..gid= gid
+    ..imageUrl= imageUrl
+    ..sourceId= '$sourceId'
+    ..imageWidth= double.parse(width)
+    ..imageHeight= double.parse(height)
+    ..originImageUrl= originImageUrl
+  ;
 }

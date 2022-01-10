@@ -59,16 +59,15 @@ GalleryImage paraImage(String htmlText) {
   }
   print('====================>$originImageUrl');
 
-  final GalleryImage _reImage = kDefGalleryImage.copyWith(
-    imageUrl: imageUrl,
-    sourceId: _sourceId,
-    imageWidth: width,
-    imageHeight: height,
-    gid: gid,
-    token: token,
-    ser: ser,
-    originImageUrl: originImageUrl,
-  );
+  final GalleryImage _reImage = defGalleryImage()
+    ..imageUrl = imageUrl
+    ..sourceId = _sourceId
+    ..imageWidth = width
+    ..imageHeight = height
+    ..gid = gid
+    ..token = token
+    ..ser = ser
+    ..originImageUrl = originImageUrl;
 
   return _reImage;
 }

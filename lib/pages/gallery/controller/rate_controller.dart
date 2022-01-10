@@ -19,7 +19,7 @@ class RateController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    rate = pageController.galleryItem?.rating ?? 0;
+    rate = pageController.galleryItem?.rating as double? ?? 0;
   }
 
   Future<void> rating() async {

@@ -35,8 +35,10 @@ EhSettings parseUconfig(String html) {
         defaultProfile = value;
       }
 
-      profileSet.add(
-          EhProfile(name: name, selected: isSelected, value: int.parse(value)));
+      profileSet.add(EhProfile()
+        ..name = name
+        ..selected = isSelected
+        ..value = int.parse(value));
     }
   }
 
@@ -68,7 +70,10 @@ EhSettings parseUconfig(String html) {
   for (int idx = 0; idx <= 9; idx++) {
     final _value = _parseUconfigInput('favorite_$idx', _inputElms);
     if (_value != null) {
-      fav.add(EhSettingItem(type: 'favorite', ser: '$idx', value: _value));
+      fav.add(EhSettingItem()
+        ..type = 'favorite'
+        ..ser = '$idx'
+        ..value = _value);
     }
   }
 
@@ -80,12 +85,11 @@ EhSettings parseUconfig(String html) {
   for (int idx = 1; idx <= 50; idx++) {
     final Element? _elm = document.querySelector('#xn_$idx');
     if (_elm != null) {
-      xn.add(EhSettingItem(
-        type: 'xn',
-        ser: '$idx',
-        value: _elm.attributes['checked'] == 'checked' ? '1' : '0',
-        name: _elm.parent?.text.trim(),
-      ));
+      xn.add(EhSettingItem()
+        ..type = 'xn'
+        ..ser = '$idx'
+        ..value = _elm.attributes['checked'] == 'checked' ? '1' : '0'
+        ..name = _elm.parent?.text.trim());
     }
   }
 
@@ -94,7 +98,10 @@ EhSettings parseUconfig(String html) {
   for (int idx = 0; idx <= 2303; idx++) {
     final Element? _elm = document.querySelector('#xl_$idx');
     if (_elm?.attributes['checked'] == 'checked') {
-      xl.add(EhSettingItem(type: 'xl', ser: '$idx', value: '1'));
+      xl.add(EhSettingItem()
+        ..type = 'xl'
+        ..ser = '$idx'
+        ..value = '1');
     }
   }
 
@@ -156,43 +163,42 @@ EhSettings parseUconfig(String html) {
   // 显示缩略图侧栏 mt
   final mt = _parseUconfigChecked('mt', 1, document);
 
-  return EhSettings(
-    profilelist: profileSet,
-    profileSelected: selectedValue,
-    defaultProfile: defaultProfile,
-    loadImageThroughHAtH: uh,
-    imageSize: xr,
-    galleryNameDisplay: tl,
-    archiverSettings: ar,
-    frontPageSettings: dm,
-    sortOrderFavorites: fs,
-    searchResultCount: rc,
-    mouseOverThumbnails: lt,
-    thumbnailSize: ts,
-    thumbnailRows: tr,
-    sortOrderComments: cs,
-    showCommentVotes: sc,
-    sortOrderTags: tb,
-    showGalleryPageNumbers: pn,
-    hentaiAtHomeLocalNetworkHost: hh,
-    originalImages: oi,
-    alwaysUseMpv: qb,
-    mpvStyle: ms,
-    mpvThumbnailPane: mt,
-    thumbnailScaling: tp,
-    viewportOverride: vp,
-    excludedUploaders: xu,
-    xuQuotaMax: xuQuotaMax,
-    xuQuotaUsing: xuQuotaUsing,
-    tagWatchingThreshold: wt,
-    tagFilteringThreshold: ft,
-    ratings: ru,
-    imageSizeHorizontal: rx,
-    imageSizeVertical: ry,
-    xn: xn,
-    xl: xl,
-    favorites: fav,
-  );
+  return EhSettings()
+    ..profilelist = profileSet
+    ..profileSelected = selectedValue
+    ..defaultProfile = defaultProfile
+    ..loadImageThroughHAtH = uh
+    ..imageSize = xr
+    ..galleryNameDisplay = tl
+    ..archiverSettings = ar
+    ..frontPageSettings = dm
+    ..sortOrderFavorites = fs
+    ..searchResultCount = rc
+    ..mouseOverThumbnails = lt
+    ..thumbnailSize = ts
+    ..thumbnailRows = tr
+    ..sortOrderComments = cs
+    ..showCommentVotes = sc
+    ..sortOrderTags = tb
+    ..showGalleryPageNumbers = pn
+    ..hentaiAtHomeLocalNetworkHost = hh
+    ..originalImages = oi
+    ..alwaysUseMpv = qb
+    ..mpvStyle = ms
+    ..mpvThumbnailPane = mt
+    ..thumbnailScaling = tp
+    ..viewportOverride = vp
+    ..excludedUploaders = xu
+    ..xuQuotaMax = xuQuotaMax
+    ..xuQuotaUsing = xuQuotaUsing
+    ..tagWatchingThreshold = wt
+    ..tagFilteringThreshold = ft
+    ..ratings = ru
+    ..imageSizeHorizontal = rx
+    ..imageSizeVertical = ry
+    ..xn = xn
+    ..xl = xl
+    ..favorites = fav;
 }
 
 String _parseUconfigChecked(String name, int max, Document document) {

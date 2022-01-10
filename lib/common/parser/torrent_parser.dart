@@ -47,16 +47,15 @@ TorrentProvider parseTorrent(String response) {
           RegExp(r'/(get|torrent)/(\d+)/').firstMatch(_href)?.group(2) ?? '';
     }
 
-    torrents.add(GalleryTorrent(
-      posted: _posted,
-      sizeText: _sizeText,
-      seeds: _seeds,
-      peerd: _peers,
-      downloads: _downloads,
-      uploader: _uploader,
-      name: _fileName,
-      hash: _hash,
-    ));
+    torrents.add(GalleryTorrent()
+      ..posted = _posted
+      ..sizeText = _sizeText
+      ..seeds = _seeds
+      ..peerd = _peers
+      ..downloads = _downloads
+      ..uploader = _uploader
+      ..name = _fileName
+      ..hash = _hash);
   }
 
   return TorrentProvider()

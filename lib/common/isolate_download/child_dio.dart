@@ -239,12 +239,13 @@ Future<GalleryImage> _isoParaImageLageInfoFromHtml(
   final double? width = double.parse(_xy?.group(1) ?? '0');
   final double? height = double.parse(_xy?.group(2) ?? '0');
 
-  final GalleryImage _reImage = GalleryImage(
-      imageUrl: imageUrl,
-      sourceId: _sourceId,
-      imageWidth: width,
-      imageHeight: height,
-      ser: -1);
+  // todo copyWith
+  final GalleryImage _reImage = GalleryImage()
+    ..imageUrl = imageUrl
+    ..sourceId = _sourceId
+    ..imageWidth = width
+    ..imageHeight = height
+    ..ser = -1;
 
   return _reImage;
 }

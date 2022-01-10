@@ -1,52 +1,15 @@
-import 'package:flutter/foundation.dart';
-import 'mvp_image.dart';
+import 'package:json_annotation/json_annotation.dart';
+import "mvp_image.dart";
+part 'mpv.g.dart';
 
-@immutable
+@JsonSerializable()
 class Mpv {
+  Mpv();
+
+  String? mpvkey;
+  num? gid;
+  List<MvpImage>? imagelist;
   
-  const Mpv({
-    this.mpvkey,
-    this.gid,
-    this.imagelist,
-  });
-
-  final String? mpvkey;
-  final int? gid;
-  final List<MvpImage>? imagelist;
-
-  factory Mpv.fromJson(Map<String,dynamic> json) => Mpv(
-    mpvkey: json['mpvkey'] != null ? json['mpvkey'] as String : null,
-    gid: json['gid'] != null ? json['gid'] as int : null,
-    imagelist: json['imagelist'] != null ? (json['imagelist'] as List? ?? []).map((e) => MvpImage.fromJson(e as Map<String, dynamic>)).toList() : null
-  );
-  
-  Map<String, dynamic> toJson() => {
-    'mpvkey': mpvkey,
-    'gid': gid,
-    'imagelist': imagelist?.map((e) => e.toJson()).toList()
-  };
-
-  Mpv clone() => Mpv(
-    mpvkey: mpvkey,
-    gid: gid,
-    imagelist: imagelist?.map((e) => e.clone()).toList()
-  );
-
-    
-  Mpv copyWith({
-    String? mpvkey,
-    int? gid,
-    List<MvpImage>? imagelist
-  }) => Mpv(
-    mpvkey: mpvkey ?? this.mpvkey,
-    gid: gid ?? this.gid,
-    imagelist: imagelist ?? this.imagelist,
-  );  
-
-  @override
-  bool operator ==(Object other) => identical(this, other) 
-    || other is Mpv && mpvkey == other.mpvkey && gid == other.gid && imagelist == other.imagelist;
-
-  @override
-  int get hashCode => mpvkey.hashCode ^ gid.hashCode ^ imagelist.hashCode;
+  factory Mpv.fromJson(Map<String,dynamic> json) => _$MpvFromJson(json);
+  Map<String, dynamic> toJson() => _$MpvToJson(this);
 }

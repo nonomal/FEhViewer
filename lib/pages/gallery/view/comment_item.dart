@@ -142,7 +142,7 @@ class CommentItem extends StatelessWidget {
           _groups.add(_group);
         } else {
           // 空行
-          _groups.add([const GalleryCommentSpan(text: '')]);
+          _groups.add([GalleryCommentSpan()..text = '']);
         }
       }
 
