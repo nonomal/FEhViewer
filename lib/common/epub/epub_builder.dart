@@ -164,7 +164,7 @@ Future<String> buildEpub(GalleryTask task, {String? tempPath}) async {
 
   // 写入 metadata.opf
   final metadata = metadataTemplate.render(
-      title: task.title,
+      label: task.title,
       fileNameList: _fileNameList,
       // coverName: _fileNameList.first['name'],
       coverName: coverName,

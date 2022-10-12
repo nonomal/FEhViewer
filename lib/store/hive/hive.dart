@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fehviewer/component/models/index.dart';
 import 'package:fehviewer/models/base/eh_models.dart';
 import 'package:fehviewer/utils/logger.dart';
 import 'package:hive/hive.dart';
@@ -16,6 +17,9 @@ const String usersKey = 'users_info';
 const String profileDelKey = 'delete_profile';
 const String qsLastTimeKey = 'quick_search_last_edit_time';
 const String customImageHideKey = 'custom_image_hide';
+
+///////
+const String settingsKey = 'settings';
 
 const String ehHomeKey = 'eh_home';
 const String viewHistoryMigrationKey = 'viewHistoryMigration';
@@ -213,5 +217,18 @@ class HiveHelper {
 
   Future<void> setDownloadTaskMigration(bool value) async {
     await _configBox.put(downloadTaskMigrationKey, '$value');
+  }
+
+  //////////////
+  Settings? getSettings() {
+    final settings = _configBox.get(settingsKey, defaultValue: '{}') ?? '{}';
+    if (settings.isNotEmpty) {
+      return Settings.fromJson(jsonDecode(settings) as Map<String, dynamic>);
+    }
+    return null;
+  }
+
+  Future<void> setSettings(Settings settings) async {
+    await _configBox.put(settingsKey, jsonEncode(settings.toJson()));
   }
 }

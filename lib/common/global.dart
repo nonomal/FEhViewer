@@ -9,7 +9,7 @@ import 'package:fehviewer/const/storages.dart';
 import 'package:fehviewer/fehviewer.dart';
 import 'package:fehviewer/network/api.dart';
 import 'package:fehviewer/network/app_dio/http_config.dart';
-import 'package:fehviewer/network/app_dio/proxy.dart';
+import 'package:fehviewer/routes/routes.dart';
 import 'package:fehviewer/store/db/isar_helper.dart';
 import 'package:fehviewer/store/get_store.dart';
 import 'package:fehviewer/store/hive/hive.dart';
@@ -28,8 +28,6 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:system_network_proxy/system_network_proxy.dart';
 
-import 'package:system_proxy/system_proxy.dart';
-
 const int kProxyPort = 4041;
 
 final LocalAuthentication localAuth = LocalAuthentication();
@@ -37,6 +35,7 @@ DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
 final HiveHelper hiveHelper = HiveHelper();
 final IsarHelper isarHelper = IsarHelper();
+final ehRouter = AppRouter();
 
 final Global global = Global();
 

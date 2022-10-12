@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.2.71+471
 
 environment:
-  sdk: '>=2.14.0 <3.0.0'
+  sdk: '>=2.17.0 <3.0.0'
 
 dependencies:
   flutter:
@@ -168,6 +168,10 @@ dependencies:
   sentry_flutter: ^6.10.0
   system_network_proxy: ^1.0.2
   flutter_socks_proxy: ^0.0.2
+  hooks_riverpod: ^2.0.2
+  auto_route: ^5.0.1
+  flutter_hooks: ^0.18.5+1
+  dynamic_color: ^1.5.4
 
 
 dev_dependencies:
@@ -193,6 +197,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.1
+  freezed: ^2.1.0+1
+  auto_route_generator: ^5.0.2
+  index_generator: ^3.3.2
 
 dependency_overrides:
 #  json_serializable: ^6.0.1
@@ -206,11 +213,21 @@ flutter_intl:
 flutter:
   uses-material-design: true
 
+# flutter pub run index_generator
+index_generator:
+  exclude:
+    - '**.g.dart'
+    - '**.freezed.dart'
+  indexes:
+    - path: lib/component/models
+      name: index
+    - path: lib/common/parser
+      name: parser
 
-  assets:
-    - assets/
-    - assets/templates/epub/META-INF/
-    - assets/templates/epub/OEBPS/
-    - assets/templates/epub/OEBPS/content/
-    - assets/templates/epub/OEBPS/content/resources/
-    - assets/images/
+assets:
+  - assets/
+  - assets/templates/epub/META-INF/
+  - assets/templates/epub/OEBPS/
+  - assets/templates/epub/OEBPS/content/
+  - assets/templates/epub/OEBPS/content/resources/
+  - assets/images/

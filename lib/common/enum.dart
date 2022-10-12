@@ -44,3 +44,9 @@ enum ProxyType {
   socks4,
   direct,
 }
+
+enum ThemePlatform {
+  cupertino,
+  material,
+  auto,
+}

@@ -19,9 +19,9 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:window_size/window_size.dart';
 
 import 'get_init.dart';
+import 'main_new.dart';
 import 'network/app_dio/pdio.dart';
 
 Future<void> main() async {
@@ -54,7 +54,7 @@ Future<void> main() async {
     resetLogLevel();
     updateTagTranslate();
 
-    runApp(MyApp());
+    runApp(MyApp2());
 
     if (GetPlatform.isDesktop) {
       doWhenWindowReady(() {
