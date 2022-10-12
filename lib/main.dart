@@ -54,7 +54,11 @@ Future<void> main() async {
     resetLogLevel();
     updateTagTranslate();
 
-    runApp(MyApp2());
+    if (kDebugMode) {
+      runApp(MyApp2());
+    } else {
+      runApp(MyApp());
+    }
 
     if (GetPlatform.isDesktop) {
       doWhenWindowReady(() {
