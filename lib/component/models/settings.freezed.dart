@@ -43,7 +43,8 @@ mixin _$Settings {
 /// @nodoc
 abstract class $SettingsCopyWith<$Res> {
   factory $SettingsCopyWith(Settings value, $Res Function(Settings) then) =
-      _$SettingsCopyWithImpl<$Res>;
+      _$SettingsCopyWithImpl<$Res, Settings>;
+  @useResult
   $Res call(
       {bool jpnTitle,
       bool tagTranslation,
@@ -61,83 +62,86 @@ abstract class $SettingsCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$SettingsCopyWithImpl<$Res> implements $SettingsCopyWith<$Res> {
+class _$SettingsCopyWithImpl<$Res, $Val extends Settings>
+    implements $SettingsCopyWith<$Res> {
   _$SettingsCopyWithImpl(this._value, this._then);
 
-  final Settings _value;
   // ignore: unused_field
-  final $Res Function(Settings) _then;
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? jpnTitle = freezed,
-    Object? tagTranslation = freezed,
-    Object? siteEx = freezed,
-    Object? coverBlur = freezed,
-    Object? longPressSelFav = freezed,
-    Object? pureDarkTheme = freezed,
-    Object? checkClipboardLink = freezed,
-    Object? commentTranslation = freezed,
-    Object? autoLockTimeOut = freezed,
-    Object? vibrate = freezed,
-    Object? debugMode = freezed,
-    Object? debugCount = freezed,
-    Object? themePlatform = freezed,
+    Object? jpnTitle = null,
+    Object? tagTranslation = null,
+    Object? siteEx = null,
+    Object? coverBlur = null,
+    Object? longPressSelFav = null,
+    Object? pureDarkTheme = null,
+    Object? checkClipboardLink = null,
+    Object? commentTranslation = null,
+    Object? autoLockTimeOut = null,
+    Object? vibrate = null,
+    Object? debugMode = null,
+    Object? debugCount = null,
+    Object? themePlatform = null,
   }) {
     return _then(_value.copyWith(
-      jpnTitle: jpnTitle == freezed
+      jpnTitle: null == jpnTitle
           ? _value.jpnTitle
           : jpnTitle // ignore: cast_nullable_to_non_nullable
               as bool,
-      tagTranslation: tagTranslation == freezed
+      tagTranslation: null == tagTranslation
           ? _value.tagTranslation
           : tagTranslation // ignore: cast_nullable_to_non_nullable
               as bool,
-      siteEx: siteEx == freezed
+      siteEx: null == siteEx
           ? _value.siteEx
           : siteEx // ignore: cast_nullable_to_non_nullable
               as bool,
-      coverBlur: coverBlur == freezed
+      coverBlur: null == coverBlur
           ? _value.coverBlur
           : coverBlur // ignore: cast_nullable_to_non_nullable
               as bool,
-      longPressSelFav: longPressSelFav == freezed
+      longPressSelFav: null == longPressSelFav
           ? _value.longPressSelFav
           : longPressSelFav // ignore: cast_nullable_to_non_nullable
               as bool,
-      pureDarkTheme: pureDarkTheme == freezed
+      pureDarkTheme: null == pureDarkTheme
           ? _value.pureDarkTheme
           : pureDarkTheme // ignore: cast_nullable_to_non_nullable
               as bool,
-      checkClipboardLink: checkClipboardLink == freezed
+      checkClipboardLink: null == checkClipboardLink
           ? _value.checkClipboardLink
           : checkClipboardLink // ignore: cast_nullable_to_non_nullable
               as bool,
-      commentTranslation: commentTranslation == freezed
+      commentTranslation: null == commentTranslation
           ? _value.commentTranslation
           : commentTranslation // ignore: cast_nullable_to_non_nullable
               as bool,
-      autoLockTimeOut: autoLockTimeOut == freezed
+      autoLockTimeOut: null == autoLockTimeOut
           ? _value.autoLockTimeOut
           : autoLockTimeOut // ignore: cast_nullable_to_non_nullable
               as int,
-      vibrate: vibrate == freezed
+      vibrate: null == vibrate
           ? _value.vibrate
           : vibrate // ignore: cast_nullable_to_non_nullable
               as bool,
-      debugMode: debugMode == freezed
+      debugMode: null == debugMode
           ? _value.debugMode
           : debugMode // ignore: cast_nullable_to_non_nullable
               as bool,
-      debugCount: debugCount == freezed
+      debugCount: null == debugCount
           ? _value.debugCount
           : debugCount // ignore: cast_nullable_to_non_nullable
               as int,
-      themePlatform: themePlatform == freezed
+      themePlatform: null == themePlatform
           ? _value.themePlatform
           : themePlatform // ignore: cast_nullable_to_non_nullable
               as ThemePlatform,
-    ));
+    ) as $Val);
   }
 }
 
@@ -147,6 +151,7 @@ abstract class _$$_SettingsCopyWith<$Res> implements $SettingsCopyWith<$Res> {
           _$_Settings value, $Res Function(_$_Settings) then) =
       __$$_SettingsCopyWithImpl<$Res>;
   @override
+  @useResult
   $Res call(
       {bool jpnTitle,
       bool tagTranslation,
@@ -164,81 +169,80 @@ abstract class _$$_SettingsCopyWith<$Res> implements $SettingsCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$_SettingsCopyWithImpl<$Res> extends _$SettingsCopyWithImpl<$Res>
+class __$$_SettingsCopyWithImpl<$Res>
+    extends _$SettingsCopyWithImpl<$Res, _$_Settings>
     implements _$$_SettingsCopyWith<$Res> {
   __$$_SettingsCopyWithImpl(
       _$_Settings _value, $Res Function(_$_Settings) _then)
-      : super(_value, (v) => _then(v as _$_Settings));
+      : super(_value, _then);
 
-  @override
-  _$_Settings get _value => super._value as _$_Settings;
-
+  @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? jpnTitle = freezed,
-    Object? tagTranslation = freezed,
-    Object? siteEx = freezed,
-    Object? coverBlur = freezed,
-    Object? longPressSelFav = freezed,
-    Object? pureDarkTheme = freezed,
-    Object? checkClipboardLink = freezed,
-    Object? commentTranslation = freezed,
-    Object? autoLockTimeOut = freezed,
-    Object? vibrate = freezed,
-    Object? debugMode = freezed,
-    Object? debugCount = freezed,
-    Object? themePlatform = freezed,
+    Object? jpnTitle = null,
+    Object? tagTranslation = null,
+    Object? siteEx = null,
+    Object? coverBlur = null,
+    Object? longPressSelFav = null,
+    Object? pureDarkTheme = null,
+    Object? checkClipboardLink = null,
+    Object? commentTranslation = null,
+    Object? autoLockTimeOut = null,
+    Object? vibrate = null,
+    Object? debugMode = null,
+    Object? debugCount = null,
+    Object? themePlatform = null,
   }) {
     return _then(_$_Settings(
-      jpnTitle: jpnTitle == freezed
+      jpnTitle: null == jpnTitle
           ? _value.jpnTitle
           : jpnTitle // ignore: cast_nullable_to_non_nullable
               as bool,
-      tagTranslation: tagTranslation == freezed
+      tagTranslation: null == tagTranslation
           ? _value.tagTranslation
           : tagTranslation // ignore: cast_nullable_to_non_nullable
               as bool,
-      siteEx: siteEx == freezed
+      siteEx: null == siteEx
           ? _value.siteEx
           : siteEx // ignore: cast_nullable_to_non_nullable
               as bool,
-      coverBlur: coverBlur == freezed
+      coverBlur: null == coverBlur
           ? _value.coverBlur
           : coverBlur // ignore: cast_nullable_to_non_nullable
               as bool,
-      longPressSelFav: longPressSelFav == freezed
+      longPressSelFav: null == longPressSelFav
           ? _value.longPressSelFav
           : longPressSelFav // ignore: cast_nullable_to_non_nullable
               as bool,
-      pureDarkTheme: pureDarkTheme == freezed
+      pureDarkTheme: null == pureDarkTheme
           ? _value.pureDarkTheme
           : pureDarkTheme // ignore: cast_nullable_to_non_nullable
               as bool,
-      checkClipboardLink: checkClipboardLink == freezed
+      checkClipboardLink: null == checkClipboardLink
           ? _value.checkClipboardLink
           : checkClipboardLink // ignore: cast_nullable_to_non_nullable
               as bool,
-      commentTranslation: commentTranslation == freezed
+      commentTranslation: null == commentTranslation
           ? _value.commentTranslation
           : commentTranslation // ignore: cast_nullable_to_non_nullable
               as bool,
-      autoLockTimeOut: autoLockTimeOut == freezed
+      autoLockTimeOut: null == autoLockTimeOut
           ? _value.autoLockTimeOut
           : autoLockTimeOut // ignore: cast_nullable_to_non_nullable
               as int,
-      vibrate: vibrate == freezed
+      vibrate: null == vibrate
           ? _value.vibrate
           : vibrate // ignore: cast_nullable_to_non_nullable
               as bool,
-      debugMode: debugMode == freezed
+      debugMode: null == debugMode
           ? _value.debugMode
           : debugMode // ignore: cast_nullable_to_non_nullable
               as bool,
-      debugCount: debugCount == freezed
+      debugCount: null == debugCount
           ? _value.debugCount
           : debugCount // ignore: cast_nullable_to_non_nullable
               as int,
-      themePlatform: themePlatform == freezed
+      themePlatform: null == themePlatform
           ? _value.themePlatform
           : themePlatform // ignore: cast_nullable_to_non_nullable
               as ThemePlatform,
@@ -318,49 +322,53 @@ class _$_Settings implements _Settings {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_Settings &&
-            const DeepCollectionEquality().equals(other.jpnTitle, jpnTitle) &&
-            const DeepCollectionEquality()
-                .equals(other.tagTranslation, tagTranslation) &&
-            const DeepCollectionEquality().equals(other.siteEx, siteEx) &&
-            const DeepCollectionEquality().equals(other.coverBlur, coverBlur) &&
-            const DeepCollectionEquality()
-                .equals(other.longPressSelFav, longPressSelFav) &&
-            const DeepCollectionEquality()
-                .equals(other.pureDarkTheme, pureDarkTheme) &&
-            const DeepCollectionEquality()
-                .equals(other.checkClipboardLink, checkClipboardLink) &&
-            const DeepCollectionEquality()
-                .equals(other.commentTranslation, commentTranslation) &&
-            const DeepCollectionEquality()
-                .equals(other.autoLockTimeOut, autoLockTimeOut) &&
-            const DeepCollectionEquality().equals(other.vibrate, vibrate) &&
-            const DeepCollectionEquality().equals(other.debugMode, debugMode) &&
-            const DeepCollectionEquality()
-                .equals(other.debugCount, debugCount) &&
-            const DeepCollectionEquality()
-                .equals(other.themePlatform, themePlatform));
+            (identical(other.jpnTitle, jpnTitle) ||
+                other.jpnTitle == jpnTitle) &&
+            (identical(other.tagTranslation, tagTranslation) ||
+                other.tagTranslation == tagTranslation) &&
+            (identical(other.siteEx, siteEx) || other.siteEx == siteEx) &&
+            (identical(other.coverBlur, coverBlur) ||
+                other.coverBlur == coverBlur) &&
+            (identical(other.longPressSelFav, longPressSelFav) ||
+                other.longPressSelFav == longPressSelFav) &&
+            (identical(other.pureDarkTheme, pureDarkTheme) ||
+                other.pureDarkTheme == pureDarkTheme) &&
+            (identical(other.checkClipboardLink, checkClipboardLink) ||
+                other.checkClipboardLink == checkClipboardLink) &&
+            (identical(other.commentTranslation, commentTranslation) ||
+                other.commentTranslation == commentTranslation) &&
+            (identical(other.autoLockTimeOut, autoLockTimeOut) ||
+                other.autoLockTimeOut == autoLockTimeOut) &&
+            (identical(other.vibrate, vibrate) || other.vibrate == vibrate) &&
+            (identical(other.debugMode, debugMode) ||
+                other.debugMode == debugMode) &&
+            (identical(other.debugCount, debugCount) ||
+                other.debugCount == debugCount) &&
+            (identical(other.themePlatform, themePlatform) ||
+                other.themePlatform == themePlatform));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType,
-      const DeepCollectionEquality().hash(jpnTitle),
-      const DeepCollectionEquality().hash(tagTranslation),
-      const DeepCollectionEquality().hash(siteEx),
-      const DeepCollectionEquality().hash(coverBlur),
-      const DeepCollectionEquality().hash(longPressSelFav),
-      const DeepCollectionEquality().hash(pureDarkTheme),
-      const DeepCollectionEquality().hash(checkClipboardLink),
-      const DeepCollectionEquality().hash(commentTranslation),
-      const DeepCollectionEquality().hash(autoLockTimeOut),
-      const DeepCollectionEquality().hash(vibrate),
-      const DeepCollectionEquality().hash(debugMode),
-      const DeepCollectionEquality().hash(debugCount),
-      const DeepCollectionEquality().hash(themePlatform));
+      jpnTitle,
+      tagTranslation,
+      siteEx,
+      coverBlur,
+      longPressSelFav,
+      pureDarkTheme,
+      checkClipboardLink,
+      commentTranslation,
+      autoLockTimeOut,
+      vibrate,
+      debugMode,
+      debugCount,
+      themePlatform);
 
   @JsonKey(ignore: true)
   @override
+  @pragma('vm:prefer-inline')
   _$$_SettingsCopyWith<_$_Settings> get copyWith =>
       __$$_SettingsCopyWithImpl<_$_Settings>(this, _$identity);
 

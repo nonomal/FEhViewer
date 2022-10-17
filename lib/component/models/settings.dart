@@ -21,7 +21,7 @@ class Settings with _$Settings {
     @Default(true) bool vibrate,
     @Default(false) bool debugMode,
     @Default(3) int debugCount,
-    @Default(ThemePlatform.auto) ThemePlatform themePlatform,
+    @Default(ThemePlatform.cupertino) ThemePlatform themePlatform,
   }) = _Settings;
 
   factory Settings.fromJson(Map<String, dynamic> json) =>

@@ -75,7 +75,7 @@ final settingsProvider =
 });
 
 final themePlatformProvider = Provider<ThemePlatform>((ref) {
-  // return ThemePlatform.cupertino;
+  return ThemePlatform.cupertino;
 
   final themePlatform =
       ref.watch(settingsProvider.select((s) => s.themePlatform));
