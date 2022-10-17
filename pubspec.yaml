@@ -172,6 +172,7 @@ dependencies:
   auto_route: ^5.0.1
   flutter_hooks: ^0.18.5+1
   dynamic_color: ^1.5.4
+  gesture_zoom_box: ^0.0.4
 
 
 dev_dependencies:
