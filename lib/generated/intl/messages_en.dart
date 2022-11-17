@@ -107,6 +107,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "dark": MessageLookupByLibrary.simpleMessage("Dark"),
         "dark_mode_effect":
             MessageLookupByLibrary.simpleMessage("Dark mode effect"),
+        "date_or_offset":
+            MessageLookupByLibrary.simpleMessage("Date or Offset"),
         "default_avatar_style":
             MessageLookupByLibrary.simpleMessage("Default Avatar Style"),
         "default_favorites":
@@ -142,6 +144,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "ehentai_my_tags": MessageLookupByLibrary.simpleMessage("My Tags"),
         "ehentai_settings":
             MessageLookupByLibrary.simpleMessage("EHentai Settings"),
+        "enter_date_or_offset_or_gid":
+            MessageLookupByLibrary.simpleMessage("Enter date or offset or gid"),
         "expand": MessageLookupByLibrary.simpleMessage("Expand"),
         "export": MessageLookupByLibrary.simpleMessage("Export"),
         "favcat": MessageLookupByLibrary.simpleMessage("Favorites"),
@@ -165,6 +169,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "groupName": MessageLookupByLibrary.simpleMessage("Group Name"),
         "groupType": MessageLookupByLibrary.simpleMessage("Group Type"),
         "hide": MessageLookupByLibrary.simpleMessage("Hide"),
+        "hide_top_bar_on_scroll":
+            MessageLookupByLibrary.simpleMessage("Hide top bar on scroll"),
         "host": MessageLookupByLibrary.simpleMessage("Host"),
         "hours": MessageLookupByLibrary.simpleMessage("hours"),
         "image_download_type":
@@ -174,6 +180,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "input_empty": MessageLookupByLibrary.simpleMessage("Input empty"),
         "input_error": MessageLookupByLibrary.simpleMessage("Input error"),
         "instantly": MessageLookupByLibrary.simpleMessage("Instantly"),
+        "jump_next": MessageLookupByLibrary.simpleMessage("Next"),
+        "jump_or_seek": MessageLookupByLibrary.simpleMessage("Jump or Seek"),
+        "jump_prev": MessageLookupByLibrary.simpleMessage("Prev"),
         "jump_to_page": MessageLookupByLibrary.simpleMessage("Jump to Page"),
         "landscape": MessageLookupByLibrary.simpleMessage("Landscape"),
         "language": MessageLookupByLibrary.simpleMessage("Language"),
@@ -323,6 +332,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "s_and": MessageLookupByLibrary.simpleMessage("and"),
         "s_pages": MessageLookupByLibrary.simpleMessage("pages"),
         "s_stars": m2,
+        "save": MessageLookupByLibrary.simpleMessage("Save"),
         "save_into_album":
             MessageLookupByLibrary.simpleMessage("Save into the album"),
         "saved_successfully":

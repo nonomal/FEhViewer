@@ -11,6 +11,8 @@ import 'package:get/get.dart';
 final kFilenameFormat =
     GetPlatform.isWindows ? 'yyyy-MM-dd HH_mm_ss' : 'yyyy-MM-dd HH:mm:ss';
 
+const kNewSearch = true;
+
 enum ListModeEnum {
   list,
   waterfall,
@@ -104,25 +106,16 @@ LoadStateChanged defLoadStateChanged = (ExtendedImageState state) {
 // const double kThresholdTabletWidth = 700.0;
 
 const AdvanceSearch kDefAdvanceSearch = AdvanceSearch(
-  searchGalleryName: true,
-  searchGalleryTags: true,
-  searchGalleryDesc: false,
-  searchToreenFilenames: false,
-  onlyShowWhithTorrents: false,
-  searchLowPowerTags: false,
-  searchDownvotedTags: false,
-  searchExpunged: false,
-  searchWithminRating: false,
+  requireGalleryTorrent: false,
+  browseExpungedGalleries: false,
+  searchWithMinRating: false,
   minRating: 2,
-  searchBetweenpage: false,
+  searchBetweenPage: false,
   startPage: '',
   endPage: '',
-  disableDFLanguage: false,
-  disableDFUploader: false,
-  disableDFTags: false,
-  favSearchName: true,
-  favSearchTags: true,
-  favSearchNote: true,
+  disableCustomFilterLanguage: false,
+  disableCustomFilterUploader: false,
+  disableCustomFilterTags: false,
 );
 
 const User kDefUser = User(
@@ -224,6 +217,8 @@ final RegExp regExpMpvThumbName = RegExp(r'[0-9a-f]{40}-(\d+)-(\d+)-(\d+)');
 
 // ignore: avoid_classes_with_only_static_members
 class EHConst {
+  static const String appTitle = 'FEhViewer';
+
   // 网页登陆页面
   static const String URL_SIGN_IN =
       'https://forums.e-hentai.org/index.php?act=Login';
@@ -321,6 +316,8 @@ class EHConst {
     11,
     if (Global.inDebugMode) 100,
   ];
+
+  static List<int> webDAVConnections = multiDownload;
 
   static int cleanDataVer = 1;
 

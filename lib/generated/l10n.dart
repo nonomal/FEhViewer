@@ -1,6 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -4099,6 +4100,76 @@ class L10n {
     return Intl.message(
       'Direct',
       name: 'direct',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save`
+  String get save {
+    return Intl.message(
+      'Save',
+      name: 'save',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hide top bar on scroll`
+  String get hide_top_bar_on_scroll {
+    return Intl.message(
+      'Hide top bar on scroll',
+      name: 'hide_top_bar_on_scroll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Jump or Seek`
+  String get jump_or_seek {
+    return Intl.message(
+      'Jump or Seek',
+      name: 'jump_or_seek',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter date or offset or gid`
+  String get enter_date_or_offset_or_gid {
+    return Intl.message(
+      'Enter date or offset or gid',
+      name: 'enter_date_or_offset_or_gid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Date or Offset`
+  String get date_or_offset {
+    return Intl.message(
+      'Date or Offset',
+      name: 'date_or_offset',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Next`
+  String get jump_next {
+    return Intl.message(
+      'Next',
+      name: 'jump_next',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Prev`
+  String get jump_prev {
+    return Intl.message(
+      'Prev',
+      name: 'jump_prev',
       desc: '',
       args: [],
     );

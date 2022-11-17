@@ -1,20 +1,29 @@
 import 'package:collection/collection.dart';
 import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/models/index.dart';
-import 'package:fehviewer/utils/utility.dart';
+import 'package:fehviewer/fehviewer.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' show parse;
 import 'package:intl/intl.dart';
 
-/// 检查返回结果是否是l视图
+/// 检查返回结果是否是 compact 视图
 bool isGalleryListDmL(String response) {
   final dom.Document document = parse(response);
-  final List<dom.Element> domList =
-      document.querySelectorAll('#dms > div > select > option');
 
-  for (final dom.Element elm in domList) {
-// logger.v('${elm.attributes["value"]} —— ${elm.attributes.keys}');
+  final dom.Element? searchnavElm = document.querySelector('.searchnav');
+
+  late List<dom.Element>? optionElms;
+  if (searchnavElm == null) {
+    optionElms = document.querySelectorAll('#dms > div > select > option');
+  } else {
+    optionElms = searchnavElm
+        .querySelector('#ulast')
+        ?.parent
+        ?.nextElementSibling
+        ?.querySelectorAll('option');
+    logger.d('searchnav optionElms length ${optionElms?.length}');
+  }
+
+  for (final dom.Element elm in optionElms ?? []) {
     final Map<dynamic, String> attributes = elm.attributes;
     if (attributes.keys.contains('selected')) {
       return attributes['value'] == 'l';
@@ -22,23 +31,38 @@ bool isGalleryListDmL(String response) {
       continue;
     }
   }
+
   return true;
 }
 
 ///  收藏夹 检查返回结果的排序方式
-bool isFavoriteOrder(String response) {
+bool? isFavoriteOrder(String response) {
   final dom.Document document = parse(response);
 
-  final List<dom.Element> domList =
-      document.querySelectorAll('body > div.ido > div');
+  final dom.Element? orderElm =
+      document.querySelector('.searchnav')?.children.firstOrNull;
 
-  if (domList.length > 2) {
-    final dom.Element? orderElm = domList[2].querySelector('div > span');
-// logger.d('${orderElm.text}');
-    return orderElm?.text.trim() == 'Favorited';
+  if (orderElm != null) {
+    logger.d('ooo ${orderElm.text}');
+    final options = orderElm.querySelectorAll('option');
+    return (options
+                .where((e) => e.attributes['selected'] == 'selected')
+                .firstOrNull
+                ?.text ??
+            '')
+        .contains('Favorited');
+  } else {
+    final List<dom.Element> domList =
+        document.querySelectorAll('body > div.ido > div');
+
+    if (domList.length > 2) {
+      final dom.Element? orderElm = domList[2].querySelector('div > span');
+      logger.v('${orderElm?.text}');
+      return orderElm?.text.trim() == 'Favorited';
+    }
+
+    return null;
   }
-
-  return false;
 }
 
 GalleryList parseGalleryListOfFav(String response) {
@@ -91,11 +115,31 @@ GalleryList parseGalleryList(
   // 下一页页码
   final dom.Element? _curPageElem =
       _pages.firstWhereOrNull((e) => e.attributes['class'] == 'ptds');
-  final _curPage = _curPageElem?.text.trim() ?? '1';
-  final _nextPage = int.parse(_curPage.split('-').last);
-  // logger.d('_curPage:$_curPage, nextIndex:$_nextPage');
+  final _curPage = _curPageElem?.text.trim() ?? '';
+  final _nextPage =
+      (int.tryParse(_curPageElem?.nextElementSibling?.text.trim() ?? '') ?? 0) -
+          1;
+  final _prevPage =
+      (int.tryParse(_curPageElem?.previousElementSibling?.text.trim() ?? '') ??
+              0) -
+          1;
 
-  final _prevPage = int.parse(_curPage.split('-').first) - 2;
+  logger.v('$_curPage , _nextPage:$_nextPage , _prevPage:$_prevPage');
+
+  const searchnavSelector = '.searchnav';
+  final searchnavElm = document.querySelector(searchnavSelector);
+
+  // prev
+  final prevElm = searchnavElm?.querySelector('#uprev');
+  final prevHref = prevElm?.attributes['href'];
+  final _prev = prevHref?.split('=').last;
+
+  // next
+  final nextElm = searchnavElm?.querySelector('#unext');
+  final nextHref = nextElm?.attributes['href'];
+  final _next = nextHref?.split('=').last;
+
+  logger.v('parse next:$_next, prev:$_prev');
 
 // 画廊列表
   List<dom.Element> gallerys = document.querySelectorAll(_listSelector);
@@ -105,7 +149,7 @@ GalleryList parseGalleryList(
     final String? category =
         tr.querySelector('td.gl1c.glcat > div')?.text.trim();
 
-// 表头或者广告
+    // 表头或者广告
     if (category == null || category.isEmpty) {
       continue;
     }
@@ -304,9 +348,11 @@ GalleryList parseGalleryList(
   // return Tuple2(_gallaryProviders, _maxPage);
   return GalleryList(
     gallerys: _gallaryProviders,
-    maxPage: _maxPage,
     favList: favcatList,
+    nextGid: _next,
+    prevGid: _prev,
     nextPage: _nextPage,
     prevPage: _prevPage,
+    maxPage: _maxPage,
   );
 }

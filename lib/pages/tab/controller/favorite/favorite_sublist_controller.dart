@@ -1,13 +1,14 @@
+import 'package:collection/collection.dart';
 import 'package:fehviewer/common/controller/localfav_controller.dart';
 import 'package:fehviewer/fehviewer.dart';
 import 'package:fehviewer/network/request.dart';
 import 'package:fehviewer/pages/controller/favorite_sel_controller.dart';
+import 'package:fehviewer/pages/tab/controller/tabview_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import '../fetch_list.dart';
-import 'enum.dart';
-import 'tabview_controller.dart';
+import '../../fetch_list.dart';
+import '../enum.dart';
 
 class FavoriteSubListController extends TabViewController {
   late String favcat;
@@ -26,23 +27,25 @@ class FavoriteSubListController extends TabViewController {
     await super.fetchData();
     if (favcat != 'l') {
       // 网络收藏夹
-      final rult = await getGallery(
+      final GalleryList? result = await getGallery(
         favcat: favcat,
         refresh: refresh,
         cancelToken: cancelToken,
         galleryListType: GalleryListType.favorite,
       );
 
-      _favoriteSelectorController?.addAllFavList(rult?.favList ?? []);
+      logger.d(
+          'favcat $favcat, result prev:${result?.prevPage} next:${result?.nextPage}, max:${result?.maxPage}');
 
-      return rult;
+      _favoriteSelectorController?.addAllFavList(result?.favList ?? []);
+
+      return result;
     } else {
       // 本地收藏夹
       logger.v('本地收藏');
       final List<GalleryProvider> localFav = _localFavController.loacalFavs;
 
-      return Future<GalleryList>.value(
-          GalleryList(gallerys: localFav, maxPage: 1));
+      return Future<GalleryList>.value(GalleryList(gallerys: localFav));
     }
   }
 
@@ -50,63 +53,53 @@ class FavoriteSubListController extends TabViewController {
   Future<GalleryList?> fetchMoreData() async {
     await super.fetchMoreData();
     final fetchConfig = FetchParams(
-      page: nextPage,
-      fromGid: state?.last.gid ?? '0',
+      pageType: PageType.next,
+      gid: kNewSearch ? nextGid : state?.lastOrNull?.gid ?? '',
       refresh: true,
       cancelToken: cancelToken,
       favcat: favcat,
+      page: nextPage,
     );
     FetchListClient fetchListClient = getFetchListClient(fetchConfig);
     return await fetchListClient.fetch();
   }
 
   @override
-  Future<void> loadFromPage(int page, {bool previous = false}) async {
-    await super.loadFromPage(page);
-    logger.d('jump to page =>  $page');
-    canLoadMore = false;
-    pageState = PageState.Loading;
-    if (!previous) {
-      change(state, status: RxStatus.loading());
-    }
-
+  Future<GalleryList?> fetchPrevData() async {
+    await super.fetchPrevData();
     final fetchConfig = FetchParams(
-      page: page,
+      pageType: PageType.prev,
+      gid: prevGid,
       refresh: true,
       cancelToken: cancelToken,
       favcat: favcat,
+      page: prevPage,
     );
-    try {
-      FetchListClient fetchListClient = getFetchListClient(fetchConfig);
-      final GalleryList? rult = await fetchListClient.fetch();
+    FetchListClient fetchListClient = getFetchListClient(fetchConfig);
+    return await fetchListClient.fetch();
+  }
 
-      curPage = page;
-      minPage = page;
-      if (!previous) {
-        nextPage = rult?.nextPage ?? page + 1;
-      }
-      prevPage = rult?.prevPage;
-      logger.d('after loadFromPage nextPage is $nextPage');
-      if (rult != null) {
-        if (previous) {
-          state?.insertAll(0, rult.gallerys ?? []);
-          change(state, status: RxStatus.success());
-        } else {
-          change(rult.gallerys, status: RxStatus.success());
-        }
-      }
-      pageState = PageState.None;
-    } catch (e) {
-      pageState = PageState.LoadingError;
-      if (!previous) {
-        change(null, status: RxStatus.error('$e'));
-      } else {
-        showToast('$e');
-      }
-      rethrow;
-    } finally {
-      canLoadMore = true;
-    }
+  @override
+  Future<GalleryList?> fetchDataFrom({
+    String? gid,
+    PageType? pageType,
+    String? jump,
+    String? seek,
+    int? page,
+  }) async {
+    await super.fetchDataFrom();
+    final fetchConfig = FetchParams(
+      pageType: pageType,
+      gid: gid,
+      jump: jump,
+      seek: seek,
+      refresh: true,
+      cancelToken: cancelToken,
+      favcat: favcat,
+      page: page,
+    );
+    FetchListClient fetchListClient = getFetchListClient(fetchConfig);
+    return await fetchListClient.fetch();
   }
 
   FetchListClient getFetchListClient(FetchParams fetchParams) {
@@ -116,8 +109,9 @@ class FavoriteSubListController extends TabViewController {
   @override
   Future<void> lastComplete() async {
     await super.lastComplete();
+    logger.d('加载更多...$next');
     if ((state ?? []).isNotEmpty &&
-        curPage < maxPage - 1 &&
+        next.isNotEmpty &&
         pageState != PageState.Loading) {
       // 加载更多
       logger.d('加载更多');

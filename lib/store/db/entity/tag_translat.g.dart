@@ -11,6 +11,8 @@ abstract class _$TagTranslatCWProxy {
 
   TagTranslat key(String key);
 
+  TagTranslat lastUseTime(int lastUseTime);
+
   TagTranslat links(String? links);
 
   TagTranslat name(String? name);
@@ -26,6 +28,7 @@ abstract class _$TagTranslatCWProxy {
   TagTranslat call({
     String? intro,
     String? key,
+    int? lastUseTime,
     String? links,
     String? name,
     String? namespace,
@@ -43,6 +46,9 @@ class _$TagTranslatCWProxyImpl implements _$TagTranslatCWProxy {
 
   @override
   TagTranslat key(String key) => this(key: key);
+
+  @override
+  TagTranslat lastUseTime(int lastUseTime) => this(lastUseTime: lastUseTime);
 
   @override
   TagTranslat links(String? links) => this(links: links);
@@ -64,6 +70,7 @@ class _$TagTranslatCWProxyImpl implements _$TagTranslatCWProxy {
   TagTranslat call({
     Object? intro = const $CopyWithPlaceholder(),
     Object? key = const $CopyWithPlaceholder(),
+    Object? lastUseTime = const $CopyWithPlaceholder(),
     Object? links = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
     Object? namespace = const $CopyWithPlaceholder(),
@@ -77,6 +84,11 @@ class _$TagTranslatCWProxyImpl implements _$TagTranslatCWProxy {
           ? _value.key
           // ignore: cast_nullable_to_non_nullable
           : key as String,
+      lastUseTime:
+          lastUseTime == const $CopyWithPlaceholder() || lastUseTime == null
+              ? _value.lastUseTime
+              // ignore: cast_nullable_to_non_nullable
+              : lastUseTime as int,
       links: links == const $CopyWithPlaceholder()
           ? _value.links
           // ignore: cast_nullable_to_non_nullable
@@ -124,18 +136,23 @@ const TagTranslatSchema = CollectionSchema(
       name: r'key',
       type: IsarType.string,
     ),
-    r'links': PropertySchema(
+    r'lastUseTime': PropertySchema(
       id: 2,
+      name: r'lastUseTime',
+      type: IsarType.long,
+    ),
+    r'links': PropertySchema(
+      id: 3,
       name: r'links',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'name',
       type: IsarType.string,
     ),
     r'namespace': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'namespace',
       type: IsarType.string,
     )
@@ -202,6 +219,19 @@ const TagTranslatSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'lastUseTime': IndexSchema(
+      id: 9135219936382264109,
+      name: r'lastUseTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'lastUseTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {},
@@ -209,7 +239,7 @@ const TagTranslatSchema = CollectionSchema(
   getId: _tagTranslatGetId,
   getLinks: _tagTranslatGetLinks,
   attach: _tagTranslatAttach,
-  version: '3.0.2',
+  version: '3.0.4',
 );
 
 int _tagTranslatEstimateSize(
@@ -249,9 +279,10 @@ void _tagTranslatSerialize(
 ) {
   writer.writeString(offsets[0], object.intro);
   writer.writeString(offsets[1], object.key);
-  writer.writeString(offsets[2], object.links);
-  writer.writeString(offsets[3], object.name);
-  writer.writeString(offsets[4], object.namespace);
+  writer.writeLong(offsets[2], object.lastUseTime);
+  writer.writeString(offsets[3], object.links);
+  writer.writeString(offsets[4], object.name);
+  writer.writeString(offsets[5], object.namespace);
 }
 
 TagTranslat _tagTranslatDeserialize(
@@ -263,9 +294,10 @@ TagTranslat _tagTranslatDeserialize(
   final object = TagTranslat(
     intro: reader.readStringOrNull(offsets[0]),
     key: reader.readString(offsets[1]),
-    links: reader.readStringOrNull(offsets[2]),
-    name: reader.readStringOrNull(offsets[3]),
-    namespace: reader.readString(offsets[4]),
+    lastUseTime: reader.readLongOrNull(offsets[2]) ?? 0,
+    links: reader.readStringOrNull(offsets[3]),
+    name: reader.readStringOrNull(offsets[4]),
+    namespace: reader.readString(offsets[5]),
   );
   object.id = id;
   return object;
@@ -283,10 +315,12 @@ P _tagTranslatDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -398,6 +432,14 @@ extension TagTranslatQueryWhereSort
   QueryBuilder<TagTranslat, TagTranslat, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhere> anyLastUseTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'lastUseTime'),
+      );
     });
   }
 }
@@ -712,6 +754,97 @@ extension TagTranslatQueryWhere
               includeUpper: false,
             ));
       }
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhereClause> lastUseTimeEqualTo(
+      int lastUseTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'lastUseTime',
+        value: [lastUseTime],
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhereClause>
+      lastUseTimeNotEqualTo(int lastUseTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastUseTime',
+              lower: [],
+              upper: [lastUseTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastUseTime',
+              lower: [lastUseTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastUseTime',
+              lower: [lastUseTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastUseTime',
+              lower: [],
+              upper: [lastUseTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhereClause>
+      lastUseTimeGreaterThan(
+    int lastUseTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastUseTime',
+        lower: [lastUseTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhereClause> lastUseTimeLessThan(
+    int lastUseTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastUseTime',
+        lower: [],
+        upper: [lastUseTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterWhereClause> lastUseTimeBetween(
+    int lowerLastUseTime,
+    int upperLastUseTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastUseTime',
+        lower: [lowerLastUseTime],
+        includeLower: includeLower,
+        upper: [upperLastUseTime],
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -1047,6 +1180,62 @@ extension TagTranslatQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'key',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterFilterCondition>
+      lastUseTimeEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastUseTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterFilterCondition>
+      lastUseTimeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastUseTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterFilterCondition>
+      lastUseTimeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastUseTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterFilterCondition>
+      lastUseTimeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastUseTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1517,6 +1706,18 @@ extension TagTranslatQuerySortBy
     });
   }
 
+  QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> sortByLastUseTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastUseTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> sortByLastUseTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastUseTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> sortByLinks() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'links', Sort.asc);
@@ -1592,6 +1793,18 @@ extension TagTranslatQuerySortThenBy
     });
   }
 
+  QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> thenByLastUseTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastUseTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> thenByLastUseTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastUseTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<TagTranslat, TagTranslat, QAfterSortBy> thenByLinks() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'links', Sort.asc);
@@ -1645,6 +1858,12 @@ extension TagTranslatQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TagTranslat, TagTranslat, QDistinct> distinctByLastUseTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastUseTime');
+    });
+  }
+
   QueryBuilder<TagTranslat, TagTranslat, QDistinct> distinctByLinks(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1684,6 +1903,12 @@ extension TagTranslatQueryProperty
   QueryBuilder<TagTranslat, String, QQueryOperations> keyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'key');
+    });
+  }
+
+  QueryBuilder<TagTranslat, int, QQueryOperations> lastUseTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastUseTime');
     });
   }
 

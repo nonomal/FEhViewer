@@ -75,7 +75,6 @@ class GalleryListHttpTransformer extends HttpTransformer {
     // 列表样式检查 不符合则设置参数重新请求
     final bool isDml = isGalleryListDmL(html);
     if (isDml) {
-      // final GalleryList _list = await compute(parseGalleryList, html);
       final GalleryList _list = parseGalleryList(html);
 
       // 查询和写入simpletag的翻译
@@ -107,14 +106,18 @@ class FavoriteListHttpTransformer extends HttpTransformer {
         FavoriteOrder.fav;
     // 排序参数
     final String _order = EHConst.favoriteOrder[order] ?? EHConst.FAV_ORDER_FAV;
-    // final bool isOrderFav = isFavoriteOrder(html);
-    final bool isOrderFav = await compute(isFavoriteOrder, html);
 
-    final bool needReOrder = isOrderFav ^ (order == FavoriteOrder.fav);
+    final bool? isOrderFav = isFavoriteOrder(html);
+    bool needReOrder = false;
+    if (isOrderFav != null) {
+      needReOrder = isOrderFav ^ (order == FavoriteOrder.fav);
+    }
+
+    logger
+        .v('isOrderFav $isOrderFav, _order: $_order, needReOrder $needReOrder');
 
     // 列表样式检查 不符合则设置参数重新请求
-    // final bool isDml = isGalleryListDmL(html);
-    final bool isDml = await compute(isGalleryListDmL, html);
+    final bool isDml = isGalleryListDmL(html);
 
     if (!isDml) {
       return DioHttpResponse<GalleryList>.failureFromError(
@@ -123,7 +126,6 @@ class FavoriteListHttpTransformer extends HttpTransformer {
       return DioHttpResponse<GalleryList>.failureFromError(
           FavOrderException(order: _order));
     } else {
-      // final GalleryList _list = await compute(parseGalleryListOfFav, html);
       final GalleryList _list = parseGalleryListOfFav(html);
 
       // 查询和写入simpletag的翻译
@@ -161,7 +163,8 @@ class GalleryImageHttpTransformer extends HttpTransformer {
       Response<dynamic> response) async {
     final html = response.data as String;
     // 使用 compute 方式会内部的 EhError 无法正常抛出
-    final GalleryImage image = await compute(paraImage, html);
+    // final GalleryImage image = await compute(paraImage, html);
+    final GalleryImage image = paraImage(html);
     // throw EhError(type: EhErrorType.image509);
     if (image.imageUrl!.endsWith('/509.gif') ||
         image.imageUrl!.endsWith('/509s.gif')) {

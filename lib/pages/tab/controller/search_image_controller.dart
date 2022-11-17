@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../component/exception/error.dart';
@@ -29,10 +29,16 @@ class SearchImageController extends DefaultTabViewController {
     }
 
     // 选取图片
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    logger.d('${image?.path}');
-    imagePath = image?.path ?? '';
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(type: FileType.image);
+    } on Exception catch (e) {
+      logger.e('Pick file failed', e);
+    }
+    imagePath = result?.files.single.path ?? '';
+    if (imagePath.isEmpty) {
+      return;
+    }
   }
 
   Future<void> startSearch({bool clear = true}) async {
@@ -41,7 +47,8 @@ class SearchImageController extends DefaultTabViewController {
     }
 
     listType = ListType.gallery;
-    curPage = -1;
+
+    resetResultPage();
 
     if (clear) {
       change(state, status: RxStatus.loading());
@@ -55,10 +62,12 @@ class SearchImageController extends DefaultTabViewController {
         return;
       }
 
-      maxPage = rult.maxPage ?? 0;
-      curPage = maxPage >= 0 ? 0 : -1;
+      nextGid = rult.nextGid;
+      prevGid = rult.prevGid;
+      nextPage = rult.nextPage;
+      prevPage = rult.prevPage;
+      maxPage = rult.maxPage;
 
-      nextPage = rult.nextPage ?? 1;
       change(rult.gallerys ?? [], status: RxStatus.success());
     } catch (err) {
       change(null, status: RxStatus.error(err.toString()));

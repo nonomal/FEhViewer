@@ -96,6 +96,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "custom_hosts": MessageLookupByLibrary.simpleMessage("自定hosts文件"),
         "dark": MessageLookupByLibrary.simpleMessage("深色模式"),
         "dark_mode_effect": MessageLookupByLibrary.simpleMessage("深色模式效果"),
+        "date_or_offset": MessageLookupByLibrary.simpleMessage("日期或偏移量"),
         "default_avatar_style":
             MessageLookupByLibrary.simpleMessage("Default avatar style"),
         "default_favorites": MessageLookupByLibrary.simpleMessage("預設收藏夾"),
@@ -124,6 +125,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "eh": MessageLookupByLibrary.simpleMessage("E·H"),
         "ehentai_my_tags": MessageLookupByLibrary.simpleMessage("我的標籤"),
         "ehentai_settings": MessageLookupByLibrary.simpleMessage("EHentai 設置"),
+        "enter_date_or_offset_or_gid":
+            MessageLookupByLibrary.simpleMessage("输入具体日期或偏移量 / GID"),
         "expand": MessageLookupByLibrary.simpleMessage("Expand"),
         "export": MessageLookupByLibrary.simpleMessage("導出"),
         "favcat": MessageLookupByLibrary.simpleMessage("收藏夾"),
@@ -145,6 +148,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "groupName": MessageLookupByLibrary.simpleMessage("Group name"),
         "groupType": MessageLookupByLibrary.simpleMessage("Group type"),
         "hide": MessageLookupByLibrary.simpleMessage("Hide"),
+        "hide_top_bar_on_scroll":
+            MessageLookupByLibrary.simpleMessage("滚动时隐藏顶栏"),
         "host": MessageLookupByLibrary.simpleMessage("地址"),
         "hours": MessageLookupByLibrary.simpleMessage("小時"),
         "image_download_type":
@@ -154,6 +159,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "input_empty": MessageLookupByLibrary.simpleMessage("空白輸入"),
         "input_error": MessageLookupByLibrary.simpleMessage("輸入錯誤"),
         "instantly": MessageLookupByLibrary.simpleMessage("立即"),
+        "jump_next": MessageLookupByLibrary.simpleMessage("后面"),
+        "jump_or_seek": MessageLookupByLibrary.simpleMessage("跳转/搜寻"),
+        "jump_prev": MessageLookupByLibrary.simpleMessage("前面"),
         "jump_to_page": MessageLookupByLibrary.simpleMessage("跳至該頁"),
         "landscape": MessageLookupByLibrary.simpleMessage("横屏"),
         "language": MessageLookupByLibrary.simpleMessage("語言設定"),
@@ -282,6 +290,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "s_and": MessageLookupByLibrary.simpleMessage("到"),
         "s_pages": MessageLookupByLibrary.simpleMessage("頁數"),
         "s_stars": m2,
+        "save": MessageLookupByLibrary.simpleMessage("保存"),
         "save_into_album": MessageLookupByLibrary.simpleMessage("保存到相簿"),
         "saved_successfully": MessageLookupByLibrary.simpleMessage("保存成功"),
         "screen_orientation":

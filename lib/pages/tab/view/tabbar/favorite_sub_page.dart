@@ -1,6 +1,6 @@
 import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/favorite_sublist_controller.dart';
-import 'package:fehviewer/pages/tab/controller/favorite_tabbar_controller.dart';
+import 'package:fehviewer/pages/tab/controller/favorite/favorite_sublist_controller.dart';
+import 'package:fehviewer/pages/tab/controller/favorite/favorite_tabbar_controller.dart';
 import 'package:fehviewer/widget/refresh.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -12,9 +12,11 @@ import '../gallery_base.dart';
 import '../tab_base.dart';
 
 class FavoriteSubPage extends StatefulWidget {
-  const FavoriteSubPage({Key? key, required this.favcat}) : super(key: key);
+  const FavoriteSubPage({Key? key, required this.favcat, this.pinned = true})
+      : super(key: key);
 
   final String favcat;
+  final bool pinned;
 
   @override
   _FavoriteSubPageState createState() => _FavoriteSubPageState();
@@ -52,7 +54,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage>
     return CustomScrollView(
       // cacheExtent: context.height * 2,
       slivers: [
-        _buildRefresh(context),
+        SliverSafeArea(
+          top: widget.pinned,
+          bottom: false,
+          sliver: _buildRefresh(context),
+        ),
         _buildListView(),
         Obx(() {
           return EndIndicator(
@@ -66,8 +72,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage>
 
   Widget _buildRefresh(BuildContext context) {
     return SliverPadding(
-        padding: EdgeInsets.only(
-            top: context.mediaQueryPadding.top + kTopTabbarHeight),
+        padding: widget.pinned
+            ? const EdgeInsets.only(top: kHeaderMaxHeight)
+            : EdgeInsets.only(
+                top: context.mediaQueryPadding.top + kTopTabbarHeight),
         sliver: EhCupertinoSliverRefreshControl(
           onRefresh: _favoriteSubListController.onRefresh,
         ));
@@ -112,8 +120,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage>
             return getGallerySliverList(
               _favoriteSubListController.state,
               _favoriteSubListController.heroTag,
-              maxPage: _favoriteSubListController.maxPage,
-              curPage: _favoriteSubListController.curPage,
+              next: logic.next,
               lastComplete: _favoriteSubListController.lastComplete,
               key: _favoriteSubListController.sliverAnimatedListKey,
             );

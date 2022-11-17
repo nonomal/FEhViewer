@@ -114,12 +114,16 @@ class IsarHelper {
     }
   }
 
+  // 模糊查询
   Future<List<TagTranslat>> findTagTranslateContains(
       String text, int limit) async {
     final result = await isar.tagTranslats
-        .where()
-        .namespaceNotEqualTo('rows')
+        .where(sort: Sort.desc)
+        .anyLastUseTime()
         .filter()
+        .not()
+        .namespaceEqualTo('rows')
+        .and()
         .keyContains(text)
         .or()
         .nameContains(text)
@@ -131,6 +135,15 @@ class IsarHelper {
     return result;
   }
 
+  Future<void> tapTagTranslate(TagTranslat tagTranslat) async {
+    await isar.writeTxn(() async {
+      final newTagTranslat = tagTranslat.copyWith(
+        lastUseTime: DateTime.now().millisecondsSinceEpoch,
+      );
+      await isar.tagTranslats.putByKeyNamespace(newTagTranslat);
+    });
+  }
+
   Future<void> removeAllTagTranslate() async {
     await isar.writeTxn(() async {
       final count = await isar.tagTranslats.where().deleteAll();
@@ -138,6 +151,7 @@ class IsarHelper {
     });
   }
 
+  /// GalleryTasks
   Future<List<GalleryTask>> findAllGalleryTasks() async {
     final taks = await isar.galleryTasks.where().sortByAddTimeDesc().findAll();
     return taks;
@@ -178,6 +192,7 @@ class IsarHelper {
     });
   }
 
+  /// ImageTasks
   Future<List<GalleryImageTask>> findImageTaskAllByGid(int gid) async {
     return await isar.galleryImageTasks
         .where()

@@ -1,9 +1,10 @@
 import 'package:blur/blur.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
+import 'package:fehviewer/common/service/ehconfig_service.dart';
 import 'package:fehviewer/common/service/layout_service.dart';
 import 'package:fehviewer/common/service/theme_service.dart';
 import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/favorite_tabbar_controller.dart';
+import 'package:fehviewer/pages/tab/controller/favorite/favorite_tabbar_controller.dart';
 import 'package:fehviewer/pages/tab/controller/search_page_controller.dart';
 import 'package:fehviewer/pages/tab/controller/tabhome_controller.dart';
 import 'package:flutter/cupertino.dart';
@@ -29,14 +30,36 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
   final controller = Get.find<FavoriteTabberController>();
   late PageController pageController;
 
-  Widget _buildTopBar(
-      BuildContext context, double offset, double maxExtentCallBackValue) {
-    double iconOpacity = 0.0;
-    final transparentOffset = maxExtentCallBackValue - 60;
-    if (offset < transparentOffset) {
-      iconOpacity = 1 - offset / transparentOffset;
-    }
+  final EhConfigService _ehConfigService = Get.find();
 
+  @override
+  void initState() {
+    super.initState();
+    pageController = PageController(initialPage: controller.index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final headerMaxHeight = context.mediaQueryPadding.top + kHeaderMaxHeight;
+
+    return Obx(() {
+      final hideTopBarOnScroll = _ehConfigService.hideTopBarOnScroll;
+
+      final scrollView =
+          buildNestedScrollView(headerMaxHeight, hideTopBarOnScroll);
+
+      return CupertinoPageScaffold(
+        // navigationBar: navigationBar,
+        child: SizeCacheWidget(child: scrollView),
+      );
+    });
+  }
+
+  Widget _buildTopBar(
+    BuildContext context,
+    double offset,
+    double maxExtentCallBackValue,
+  ) {
     return Container(
       height: maxExtentCallBackValue,
       child: Column(
@@ -63,96 +86,79 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
                   ),
                 );
               }),
-              Container(
-                decoration: const BoxDecoration(
-                  border: kDefaultNavBarBorder,
-                ),
-                padding: EdgeInsets.only(
-                  left: context.mediaQueryPadding.left,
-                  right: context.mediaQueryPadding.right,
-                ),
-                child: Container(
-                  height: kTopTabbarHeight,
-                  child: Obx(() {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: LinkScrollBar(
-                            pageController: pageController,
-                            controller: linkScrollBarController,
-                            items: controller.favcatList
-                                .map((e) => LinkTabItem(
-                                      title: e.favTitle,
-                                      // icon: LineIcons.dotCircleAlt,
-                                    ))
-                                .toList(),
-                            itemPadding:
-                                const EdgeInsets.symmetric(horizontal: 8),
-                            initIndex: controller.index,
-                            onItemChange: (index) =>
-                                pageController.animateToPage(index,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.ease),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (GetPlatform.isDesktop)
-                                Obx(() {
-                                  return CupertinoButton(
-                                    minSize: 40,
-                                    padding: const EdgeInsets.all(0),
-                                    child: const Icon(
-                                      FontAwesomeIcons.rotateRight,
-                                      size: 20,
-                                    ),
-                                    onPressed: controller
-                                            .currSubController?.reloadData ??
-                                        () {
-                                          controller.update();
-                                          controller.currSubController
-                                              ?.reloadData();
-                                        },
-                                  );
-                                }),
-                              if (controller.showBarsBtn)
-                                CupertinoButton(
-                                  minSize: 40,
-                                  padding: const EdgeInsets.all(0),
-                                  child: const Icon(
-                                    FontAwesomeIcons.bars,
-                                    size: 20,
-                                  ),
-                                  onPressed: () async {
-                                    // 跳转收藏夹选择页
-                                    final result = await Get.toNamed(
-                                      EHRoutes.selFavorie,
-                                      id: isLayoutLarge ? 1 : null,
-                                    );
-                                    if (result != null && result is Favcat) {
-                                      final index = controller.favcatList
-                                          .indexWhere((element) =>
-                                              element.favId == result.favId);
-                                      pageController.jumpToPage(index);
-                                    }
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
+              FavoriteTabBar(
+                pageController: pageController,
+                linkScrollBarController: linkScrollBarController,
+                controller: controller,
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget buildNestedScrollView(
+      double headerMaxHeight, bool hideTopBarOnScroll) {
+    return ExtendedNestedScrollView(
+      floatHeaderSlivers: true,
+      onlyOneScrollInBody: true,
+      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+        return [
+          SliverOverlapAbsorber(
+            handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(
+                context),
+            sliver: SliverPersistentHeader(
+              floating: true,
+              pinned: true,
+              delegate: FooSliverPersistentHeaderDelegate(
+                builder: (context, offset, _) => _buildTopBar(
+                  context,
+                  offset,
+                  headerMaxHeight,
+                ),
+                // minHeight: context.mediaQueryPadding.top + kTopTabbarHeight,
+                minHeight: hideTopBarOnScroll
+                    ? context.mediaQueryPadding.top + kTopTabbarHeight
+                    : headerMaxHeight,
+                maxHeight: headerMaxHeight,
+              ),
+            ),
+          )
+        ];
+      },
+      body: buildBody(),
+    );
+  }
+
+  Builder buildBody() {
+    return Builder(builder: (context) {
+      return GestureDetector(
+        onPanDown: (e) {
+          // 恢复启用 scrollToItem
+          linkScrollBarController.enableScrollToItem();
+        },
+        child: Obx(() {
+          final hideTopBarOnScroll = _ehConfigService.hideTopBarOnScroll;
+          return PageView(
+            key: ValueKey(controller.showBarsBtn), // 登录状态变化后能刷新
+            controller: pageController,
+            children: [
+              ...controller.favcatList
+                  .map((e) => FavoriteSubPage(
+                        favcat: e.favId,
+                        pinned: !hideTopBarOnScroll,
+                      ))
+                  .toList(),
+            ],
+            onPageChanged: (index) {
+              linkScrollBarController.scrollToItem(index);
+              controller.onPageChanged(index);
+            },
+          );
+        }),
+      );
+    });
   }
 
   Widget getNavigationBar(BuildContext context) {
@@ -168,7 +174,7 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
         ),
         padding: const EdgeInsetsDirectional.only(end: 4),
         middle: GestureDetector(
-          onTap: () => controller.srcollToTop(context),
+          onTap: () => controller.scrollToTop(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -235,103 +241,190 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
               ),
               onPressed: () => controller.setOrder(context),
             ),
+            Obx(() {
+              if (controller.afterJump) {
+                return CupertinoButton(
+                  minSize: 40,
+                  padding: const EdgeInsets.all(0),
+                  child: const Icon(
+                    CupertinoIcons.arrow_up_circle,
+                    size: 28,
+                  ),
+                  onPressed: () {
+                    controller.jumpToTop();
+                  },
+                );
+              } else {
+                return const SizedBox();
+              }
+            }),
             CupertinoButton(
+              minSize: 40,
               padding: const EdgeInsets.all(0),
-              minSize: 36,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                constraints: const BoxConstraints(minWidth: 24),
-                decoration: BoxDecoration(
-                    border: Border.all(
-                      color: CupertinoDynamicColor.resolve(
-                          CupertinoColors.activeBlue, context),
-                      width: 1.8,
-                    ),
-                    borderRadius: const BorderRadius.all(Radius.circular(8))),
-                child: Obx(() => Text(
-                      '${controller.curPage + 1}',
-                      textAlign: TextAlign.center,
-                      textScaleFactor: 0.9,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.activeBlue, context)),
-                    )),
+              child: const Icon(
+                CupertinoIcons.arrow_uturn_down_circle,
+                size: 28,
               ),
               onPressed: () {
-                controller.showJumpToPage();
+                controller.showJumpDialog(context);
               },
             ),
+            // PageSelectorButton(controller: controller),
           ],
         ).paddingOnly(right: 4),
       );
     });
   }
+}
 
-  @override
-  void initState() {
-    super.initState();
-    pageController = PageController(initialPage: controller.index);
-  }
+// class PageSelectorButton extends StatelessWidget {
+//   const PageSelectorButton({
+//     Key? key,
+//     required this.controller,
+//   }) : super(key: key);
+//
+//   final FavoriteTabberController controller;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return CupertinoButton(
+//       padding: const EdgeInsets.all(0),
+//       minSize: 36,
+//       child: Container(
+//         alignment: Alignment.center,
+//         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+//         constraints: const BoxConstraints(minWidth: 24, maxHeight: 26),
+//         decoration: BoxDecoration(
+//             border: Border.all(
+//               color: CupertinoDynamicColor.resolve(
+//                   CupertinoColors.activeBlue, context),
+//               width: 1.8,
+//             ),
+//             borderRadius: const BorderRadius.all(Radius.circular(8))),
+//         child: Obx(() => Text(
+//               '${max(1, controller.curPage + 1)}',
+//               textAlign: TextAlign.center,
+//               textScaleFactor: 0.9,
+//               style: TextStyle(
+//                   fontWeight: FontWeight.bold,
+//                   height: 1.25,
+//                   color: CupertinoDynamicColor.resolve(
+//                       CupertinoColors.activeBlue, context)),
+//             )),
+//       ),
+//       onPressed: () {
+//         controller.showJumpToPage();
+//       },
+//     );
+//   }
+// }
+
+class FavoriteTabBar extends StatelessWidget {
+  const FavoriteTabBar({
+    Key? key,
+    required this.pageController,
+    required this.linkScrollBarController,
+    required this.controller,
+  }) : super(key: key);
+
+  final PageController pageController;
+  final LinkScrollBarController linkScrollBarController;
+  final FavoriteTabberController controller;
 
   @override
   Widget build(BuildContext context) {
-    final headerMaxHeight = context.mediaQueryPadding.top + kHeaderMaxHeight;
-
-    final Widget scrollView = ExtendedNestedScrollView(
-      floatHeaderSlivers: true,
-      onlyOneScrollInBody: true,
-      headerSliverBuilder: (context, innerBoxIsScrolled) {
-        return [
-          SliverOverlapAbsorber(
-            handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(
-                context),
-            sliver: SliverPersistentHeader(
-              floating: true,
-              pinned: true,
-              delegate: FooSliverPersistentHeaderDelegate(
-                builder: (context, offset, _) => _buildTopBar(
-                  context,
-                  offset,
-                  headerMaxHeight,
+    return Container(
+      decoration: const BoxDecoration(
+        border: kDefaultNavBarBorder,
+      ),
+      padding: EdgeInsets.only(
+        left: context.mediaQueryPadding.left,
+        right: context.mediaQueryPadding.right,
+      ),
+      child: Container(
+        height: kTopTabbarHeight,
+        child: Obx(() {
+          return Row(
+            children: [
+              Expanded(
+                child: LinkScrollBar(
+                  pageController: pageController,
+                  controller: linkScrollBarController,
+                  items: controller.favcatList
+                      .map((e) => LinkTabItem(
+                            title: e.favTitle,
+                            // icon: LineIcons.dotCircleAlt,
+                          ))
+                      .toList(),
+                  itemPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  initIndex: controller.index,
+                  onItemChange: (index) => pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.ease),
                 ),
-                minHeight: context.mediaQueryPadding.top + kTopTabbarHeight,
-                maxHeight: headerMaxHeight,
               ),
-            ),
-          )
-        ];
-      },
-      body: Builder(builder: (context) {
-        return GestureDetector(
-          onPanDown: (e) {
-            // 恢复启用 scrollToItem
-            linkScrollBarController.enableScrollToItem();
-          },
-          child: Obx(() {
-            return PageView(
-              key: ValueKey(controller.showBarsBtn), // 登录状态变化后能刷新
-              controller: pageController,
-              children: [
-                ...controller.favcatList
-                    .map((e) => FavoriteSubPage(
-                          favcat: e.favId,
-                        ))
-                    .toList(),
-              ],
-              onPageChanged: (index) {
-                linkScrollBarController.scrollToItem(index);
-                controller.onPageChanged(index);
-              },
-            );
-          }),
-        );
-      }),
-    );
-
-    return CupertinoPageScaffold(
-      // navigationBar: navigationBar,
-      child: SizeCacheWidget(child: scrollView),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 刷新按钮
+                    if (GetPlatform.isDesktop)
+                      Builder(builder: (context) {
+                        bool isRefresh = false;
+                        return StatefulBuilder(builder: (context, setState) {
+                          return CupertinoButton(
+                            minSize: 40,
+                            padding: const EdgeInsets.all(0),
+                            child: isRefresh
+                                ? const CupertinoActivityIndicator(radius: 10)
+                                : const Icon(
+                                    FontAwesomeIcons.rotateRight,
+                                    size: 20,
+                                  ),
+                            onPressed: () async {
+                              setState(() {
+                                isRefresh = true;
+                              });
+                              try {
+                                await controller.reloadData();
+                              } finally {
+                                setState(() {
+                                  isRefresh = false;
+                                });
+                              }
+                            },
+                          );
+                        });
+                      }),
+                    if (controller.showBarsBtn)
+                      CupertinoButton(
+                        minSize: 40,
+                        padding: const EdgeInsets.all(0),
+                        child: const Icon(
+                          FontAwesomeIcons.bars,
+                          size: 20,
+                        ),
+                        onPressed: () async {
+                          // 跳转收藏夹选择页
+                          final result = await Get.toNamed(
+                            EHRoutes.selFavorie,
+                            id: isLayoutLarge ? 1 : null,
+                          );
+                          if (result != null && result is Favcat) {
+                            final index = controller.favcatList.indexWhere(
+                                (element) => element.favId == result.favId);
+                            pageController.jumpToPage(index);
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 }

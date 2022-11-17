@@ -15,11 +15,10 @@ import 'package:fehviewer/utils/cust_lib/persistent_header_builder.dart';
 import 'package:fehviewer/utils/cust_lib/sliver/sliver_persistent_header.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:keframe/keframe.dart';
-
-import 'constants.dart';
 
 const CupertinoDynamicColor _kClearButtonColor =
     CupertinoDynamicColor.withBrightness(
@@ -669,8 +668,7 @@ class _GallerySearchPageState extends State<GallerySearchPage> {
           return getGallerySliverList(
             logic.state,
             controller.heroTag,
-            maxPage: controller.maxPage,
-            curPage: controller.curPage,
+            next: logic.next,
             lastComplete: controller.lastComplete,
             centerKey: centerKey,
             key: controller.sliverAnimatedListKey,
@@ -707,47 +705,81 @@ class _GallerySearchPageState extends State<GallerySearchPage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             // 页码
+            // Obx(() {
+            //   if (controller.curPage > -1) {
+            //     return Container(
+            //       margin: const EdgeInsets.only(left: 8, right: 4),
+            //       child: CupertinoButton(
+            //         minSize: 36,
+            //         padding: const EdgeInsets.all(0),
+            //         child: Container(
+            //           padding: const EdgeInsets.symmetric(
+            //               horizontal: 4, vertical: 0),
+            //           constraints: const BoxConstraints(minWidth: 24),
+            //           decoration: BoxDecoration(
+            //             border: Border.all(
+            //               color: CupertinoDynamicColor.resolve(
+            //                   CupertinoColors.activeBlue, context),
+            //               width: 2.0,
+            //             ),
+            //             borderRadius: BorderRadius.circular(8),
+            //           ),
+            //           child: Obx(() => Text(
+            //                 '${controller.curPage + 1}',
+            //                 textAlign: TextAlign.center,
+            //                 textScaleFactor: 0.85,
+            //                 style: TextStyle(
+            //                   fontWeight: FontWeight.bold,
+            //                   color: CupertinoDynamicColor.resolve(
+            //                       CupertinoColors.activeBlue, context),
+            //                   // height: 1.2,
+            //                   // textBaseline: TextBaseline.ideographic,
+            //                 ),
+            //                 // strutStyle: const StrutStyle(
+            //                 //   leading: 0.2,
+            //                 //   height: 1.2,
+            //                 //   forceStrutHeight: true,
+            //                 // ),
+            //               )),
+            //         ),
+            //         onPressed: () {
+            //           controller.showJumpToPage();
+            //         },
+            //       ),
+            //     );
+            //   } else {
+            //     return const SizedBox.shrink();
+            //   }
+            // }),
             Obx(() {
-              if (controller.curPage > -1) {
-                return Container(
-                  margin: const EdgeInsets.only(left: 8, right: 4),
-                  child: CupertinoButton(
-                    minSize: 36,
-                    padding: const EdgeInsets.all(0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 0),
-                      constraints: const BoxConstraints(minWidth: 24),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: CupertinoDynamicColor.resolve(
-                              CupertinoColors.activeBlue, context),
-                          width: 2.0,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Obx(() => Text(
-                            '${controller.curPage + 1}',
-                            textAlign: TextAlign.center,
-                            textScaleFactor: 0.85,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: CupertinoDynamicColor.resolve(
-                                  CupertinoColors.activeBlue, context),
-                              // height: 1.2,
-                              // textBaseline: TextBaseline.ideographic,
-                            ),
-                            // strutStyle: const StrutStyle(
-                            //   leading: 0.2,
-                            //   height: 1.2,
-                            //   forceStrutHeight: true,
-                            // ),
-                          )),
-                    ),
-                    onPressed: () {
-                      controller.showJumpToPage();
-                    },
+              if (controller.afterJump) {
+                return CupertinoButton(
+                  minSize: 40,
+                  padding: const EdgeInsets.all(0),
+                  child: const Icon(
+                    CupertinoIcons.arrow_up_circle,
+                    size: 28,
                   ),
+                  onPressed: () {
+                    controller.jumpToTop();
+                  },
+                );
+              } else {
+                return const SizedBox();
+              }
+            }),
+            Obx(() {
+              if (controller.next.isNotEmpty) {
+                return CupertinoButton(
+                  minSize: 40,
+                  padding: const EdgeInsets.all(0),
+                  child: const Icon(
+                    CupertinoIcons.arrow_uturn_down_circle,
+                    size: 28,
+                  ),
+                  onPressed: () {
+                    controller.showJumpDialog(context);
+                  },
                 );
               } else {
                 return const SizedBox.shrink();
@@ -792,17 +824,17 @@ class _GallerySearchPageState extends State<GallerySearchPage> {
             //   },
             // ),
             // 打开快捷搜索
-            CupertinoButton(
-              minSize: 36,
-              padding: const EdgeInsets.all(0),
-              child: const Icon(
-                FontAwesomeIcons.listUl,
-                size: 20,
-              ),
-              onPressed: () {
-                controller.quickSearchList();
-              },
-            ),
+            // CupertinoButton(
+            //   minSize: 36,
+            //   padding: const EdgeInsets.all(0),
+            //   child: const Icon(
+            //     FontAwesomeIcons.listUl,
+            //     size: 20,
+            //   ),
+            //   onPressed: () {
+            //     controller.quickSearchList();
+            //   },
+            // ),
           ],
         ),
       );
@@ -827,81 +859,111 @@ class SearchTextFieldIn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       ehTheme.isDarkMode;
-      return CupertinoTextField(
-        style: const TextStyle(height: 1.25),
-        decoration: BoxDecoration(
-          color: ehTheme.textFieldBackgroundColor!.withOpacity(0.6),
-          borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-        ),
-        placeholder: L10n.of(context).search,
-        placeholderStyle: const TextStyle(
-          fontWeight: FontWeight.w400,
-          color: CupertinoColors.placeholderText,
-          height: 1.25,
-        ),
-        // clearButtonMode: OverlayVisibilityMode.editing,
-        prefix: CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          minSize: 0,
-          child: Icon(
-            FontAwesomeIcons.magnifyingGlass,
-            size: 20.0,
-            color: CupertinoColors.systemGrey.withOpacity(iconOpacity),
+      return KeyboardVisibilityBuilder(builder: (context, isKeyboardVisible) {
+        return CupertinoTextField(
+          style: const TextStyle(height: 1.25),
+          decoration: BoxDecoration(
+            color: ehTheme.textFieldBackgroundColor!.withOpacity(0.6),
+            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
           ),
-          onPressed: () {},
-        ),
-        suffix: GetBuilder<SearchPageController>(
-          id: GetIds.SEARCH_CLEAR_BTN,
-          tag: searchPageCtrlTag,
-          builder: (SearchPageController controller) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (controller.textIsGalleryUrl)
+          placeholder: L10n.of(context).search,
+          placeholderStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            color: CupertinoColors.placeholderText,
+            height: 1.25,
+          ),
+          // clearButtonMode: OverlayVisibilityMode.editing,
+          prefix: CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minSize: 0,
+            child: Icon(
+              FontAwesomeIcons.magnifyingGlass,
+              size: 20.0,
+              color: CupertinoColors.systemGrey.withOpacity(iconOpacity),
+            ),
+            onPressed: () {},
+          ),
+          suffix: GetBuilder<SearchPageController>(
+            id: GetIds.SEARCH_CLEAR_BTN,
+            tag: searchPageCtrlTag,
+            builder: (SearchPageController controller) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (GetPlatform.isDesktop)
+                    Builder(builder: (context) {
+                      bool isRefresh = false;
+                      return StatefulBuilder(builder: (context, setState) {
+                        return GestureDetector(
+                          onTap: () async {
+                            setState(() {
+                              isRefresh = true;
+                            });
+                            await controller.reloadData();
+                            setState(() {
+                              isRefresh = false;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: isRefresh
+                                ? const CupertinoActivityIndicator(radius: 8)
+                                : Icon(
+                                    FontAwesomeIcons.rotateRight,
+                                    size: 18.0,
+                                    color: CupertinoDynamicColor.resolve(
+                                            _kClearButtonColor, Get.context!)
+                                        .withOpacity(iconOpacity),
+                                  ),
+                          ),
+                        );
+                      });
+                    }),
+                  if (controller.textIsNotEmpty && !controller.textIsGalleryUrl)
+                    GestureDetector(
+                      onTap: controller.addToQuickSearch,
+                      child: Icon(
+                        FontAwesomeIcons.circlePlus,
+                        size: 20.0,
+                        color: CupertinoDynamicColor.resolve(
+                                _kClearButtonColor, Get.context!)
+                            .withOpacity(iconOpacity),
+                      ).paddingSymmetric(horizontal: 4),
+                    ),
+                  if (controller.textIsNotEmpty)
+                    GestureDetector(
+                      onTap: controller.clearText,
+                      child: Icon(
+                        FontAwesomeIcons.circleXmark,
+                        size: 20.0,
+                        color: CupertinoDynamicColor.resolve(
+                                _kClearButtonColor, Get.context!)
+                            .withOpacity(iconOpacity),
+                      ).paddingSymmetric(horizontal: 6),
+                    ),
                   GestureDetector(
-                    onTap: controller.jumpToGallery,
+                    onTap: controller.quickSearchList,
                     child: Icon(
-                      FontAwesomeIcons.circleArrowRight,
-                      size: 20.0,
+                      FontAwesomeIcons.listUl,
+                      size: 18.0,
                       color: CupertinoDynamicColor.resolve(
                               _kClearButtonColor, Get.context!)
                           .withOpacity(iconOpacity),
-                    ).paddingSymmetric(horizontal: 6),
+                    ).paddingOnly(right: 10, left: 6),
                   ),
-                if (controller.textIsNotEmpty && !controller.textIsGalleryUrl)
-                  GestureDetector(
-                    onTap: controller.addToQuickSearch,
-                    child: Icon(
-                      FontAwesomeIcons.circlePlus,
-                      size: 20.0,
-                      color: CupertinoDynamicColor.resolve(
-                              _kClearButtonColor, Get.context!)
-                          .withOpacity(iconOpacity),
-                    ).paddingSymmetric(horizontal: 4),
-                  ),
-                if (controller.textIsNotEmpty)
-                  GestureDetector(
-                    onTap: controller.clearText,
-                    child: Icon(
-                      FontAwesomeIcons.circleXmark,
-                      size: 20.0,
-                      color: CupertinoDynamicColor.resolve(
-                              _kClearButtonColor, Get.context!)
-                          .withOpacity(iconOpacity),
-                    ).paddingSymmetric(horizontal: 6),
-                  ),
-              ],
-            );
-          },
-        ),
-        padding: const EdgeInsetsDirectional.fromSTEB(0, 6, 5, 6),
-        controller: controller.searchTextController,
-        autofocus: controller.autofocus,
-        onEditingComplete: controller.onEditingComplete,
-        focusNode: controller.searchFocusNode,
-        maxLines: multiline ? null : 1,
-        textInputAction: TextInputAction.search,
-      );
+                ],
+              );
+            },
+          ),
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 6, 5, 6),
+          controller: controller.searchTextController,
+          autofocus: controller.autofocus,
+          onEditingComplete: controller.onEditingComplete,
+          focusNode: controller.searchFocusNode,
+          maxLines: (isKeyboardVisible && multiline) ? null : 1,
+          textInputAction: TextInputAction.search,
+        );
+      });
     });
   }
 }

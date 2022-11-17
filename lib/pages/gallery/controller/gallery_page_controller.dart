@@ -407,6 +407,7 @@ class GalleryPageController extends GetxController
     if (scrollController == null) {
       return;
     }
+    // logger.d('${scrollController?.offset}');
     try {
       if (scrollController!.offset < kHeaderHeightOffset + kHeaderPaddingTop &&
           !gState.hideNavigationBtn) {
@@ -416,7 +417,9 @@ class GalleryPageController extends GetxController
           gState.hideNavigationBtn) {
         gState.hideNavigationBtn = false;
       }
-    } catch (_) {}
+    } catch (_) {
+      logger.e('$_');
+    }
   }
 
   /// 拉取直到index的缩略图信息
@@ -521,6 +524,7 @@ class GalleryPageController extends GetxController
     int itemSer, {
     CancelToken? cancelToken,
     bool changeSource = false,
+    bool refresh = false,
   }) async {
     try {
       /// 当前缩略图对象
@@ -556,7 +560,8 @@ class GalleryPageController extends GetxController
           final GalleryImage? _image = await fetchImageInfo(
             gState.imageMap[itemSer]?.href ?? '',
             sourceId: _sourceId,
-            refresh: true,
+            refresh: changeSource || refresh,
+            debugLabel: 'fetchAndParserImageInfo 加载当前页信息',
           );
 
           logger.v('fetch _image ${_image?.toJson()}');
@@ -576,6 +581,7 @@ class GalleryPageController extends GetxController
             imageWidth: _image.imageWidth,
             imageHeight: _image.imageHeight,
             originImageUrl: _image.originImageUrl,
+            filename: _image.filename,
             changeSource: changeSource,
             errorInfo: '',
             tempPath: '',

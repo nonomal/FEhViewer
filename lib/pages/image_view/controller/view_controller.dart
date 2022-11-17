@@ -17,7 +17,6 @@ import 'package:fehviewer/pages/image_view/common.dart';
 import 'package:fehviewer/pages/image_view/view/view_widget.dart';
 import 'package:fehviewer/store/archive_async.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -45,7 +44,7 @@ const double kBottomBarHeight = 64.0;
 const double kSliderBarHeight = 64.0;
 
 // 顶栏高度
-const double kTopBarHeight = 44.0;
+const double kTopBarHeight = 56.0;
 
 // 顶栏按钮高度
 const double kTopBarButtonHeight = 44.0;
@@ -221,7 +220,7 @@ class ViewExtController extends GetxController {
   void onReady() {
     super.onReady();
 
-    logger.d('Read onReady');
+    logger.v('Read onReady');
 
     /// 初始预载
     /// 后续的预载触发放在翻页事件中
@@ -488,10 +487,14 @@ class ViewExtController extends GetxController {
         imageTask.filePath != null &&
         imageTask.filePath!.isNotEmpty &&
         imageTask.status == TaskStatus.complete.value) {
+      final filePath = dir.isContentUri
+          ? '$dir%2F${imageTask.filePath}'
+          : path.join(dir, imageTask.filePath!);
+
       return GalleryImage(
         ser: itemSer,
         completeDownload: true,
-        filePath: path.join(dir, imageTask.filePath!),
+        filePath: filePath,
       );
     }
     return null;
@@ -691,6 +694,15 @@ class ViewExtController extends GetxController {
     final enableAnimate = animate ?? _ehConfigService.turnPageAnimations;
 
     if (enableAnimate) {
+      if (vState.viewMode == ViewMode.topToBottom) {
+        itemScrollController.scrollTo(
+          index: page,
+          duration: duration,
+          curve: Curves.ease,
+        );
+        return;
+      }
+
       switch (pageViewType) {
         case PageViewType.photoView:
           pageController.animateToPage(
@@ -714,6 +726,13 @@ class ViewExtController extends GetxController {
           );
       }
     } else {
+      if (vState.viewMode == ViewMode.topToBottom) {
+        itemScrollController.jumpTo(
+          index: page,
+        );
+        return;
+      }
+
       switch (pageViewType) {
         case PageViewType.photoView:
           pageController.jumpToPage(page);
@@ -858,21 +877,55 @@ class ViewExtController extends GetxController {
   }
 
   void tapShare(BuildContext context) {
+    final ser = vState.currentItemIndex + 1;
     if (vState.loadFrom == LoadFrom.gallery) {
-      logger.d('share networkFile ${vState.currentItemIndex + 1}');
-      final GalleryImage? p = vState.imageMap?[vState.currentItemIndex + 1];
+      logger.d('share networkFile $ser');
+      final GalleryImage? p = vState.imageMap?[ser];
       logger.d('p:\n${p?.toJson()}');
       showShareActionSheet(
         context,
         imageUrl: p?.imageUrl,
         origImageUrl: p?.originImageUrl,
         filePath: p?.filePath,
+        gid: vState.gid,
+        ser: ser,
+        filename: p?.filename,
       );
     } else {
       logger.d('share localFile');
       showShareActionSheet(
         context,
+        isLocal: true,
         filePath: vState.imagePathList[vState.currentItemIndex],
+        gid: vState.gid,
+        ser: ser,
+      );
+    }
+  }
+
+  void tapSave(BuildContext context) {
+    final ser = vState.currentItemIndex + 1;
+    if (vState.loadFrom == LoadFrom.gallery) {
+      logger.d('save networkFile ser');
+      final GalleryImage? p = vState.imageMap?[ser];
+      logger.d('p:\n${p?.toJson()}');
+      showSaveActionSheet(
+        context,
+        imageUrl: p?.imageUrl,
+        origImageUrl: p?.originImageUrl,
+        filePath: p?.filePath,
+        gid: vState.gid,
+        ser: ser,
+        filename: p?.filename,
+      );
+    } else {
+      logger.d('save localFile');
+      showSaveActionSheet(
+        context,
+        isLocal: true,
+        filePath: vState.imagePathList[vState.currentItemIndex],
+        gid: vState.gid,
+        ser: ser,
       );
     }
   }
@@ -1093,7 +1146,7 @@ class ViewExtController extends GetxController {
     if (vState.autoRead) {
       if (vState.viewMode == ViewMode.topToBottom &&
           itemScrollController.isAttached) {
-        logger.d('trd minImageIndex:${vState.minImageIndex + 1}');
+        logger.d('t2d minImageIndex:${vState.minImageIndex + 1}');
         final _minIndex = vState.minImageIndex;
         final _minImageSer = _minIndex + 1;
         if (!(vState.loadCompleMap[_minImageSer] ?? false)) {

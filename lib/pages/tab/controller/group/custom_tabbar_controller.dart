@@ -56,17 +56,8 @@ class CustomTabbarController extends DefaultTabViewController {
   set reorderable(bool val) => _reorderable.value = val;
 
   Map<String, CustomSubListController> subControllerMap = {};
-  CustomSubListController? get currSubController =>
+  CustomSubListController? get _currSubController =>
       subControllerMap[currProfileUuid];
-
-  @override
-  int get maxPage => currSubController?.maxPage ?? 1;
-
-  @override
-  int get minPage => currSubController?.minPage ?? 0;
-
-  @override
-  int get curPage => currSubController?.curPage ?? 0;
 
   late PageController pageController;
 
@@ -129,6 +120,8 @@ class CustomTabbarController extends DefaultTabViewController {
       Get.lazyPut(() => CustomSubListController(profileUuid: profile.uuid),
           tag: profile.uuid);
     }
+
+    syncProfiles();
   }
 
   @override
@@ -144,31 +137,26 @@ class CustomTabbarController extends DefaultTabViewController {
   }
 
   @override
-  Future<void> showJumpToPage() async {
-    void _jump() {
-      logger.d('jumpToPage');
-      final String _input = pageJumpTextEditController.text.trim();
+  Future<void> showJumpDialog(BuildContext context) async {
+    await _currSubController?.showJumpDialog(context);
+  }
 
-      if (_input.isEmpty) {
-        showToast(L10n.of(Get.context!).input_empty);
-      }
+  @override
+  bool get afterJump => _currSubController?.afterJump ?? false;
 
-      // 数字检查
-      if (!RegExp(r'(^\d+$)').hasMatch(_input)) {
-        showToast(L10n.of(Get.context!).input_error);
-      }
+  @override
+  Future<void> jumpToTop() async {
+    await _currSubController?.jumpToTop();
+  }
 
-      final int _toPage = int.parse(_input) - 1;
-      if (_toPage >= 0 && _toPage <= maxPage - 1) {
-        FocusScope.of(Get.context!).requestFocus(FocusNode());
-        currSubController?.loadFromPage(_toPage);
-        Get.back();
-      } else {
-        showToast(L10n.of(Get.context!).page_range_error);
-      }
+  @override
+  Future<void> reloadData() async {
+    if (_currSubController?.reloadData != null) {
+      await _currSubController!.reloadData();
+    } else {
+      update();
+      await _currSubController?.reloadData();
     }
-
-    return await showJumpDialog(jump: _jump, maxPage: maxPage);
   }
 
   @override
@@ -215,6 +203,8 @@ class CustomTabbarController extends DefaultTabViewController {
     await 200.milliseconds.delay();
     pageController.jumpToPage(index);
     linkScrollBarController.scrollToItem(index);
+
+    syncProfiles();
   }
 
   // 删除分组配置
@@ -227,8 +217,11 @@ class CustomTabbarController extends DefaultTabViewController {
 
     addDelProfile(profiles.firstWhere((element) => element.uuid == uuid));
     profiles.removeWhere((element) => element.uuid == uuid);
+
+    syncProfiles();
   }
 
+  // 添加到已删除列表 记录删除时间
   void addDelProfile(CustomProfile profile) {
     final nowTime = DateTime.now().millisecondsSinceEpoch;
     final _index = delProfiles.indexOf((e) => e.name == profile.name);
@@ -301,12 +294,15 @@ class CustomTabbarController extends DefaultTabViewController {
   }
 
   Future<void> syncProfiles() async {
+    if (!webdavController.syncGroupProfile) {
+      return;
+    }
     final listLocal = List<CustomProfile>.from(profiles);
     logger.v('listLocal ${listLocal.length} \n${listLocal.map((e) => e.uuid)}');
     logger.v('${jsonEncode(listLocal)} ');
 
     // 下载远程文件名列表 包含： 分组名 uuid 时间戳
-    final listRemote = await webdavController.getRemotGroupList();
+    final listRemote = await webdavController.getRemoteGroupList();
     // 远程列表为空 直接上传本地所有分组
     if (listRemote.isEmpty) {
       await _uploadProfiles(listLocal);
@@ -319,8 +315,10 @@ class CustomTabbarController extends DefaultTabViewController {
     // 合并列表
     final allProfile = <CustomProfile?>{...listRemote, ...listLocal};
     final diff = allProfile
-        .where((element) =>
-            !listRemote.contains(element) || !listLocal.contains(element))
+        .where(
+          (CustomProfile? element) =>
+              !listRemote.contains(element) || !listLocal.contains(element),
+        )
         .toList()
         .toSet();
     logger.v('diff ${diff.map((e) => e?.toJson())}');
@@ -399,7 +397,7 @@ class CustomTabbarController extends DefaultTabViewController {
 
         if (profile != null) {
           final upload = webdavController.uploadGroupProfile(profile);
-          final delete = webdavController.deleteRemotGroup(_oriRemote);
+          final delete = webdavController.deleteRemoteGroup(_oriRemote);
           await Future.wait([upload, delete]);
         }
       });

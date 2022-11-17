@@ -1,6 +1,7 @@
 import 'package:archive_async/archive_async.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:fehviewer/const/const.dart';
+import 'package:fehviewer/models/gallery_image.dart';
 import 'package:fehviewer/pages/image_view/view/view_widget.dart';
 import 'package:fehviewer/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
@@ -128,7 +129,7 @@ class ViewKeyboardListener extends GetView<ViewExtController> {
               controller.tapAutoRead(context, setInv: false),
         };
 
-        logger.d('logicalKey: ${event.logicalKey}');
+        logger.v('logicalKey: ${event.logicalKey}');
         actionMap[event.logicalKey]?.call();
       },
       child: child,
@@ -144,16 +145,17 @@ class ImageView extends StatelessWidget {
     return GetBuilder<ViewExtController>(
       id: idImagePageView,
       builder: (logic) {
-        logger.d('build ImageView');
+        logger.v('build ImageView');
         switch (logic.vState.viewMode) {
           case ViewMode.topToBottom:
             return const ImageListView();
           case ViewMode.LeftToRight:
+            return const ImagePageView();
             return kReleaseMode
                 ? const ImagePageView()
                 : const ImagePhotoView();
           case ViewMode.rightToLeft:
-            // return const ImagePageView(reverse: true);
+            return const ImagePageView(reverse: true);
             return kReleaseMode
                 ? const ImagePageView(reverse: true)
                 : const ImagePhotoView(reverse: true);
@@ -182,7 +184,7 @@ PhotoViewScaleState lisviewScaleStateCycle(PhotoViewScaleState actual) {
   }
 }
 
-class DoublePageView extends GetView<ViewExtController> {
+class DoublePageView extends StatefulWidget {
   const DoublePageView({
     Key? key,
     required this.pageIndex,
@@ -190,99 +192,166 @@ class DoublePageView extends GetView<ViewExtController> {
 
   final int pageIndex;
 
-  // ViewExtState get vState => controller.vState;
+  @override
+  State<DoublePageView> createState() => _DoublePageViewState();
+}
+
+class _DoublePageViewState extends State<DoublePageView> {
+  ViewExtController get controller => Get.find();
+
+  ViewExtState get vState => controller.vState;
+
+  double _ratioStart = 1.0;
+  double _ratioEnd = 1.0;
+  int serStart = 1;
+
+  bool needResizeS = false;
+  bool needResizeE = false;
+
+  double? getRatio(int ser, ViewExtState vState) {
+    final size = vState.imageSizeMap[ser];
+    if (size != null) {
+      logger.d('getRatio $ser ${size.width} ${size.height}');
+      return size.width / size.height;
+    }
+
+    final GalleryImage? _curImage = vState.imageMap?[ser];
+    // logger.d('_curImage $ser ${_curImage?.toJson()}');
+    if (_curImage == null) {
+      return null;
+    }
+
+    if ((_curImage.imageHeight ?? 0) > 0) {
+      return (_curImage.imageWidth ?? 0) / _curImage.imageHeight!;
+    } else if ((_curImage.thumbHeight ?? 0) > 0) {
+      return (_curImage.thumbWidth ?? 0) / _curImage.thumbHeight!;
+    } else {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 双页阅读
+    serStart = vState.columnMode == ViewColumnMode.oddLeft
+        ? widget.pageIndex * 2 + 1
+        : widget.pageIndex * 2;
+    vState.serStart = serStart;
+    final ratioStart = getRatio(serStart, vState);
+    if (ratioStart == null) {
+      needResizeS = true;
+    }
+    _ratioStart = ratioStart ?? 3 / 4;
+
+    final ratioEnd =
+        vState.filecount <= serStart ? 0.0 : getRatio(serStart + 1, vState);
+    if (ratioEnd == null) {
+      needResizeE = true;
+    }
+    _ratioEnd = ratioEnd ?? 3 / 4;
+  }
+
+  double get _ratioBoth => _ratioStart + _ratioEnd;
 
   @override
   Widget build(BuildContext context) {
-    final ViewExtState vState = controller.vState;
     final reverse = vState.viewMode == ViewMode.rightToLeft;
 
-    // 双页阅读
-    final int serStart = vState.columnMode == ViewColumnMode.oddLeft
-        ? pageIndex * 2 + 1
-        : pageIndex * 2;
-    vState.serStart = serStart;
-
-    // logger.d('pageIndex $pageIndex leftSer $serStart');
-
-    Alignment? alignmentL =
-        vState.filecount > serStart ? Alignment.centerRight : null;
-    Alignment? alignmentR = serStart <= 0 ? null : Alignment.centerLeft;
-
-    logger.v('alignmentL:$alignmentL  alignmentR:$alignmentR');
-
-    double? _flexStart = () {
-      try {
-        final _curImage = vState.imageMap?[serStart];
-        return _curImage!.imageWidth! / _curImage.imageHeight!;
-      } on Exception catch (_) {
-        final _curImage = vState.imageMap?[serStart];
-        return _curImage!.thumbWidth! / _curImage.thumbHeight!;
-      } catch (e) {
-        return 1.0;
-      }
-    }();
-
-    double? _flexEnd = () {
-      if (vState.filecount <= serStart) {
-        return 0.0;
-      }
-      try {
-        final _curImage = vState.imageMap?[serStart + 1];
-        return _curImage!.imageWidth! / _curImage.imageHeight!;
-      } on Exception catch (_) {
-        final _curImage = vState.imageMap?[serStart + 1];
-        return _curImage!.thumbWidth! / _curImage.thumbHeight!;
-      } catch (e) {
-        return 1.0;
-      }
-    }();
-
-    logger.v('_flexStart:$_flexStart  _flexEnd:$_flexEnd');
+    logger.v(
+        '_ratioStart:$_ratioStart, _ratioEnd:$_ratioEnd, _ratioBoth:$_ratioBoth');
 
     final List<Widget> _pageList = <Widget>[
       if (serStart > 0)
-        Expanded(
-          flex: _flexStart * 1000 ~/ 1,
-          child: Container(
-            alignment: reverse ? alignmentR : alignmentL,
-            child: ViewImage(
-              imageSer: serStart,
-              enableDoubleTap: false,
-              mode: ExtendedImageMode.none,
-              // enableSlideOutPage: false,
-            ),
-          ),
+        AspectRatio(
+          aspectRatio: _ratioStart,
+          child: buildViewImageStart(),
         ),
       if (vState.filecount > serStart)
-        Expanded(
-          flex: _flexEnd * 1000 ~/ 1,
-          child: Container(
-            alignment: reverse ? alignmentL : alignmentR,
-            child: ViewImage(
-              imageSer: serStart + 1,
-              enableDoubleTap: false,
-              mode: ExtendedImageMode.none,
-              // enableSlideOutPage: false,
-            ),
-          ),
+        AspectRatio(
+          aspectRatio: _ratioEnd,
+          child: buildViewImageEnd(),
         ),
     ];
 
+    Widget doubleView = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: reverse ? _pageList.reversed.toList() : _pageList,
+    );
+
+    doubleView = AspectRatio(
+      aspectRatio: _ratioBoth,
+      child: doubleView,
+    );
+
     return GestureDetector(
-      // onDoubleTap: () {
-      //   logger.d('onDoubleTap');
-      //   controller.photoViewScaleStateController.scaleState =
-      //       PhotoViewScaleState.zoomedOut;
-      // },
       onDoubleTapDown: (details) {
         logger.d('onDoubleTapDown');
       },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: reverse ? _pageList.reversed.toList() : _pageList,
-      ),
+      child: _pageList.length > 1 ? Center(child: doubleView) : doubleView,
+    );
+  }
+
+  ViewImage buildViewImageEnd() {
+    return ViewImage(
+      imageSer: serStart + 1,
+      enableDoubleTap: false,
+      mode: ExtendedImageMode.none,
+      enableSlideOutPage: false,
+      imageSizeChanged: (Size size) {
+        if (size.width > 0 && size.height > 0 && needResizeE) {
+          logger.d('end imageSizeChanged ${serStart + 1} $_ratioEnd');
+          _ratioEnd = size.width / size.height;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {});
+            needResizeE = false;
+          });
+        }
+
+        vState.imageSizeMap[serStart + 1] = size;
+
+        controller.vState.galleryPageController?.uptImageBySer(
+            ser: serStart + 1,
+            imageCallback: (GalleryImage image) {
+              return image.copyWith(
+                imageWidth: size.width,
+                imageHeight: size.height,
+              );
+            });
+      },
+    );
+  }
+
+  ViewImage buildViewImageStart() {
+    return ViewImage(
+      imageSer: serStart,
+      enableDoubleTap: false,
+      mode: ExtendedImageMode.none,
+      enableSlideOutPage: false,
+      imageSizeChanged: (Size size) {
+        if (size.width > 0 && size.height > 0 && needResizeS) {
+          _ratioStart = size.width / size.height;
+          logger.d('start imageSizeChanged $serStart $_ratioStart');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {});
+            needResizeS = false;
+          });
+        }
+
+        logger.v('${controller.vState.galleryPageController == null}');
+
+        vState.imageSizeMap[serStart] = size;
+
+        controller.vState.galleryPageController?.uptImageBySer(
+            ser: serStart,
+            imageCallback: (GalleryImage image) {
+              return image.copyWith(
+                imageWidth: size.width,
+                imageHeight: size.height,
+              );
+            });
+      },
     );
   }
 }

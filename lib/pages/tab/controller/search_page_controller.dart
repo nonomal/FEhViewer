@@ -46,6 +46,8 @@ class SearchPageController extends DefaultTabViewController {
 
   bool translateSerachHistory = false;
 
+  final TagTransController tagTransController = Get.find<TagTransController>();
+
   // 搜索输入框的控制器
   late final TextEditingController searchTextController =
       TextEditingController();
@@ -99,12 +101,15 @@ class SearchPageController extends DefaultTabViewController {
   @override
   FetchListClient getFetchListClient(FetchParams fetchParams) {
     return SearchFetchListClient(
-        fetchParams: fetchParams..galleryListType = _currListType);
+      fetchParams: fetchParams..galleryListType = _currListType,
+      globalSearch: true,
+    );
   }
 
   /// 执行搜索
   Future<void> _startSearch({bool clear = true}) async {
-    curPage = -1;
+    resetResultPage();
+
     searchText = searchTextController.text.trim();
 
     if (searchText.isNotEmpty) {
@@ -121,10 +126,12 @@ class SearchPageController extends DefaultTabViewController {
           return;
         }
 
-        maxPage = rult.maxPage ?? 0;
-        curPage = maxPage >= 0 ? 0 : -1;
+        nextGid = rult.nextGid;
+        prevGid = rult.prevGid;
+        nextPage = rult.nextPage;
+        prevPage = rult.prevPage;
+        maxPage = rult.maxPage;
 
-        nextPage = rult.nextPage ?? 1;
         change(rult.gallerys ?? [], status: RxStatus.success());
       } catch (err) {
         change(null, status: RxStatus.error(err.toString()));
@@ -155,11 +162,8 @@ class SearchPageController extends DefaultTabViewController {
     _lastInputCompleteAt = DateTime.now();
     await Future<void>.delayed(_duration);
 
-    // logger.d('$_lastSearchText\n${searchTextController.text}');
-
     if (lastSearchText.trim() != searchTextController.text.trim() &&
         DateTime.now().difference(_lastInputCompleteAt) >= _duration) {
-      // logger.d('_autoComplete $_autoComplete');
       if (searchTextController.text.trim().isEmpty) {
         logger.v('ListType to ListType.init');
         listType = ListType.init;
@@ -206,7 +210,7 @@ class SearchPageController extends DefaultTabViewController {
         // 中文从翻译库匹配
         if (localeService.isLanguageCodeZh) {
           logger.d('isLanguageCodeZh');
-          List<TagTranslat> qryTagsTemp = await Get.find<TagTransController>()
+          List<TagTranslat> qryTagsTemp = await tagTransController
               .getTagTranslatesLike(text: currQryText, limit: 200);
           if (qryTagsTemp.isNotEmpty) {
             qryTags.value = qryTagsTemp;
@@ -246,14 +250,12 @@ class SearchPageController extends DefaultTabViewController {
     if (searchHistory.length > 100) {
       searchHistory.removeRange(100, searchHistory.length);
     }
-    // _gStore.searchHistory = searchHistory;
     hiveHelper.setSearchHistory(searchHistory);
   }
 
   void removeHistory(Object? value) {
     searchHistory.remove(value);
     update([GetIds.SEARCH_INIT_VIEW]);
-    // _gStore.searchHistory = searchHistory;
     hiveHelper.setSearchHistory(searchHistory);
   }
 
@@ -264,21 +266,14 @@ class SearchPageController extends DefaultTabViewController {
   }
 
   void switchTranslateHistory() {
-    // searchHistory.clear();
     translateSerachHistory = !translateSerachHistory;
     update([GetIds.SEARCH_INIT_VIEW]);
-    // hiveHelper.setSearchHistory(searchHistory);
   }
 
   @override
   void onInit() {
     logger.d('onInit searchPageCtrlDepth $searchPageCtrlTag');
 
-    // SearchRepository searchRepository = Get.find();
-    // initSearchText = searchRepository.searchText;
-    // searchType = searchRepository.searchType;
-    // _autoComplete = initSearchText?.trim().isNotEmpty ?? false;
-    // searchTextController.addListener(_delayedSearch);
     searchHistory = hiveHelper.getAllSearchHistory();
     super.onInit();
   }
@@ -308,8 +303,6 @@ class SearchPageController extends DefaultTabViewController {
 
   @override
   void onClose() {
-    // searchTextController.dispose();
-    // Get.find<DepthService>().popSearchPageCtrl();
     super.onClose();
   }
 
@@ -367,6 +360,8 @@ class SearchPageController extends DefaultTabViewController {
 
     FocusScope.of(Get.context!).requestFocus(searchFocusNode);
     qryTags.clear();
+
+    tagTransController.tapTagTranslate(_qry);
   }
 
   void appendTextToSearch(String text) {
@@ -389,7 +384,7 @@ class SearchPageController extends DefaultTabViewController {
   void clearText() {
     vibrateUtil.light();
     searchTextController.clear();
-    curPage = -1;
+    resetResultPage();
   }
 
   void jumpToGallery() {

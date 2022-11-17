@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io' as io;
-import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:fehviewer/common/service/ehconfig_service.dart';
+import 'package:fehviewer/component/exception/error.dart';
 import 'package:fehviewer/fehviewer.dart';
 import 'package:fehviewer/network/request.dart';
 import 'package:fehviewer/pages/setting/controller/eh_mysettings_controller.dart';
@@ -16,9 +18,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart' hide Response, FormData;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_save/image_save.dart';
+import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
-import 'package:permission_handler/permission_handler.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_storage/shared_storage.dart' as ss;
 
 final Api api = Api();
 
@@ -43,8 +47,9 @@ class Api {
       primary: MemCacheStore(),
       secondary: HiveCacheStore(Global.appSupportPath),
     ),
+    // store: HiveCacheStore(Global.appSupportPath),
     policy: CachePolicy.forceCache,
-    hitCacheOnErrorExcept: [401, 403, 304, 503],
+    hitCacheOnErrorExcept: [401, 403, 503],
     maxStale: const Duration(days: 7),
     priority: CachePriority.normal,
     cipher: null,
@@ -377,7 +382,7 @@ class Api {
     bool refresh = false,
   }) async {
     final RegExp urlRex =
-        RegExp(r'(http?s://e(-|x)hentai.org)?/g/(\d+)/(\w+)/?$');
+        RegExp(r'(http?s://e([-x])hentai.org)?/g/(\d+)/(\w+)/?$');
     // logger.v(galleryProvider.url);
     final RegExpMatch? urlRult = urlRex.firstMatch(galleryProvider.url ?? '');
     // logger.v(urlRult.groupCount);
@@ -395,194 +400,45 @@ class Api {
     return (await getMoreGalleryInfo(reqGalleryItems, refresh: refresh)).first;
   }
 
-  static Future<void> shareImageExtended({
-    String? imageUrl,
-    String? filePath,
-  }) async {
-    if (imageUrl == null && filePath == null) {
-      return;
-    }
-
-    logger.d('imageUrl:$imageUrl   filePath:$filePath');
-
-    io.File? file;
-    String? _name;
-
-    if (filePath != null) {
-      file = io.File(filePath);
-      _name = path.basename(filePath);
-    } else if (imageUrl != null && imageUrl.isNotEmpty) {
-      logger.d('imageUrl => $imageUrl');
-      final exists = await cachedImageExists(imageUrl);
-      file = await getCachedImageFile(imageUrl);
-      logger.d('exists $exists');
-      if (!exists || file == null) {
-        try {
-          file = await imageCacheManager().getSingleFile(imageUrl,
-              headers: {'cookie': Global.profile.user.cookie});
-        } catch (e, stack) {
-          logger.e('$e\n$stack');
-          throw 'get file error';
-        }
-      }
-      _name = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-    }
-
-    if (file == null) {
-      throw 'get file error';
-    }
-
-    logger.v('_name $_name url $imageUrl');
-    final io.File newFile = file.copySync(path.join(Global.tempPath, _name));
-    Share.shareFiles(<String>[newFile.path]);
-  }
-
-  /// 保存图片到相册
-  static Future<bool> saveImage({
-    BuildContext? context,
-    String? imageUrl,
-    String? filePath,
-  }) async {
-    /// 跳转权限设置
-    Future<bool?> _jumpToAppSettings(BuildContext context) async {
-      return await jumpToAppSettings(
-          context,
-          'You have disabled the necessary permissions for the application:'
-          '\nRead and write phone storage, is it allowed in the settings?');
-    }
-
-    if (io.Platform.isIOS) {
-      logger.v('check ios photos Permission');
-      final PermissionStatus statusPhotos = await Permission.photos.status;
-      final PermissionStatus statusPhotosAdd =
-          await Permission.photosAddOnly.status;
-
-      logger.d('statusPhotos $statusPhotos , photosAddOnly $statusPhotosAdd');
-
-      if (statusPhotos.isPermanentlyDenied &&
-          statusPhotosAdd.isPermanentlyDenied &&
-          context != null) {
-        _jumpToAppSettings(context);
-        return false;
-      } else {
-        final requestAddOnly =
-            () async => await Permission.photosAddOnly.request();
-        final requestAll = () async => await Permission.photos.request();
-
-        if (await requestAddOnly().isGranted ||
-            await requestAddOnly().isLimited ||
-            await requestAll().isGranted ||
-            await requestAll().isLimited) {
-          // return _saveImage(imageUrl);
-          return _saveImageExtended(imageUrl: imageUrl, filePath: filePath);
-          // Either the permission was already granted before or the user just granted it.
-        } else {
-          throw 'Unable to save pictures, please authorize first~';
-        }
-      }
-    } else {
-      final PermissionStatus status = await Permission.storage.status;
-      logger.v(status);
-      if (status.isPermanentlyDenied) {
-        if (await Permission.storage.request().isGranted) {
-          // _saveImage(imageUrl);
-          return _saveImageExtended(imageUrl: imageUrl, filePath: filePath);
-        } else if (context != null) {
-          await _jumpToAppSettings(context);
-          return false;
-        }
-        return false;
-      } else {
-        if (await Permission.storage.request().isGranted) {
-          // Either the permission was already granted before or the user just granted it.
-          // return _saveImage(imageUrl);
-          return _saveImageExtended(imageUrl: imageUrl, filePath: filePath);
-        } else {
-          throw 'Unable to save pictures, please authorize first~';
-        }
-      }
-    }
-  }
-
-  static Future<bool> saveImageFromExtendedCache({
+  // 从ExtendedImage缓存保存图片
+  static Future<String?> saveImageFromExtendedCache({
     required String imageUrl,
-    required String savePath,
+    required String parentPath,
+    required String fileName,
   }) async {
     if (!(await cachedImageExists(imageUrl))) {
-      return false;
+      return null;
     }
 
     final imageFile = await getCachedImageFile(imageUrl);
     if (imageFile == null) {
       logger.d('not from cache \n$imageUrl');
-      return false;
+      return null;
     }
 
     logger.d('from cache \n$imageUrl');
 
-    // final imageBytes = await imageFile.readAsBytes();
-    // final _name = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+    if (parentPath.isContentUri) {
+      // SAF 方式
+      final bytes = await imageFile.readAsBytes();
 
-    final destFile = imageFile.copySync(savePath);
-    return true;
-  }
+      final mimeType =
+          lookupMimeType(imageFile.path, headerBytes: bytes.take(8).toList());
+      logger.d('mimeType $mimeType');
 
-  static Future<bool> _saveImageExtended({
-    String? imageUrl,
-    String? filePath,
-  }) async {
-    try {
-      if (imageUrl == null && filePath == null) {
-        throw 'Save failed, picture does not exist!';
-      }
-
-      /// 保存的图片数据
-      Uint8List imageBytes;
-      io.File? file;
-      String? _name;
-
-      if (filePath != null) {
-        file = io.File(filePath);
-        if (!file.existsSync()) {
-          throw 'read file error';
-        }
-        imageBytes = await file.readAsBytes();
-        _name = path.basename(filePath);
-      } else if (imageUrl != null) {
-        /// 保存网络图片
-        logger.d('保存网络图片');
-        file = await getCachedImageFile(imageUrl);
-
-        if (file == null) {
-          throw 'read file error';
-        }
-
-        logger.v('file path ${file.path}');
-
-        // imageBytes = await file.readAsBytes();
-
-        _name = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-        logger.v('_name $_name url $imageUrl');
-      }
-
-      if (file == null) {
-        throw 'read file error';
-      }
-
-      final io.File newFile = file.copySync(path.join(Global.tempPath, _name));
-      logger.v('${newFile.path} ${file.lengthSync()} ${newFile.lengthSync()}');
-
-      final result = await ImageGallerySaver.saveFile(newFile.path);
-
-      if (result == null || result == '') {
-        throw 'Save image fail';
-      }
-
-      logger.d('保存成功');
-      return true;
-    } catch (e, stack) {
-      logger.e('$e\n$stack');
-      rethrow;
+      final result = await ss.createFileAsBytes(
+        Uri.parse(parentPath),
+        mimeType: mimeType ?? '',
+        displayName: fileName,
+        bytes: bytes,
+      );
+      logger.d('save to content:// result ${result?.uri}');
+      return result?.uri.toString();
+    } else {
+      // 普通方式
+      final toFilePath = path.join(parentPath, fileName);
+      imageFile.copySync(toFilePath);
+      return toFilePath;
     }
   }
 
@@ -639,5 +495,229 @@ class Api {
     );
 
     return _reImage;
+  }
+
+  // 下载单张图片
+  static Future<String> _downloadImage(
+    String imageUrl, {
+    required String? gid,
+    required int? ser,
+    String? fileName,
+    ProgressCallback? progressCallback,
+  }) async {
+    String? saveDir;
+    io.File? saveFile;
+    late String realSavePath;
+    if (imageUrl.contains('/fullimg.php?')) {
+      saveDir = path.join(
+          Global.tempPath, 'ori_image_temp', gid ?? '0', '${ser ?? 0}');
+      if (!io.Directory(saveDir).existsSync()) {
+        io.Directory(saveDir).createSync(recursive: true);
+      }
+    }
+
+    final dir = io.Directory(saveDir ?? Global.tempPath);
+    if (dir.existsSync()) {
+      logger.d('缓存文件 ${dir.path}');
+      dir.listSync().forEach((element) {
+        logger.d('path ${element.path}');
+        if (element is io.File) {
+          saveFile = element;
+          logger.d('读取缓存文件 ${saveFile?.path}');
+        }
+      });
+    }
+
+    if (saveFile == null) {
+      await ehDownload(
+          progressCallback: progressCallback,
+          url: imageUrl,
+          savePath: (Headers headers) {
+            logger.d('headers:\n$headers');
+            final contentDisposition = headers.value('content-disposition');
+            logger.d('contentDisposition $contentDisposition');
+            final filename = contentDisposition
+                    ?.split(RegExp(r"filename(=|\*=UTF-8'')"))
+                    .last ??
+                '';
+            final fileNameDecode =
+                Uri.decodeFull(filename).replaceAll('/', '_');
+            logger.d('fileNameDecode: $fileNameDecode, fileName: $fileName');
+            if (fileNameDecode.isEmpty) {
+              realSavePath = path.join(
+                  saveDir ?? path.join(Global.tempPath, gid ?? '0'), fileName);
+            } else {
+              realSavePath = saveDir != null
+                  ? path.join(saveDir, fileNameDecode)
+                  : path.join(Global.tempPath, gid ?? '0', fileNameDecode);
+            }
+
+            return realSavePath;
+          });
+    } else {
+      realSavePath = saveFile!.path;
+    }
+
+    return realSavePath;
+  }
+
+  // 保存图片到相册
+  static Future<void> saveNetworkImageToPhoto(
+    String imageUrl, {
+    required String? gid,
+    required int? ser,
+    String? filename,
+    ProgressCallback? progressCallback,
+    BuildContext? context,
+  }) async {
+    logger.d('imageUrl $imageUrl');
+
+    // 权限检查
+    // final permission =
+    //     await requestPhotosPermission(context: context, addOnly: true);
+    // if (!permission) {
+    //   throw EhError(error: 'Permission denied');
+    // }
+
+    logger.d('开始下载图片');
+
+    io.File? file;
+    late String realFileName;
+
+    // 从缓存中获取
+    file = await getCachedImageFile(imageUrl);
+
+    if (file != null) {
+      realFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+    } else {
+      // 无缓存下载
+      logger.d('无缓存下载');
+      final savePath = await _downloadImage(
+        imageUrl,
+        gid: gid,
+        ser: ser,
+        fileName: filename,
+        progressCallback: (count, total) {
+          logger.d('count $count, total $total');
+          progressCallback?.call(count, total);
+        },
+      );
+      file = io.File(savePath);
+      realFileName = path.basename(savePath);
+    }
+
+    realFileName = realFileName.replaceAll('/', '_');
+    if (gid != null) {
+      realFileName = '$gid-$realFileName';
+    }
+    logger.d('保存图片到相册 $realFileName lengthSync:${file.lengthSync()}');
+
+    try {
+      // final result =
+      //     await ImageGallerySaver.saveFile(file.path, name: realFileName);
+      // logger.d('${result.runtimeType} $result');
+      // if (result == null || result == '') {
+      //   throw EhError(error: 'Save image fail');
+      // }
+
+      final result = await ImageSave.saveImage(
+        file.readAsBytesSync(),
+        realFileName,
+        albumName: EHConst.appTitle,
+        overwriteSameNameFile: false,
+      );
+      if (result == null || !result) {
+        throw EhError(error: 'Save image fail');
+      }
+    } catch (e, s) {
+      logger.e('保存图片到相册失败', e, s);
+      throw EhError(error: '保存失败');
+    }
+  }
+
+  static Future<void> shareNetworkImage(
+    String imageUrl, {
+    required String? gid,
+    required int? ser,
+    String? filename,
+    ProgressCallback? progressCallback,
+    BuildContext? context,
+  }) async {
+    logger.d('imageUrl $imageUrl');
+    logger.d('开始下载图片');
+
+    io.File? file;
+    late String realFileName;
+
+    // 从缓存中获取
+    file = await getCachedImageFile(imageUrl);
+
+    if (file != null) {
+      realFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+      logger.d('realFileName $realFileName');
+      file = file.copySync(path.join(Global.tempPath, realFileName));
+    } else {
+      // 无缓存下载
+      logger.d('无缓存下载');
+      final realSavePath = await _downloadImage(
+        imageUrl,
+        gid: gid,
+        ser: ser,
+        fileName: filename,
+        progressCallback: progressCallback,
+      );
+      logger.d('realSavePath $realSavePath');
+      file = io.File(realSavePath);
+
+      realFileName = path.basename(file.path);
+    }
+
+    realFileName = realFileName.replaceAll('/', '_');
+    if (gid != null) {
+      realFileName = '$gid-$realFileName';
+    }
+
+    await Share.shareXFiles([XFile(file.path)], subject: realFileName);
+  }
+
+  // 保存本地图片到相册
+  static Future<void> saveLocalImageToPhoto(
+    String imagePath, {
+    String? gid,
+    ProgressCallback? progressCallback,
+    BuildContext? context,
+  }) async {
+    // 权限检查
+    final permission =
+        await requestPhotosPermission(context: context, addOnly: true);
+    if (!permission) {
+      throw EhError(error: 'Permission denied');
+    }
+
+    final file = io.File(imagePath);
+    if (!file.existsSync()) {
+      throw EhError(error: 'File not found');
+    }
+
+    final result = await ImageGallerySaver.saveFile(file.path);
+    logger.d('${result.runtimeType} $result');
+
+    if (result == null || result == '') {
+      throw EhError(error: 'Save image fail');
+    }
+  }
+
+  static Future<void> shareLocalImage(
+    String imagePath, {
+    String? gid,
+    ProgressCallback? progressCallback,
+    BuildContext? context,
+  }) async {
+    final file = io.File(imagePath);
+    if (!file.existsSync()) {
+      throw EhError(error: 'File not found');
+    }
+
+    await Share.shareXFiles([XFile(imagePath)]);
   }
 }

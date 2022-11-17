@@ -100,6 +100,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "custom_hosts": MessageLookupByLibrary.simpleMessage("사용자 지정 hosts"),
         "dark": MessageLookupByLibrary.simpleMessage("어둡게"),
         "dark_mode_effect": MessageLookupByLibrary.simpleMessage("다크 모드 효과"),
+        "date_or_offset":
+            MessageLookupByLibrary.simpleMessage("Date or Offset"),
         "default_avatar_style":
             MessageLookupByLibrary.simpleMessage("Default avatar style"),
         "default_favorites": MessageLookupByLibrary.simpleMessage("기본 즐겨찾기"),
@@ -131,6 +133,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "eh": MessageLookupByLibrary.simpleMessage("E·H"),
         "ehentai_my_tags": MessageLookupByLibrary.simpleMessage("내 태그"),
         "ehentai_settings": MessageLookupByLibrary.simpleMessage("EHentai 설정"),
+        "enter_date_or_offset_or_gid":
+            MessageLookupByLibrary.simpleMessage("Enter date or offset or gid"),
         "expand": MessageLookupByLibrary.simpleMessage("펼치기"),
         "export": MessageLookupByLibrary.simpleMessage("Export"),
         "favcat": MessageLookupByLibrary.simpleMessage("즐겨찾기"),
@@ -152,6 +156,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "groupName": MessageLookupByLibrary.simpleMessage("Group name"),
         "groupType": MessageLookupByLibrary.simpleMessage("Group type"),
         "hide": MessageLookupByLibrary.simpleMessage("Hide"),
+        "hide_top_bar_on_scroll":
+            MessageLookupByLibrary.simpleMessage("Hide top bar on scroll"),
         "host": MessageLookupByLibrary.simpleMessage("Host"),
         "hours": MessageLookupByLibrary.simpleMessage("시간"),
         "image_download_type":
@@ -161,6 +167,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "input_empty": MessageLookupByLibrary.simpleMessage("인풋 비어있음"),
         "input_error": MessageLookupByLibrary.simpleMessage("인풋 에러"),
         "instantly": MessageLookupByLibrary.simpleMessage("즉시"),
+        "jump_next": MessageLookupByLibrary.simpleMessage("Next"),
+        "jump_or_seek": MessageLookupByLibrary.simpleMessage("Jump or Seek"),
+        "jump_prev": MessageLookupByLibrary.simpleMessage("Prev"),
         "jump_to_page": MessageLookupByLibrary.simpleMessage("페이지로 이동"),
         "landscape": MessageLookupByLibrary.simpleMessage("Landscape"),
         "language": MessageLookupByLibrary.simpleMessage("언어"),
@@ -293,6 +302,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "s_and": MessageLookupByLibrary.simpleMessage("그리고"),
         "s_pages": MessageLookupByLibrary.simpleMessage("페이지"),
         "s_stars": m2,
+        "save": MessageLookupByLibrary.simpleMessage("Save"),
         "save_into_album": MessageLookupByLibrary.simpleMessage("앨범에 저장"),
         "saved_successfully": MessageLookupByLibrary.simpleMessage("저장 완료"),
         "screen_orientation": MessageLookupByLibrary.simpleMessage("화면 방향"),
