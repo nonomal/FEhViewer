@@ -267,7 +267,7 @@ class _$_Settings implements _Settings {
       this.vibrate = true,
       this.debugMode = false,
       this.debugCount = 3,
-      this.themePlatform = ThemePlatform.auto});
+      this.themePlatform = ThemePlatform.cupertino});
 
   factory _$_Settings.fromJson(Map<String, dynamic> json) =>
       _$$_SettingsFromJson(json);

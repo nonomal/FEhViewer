@@ -21,7 +21,7 @@ _$_Settings _$$_SettingsFromJson(Map<String, dynamic> json) => _$_Settings(
       debugCount: json['debug_count'] as int? ?? 3,
       themePlatform:
           $enumDecodeNullable(_$ThemePlatformEnumMap, json['theme_platform']) ??
-              ThemePlatform.auto,
+              ThemePlatform.cupertino,
     );
 
 Map<String, dynamic> _$$_SettingsToJson(_$_Settings instance) =>
