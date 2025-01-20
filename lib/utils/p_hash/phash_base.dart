@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:eros_fe/utils/logger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart';
 
 class Pixel {
@@ -19,6 +21,7 @@ class Pixel {
 const int _kSize = 32;
 
 BigInt calculatePHash(Image image) {
+  // print('^^^^ calculatePHash ${image.width} ${image.height}');
   image = copyResize(image, width: 32, height: 32);
   final List<Pixel> pixelList = [];
   const bytesPerPixel = 4;
@@ -26,7 +29,14 @@ BigInt calculatePHash(Image image) {
   for (var i = 0; i <= bytes.length - bytesPerPixel; i += bytesPerPixel) {
     pixelList.add(Pixel(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]));
   }
-  return _calcPhash(pixelList);
+
+  try {
+    final BigInt pHash = _calcPhash(pixelList);
+    return pHash;
+  } catch (e, s) {
+    logger.e('^^^^ calculatePHash error $e\n$s');
+    rethrow;
+  }
 }
 
 BigInt calculateFromList(List<int> data) {
@@ -52,6 +62,8 @@ List<List<Pixel>> _unit8ListToMatrix(List<Pixel> pixelList) {
 
       if (i < copy.length) {
         res.add(copy[i]);
+      } else {
+        res.add(Pixel(0, 0, 0, 0));
       }
     }
 
@@ -74,12 +86,12 @@ BigInt _calcPhash(List<Pixel> pixelList) {
   for (int y = 0; y < _kSize; y++) {
     for (int x = 0; x < _kSize; x++) {
       final color = data[x][y];
-
       row[x] = getLuminanceRgb(color._red, color._green, color._blue);
     }
 
     rows[y] = _calculateDCT(row);
   }
+
   for (int x = 0; x < _kSize; x++) {
     for (int y = 0; y < _kSize; y++) {
       col[y] = rows[y][x];
@@ -159,7 +171,7 @@ int hammingDistance(BigInt x, BigInt y) {
 Image getValidImage(List<int> bytes) {
   Image? image;
   try {
-    image = decodeImage(bytes);
+    image = decodeImage(Uint8List.fromList(bytes));
   } on Exception {
     throw const FormatException(
         'Insufficient data provided to identify image.');

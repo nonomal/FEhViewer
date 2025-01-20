@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
-import 'package:fehviewer/common/controller/tag_trans_controller.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/utils/chapter.dart';
+import 'package:eros_fe/common/controller/tag_trans_controller.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/utils/chapter.dart';
 import 'package:get/get.dart' hide Node;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
@@ -44,7 +44,7 @@ List<GalleryComment> parseGalleryComment(Document document) {
       // 解析时间
       final Element? timeElem = comment.querySelector('div.c2 > div.c3');
       final String postTime = timeElem?.text.trim() ?? '';
-      // logger.v(postTime);
+      // logger.t(postTime);
       // 示例: Posted on 29 June 2020, 05:41 UTC by:
       // 20201027 修复评论问题
       // Posted on 29 June 2020, 05:41 by:
@@ -104,7 +104,7 @@ List<GalleryComment> parseGalleryComment(Document document) {
       final Element? contextElem = comment.querySelector('div.c6');
 
       final rawContent = contextElem?.innerHtml ?? '';
-      logger.v('rawContent: $rawContent');
+      logger.t('rawContent: $rawContent');
 
       // 识别URL，并修改为 a href 元素
       final linkifyContent = rawContent.replaceAllMapped(
@@ -139,7 +139,7 @@ List<GalleryComment> parseGalleryComment(Document document) {
       );
 
       _galleryComment.add(galleryComment.copyWith(
-        textList: galleryComment.getTextList(),
+        textList: galleryComment.getTextList().oN,
       ));
     } catch (e, stack) {
       logger.e('解析评论异常\n' + e.toString() + '\n' + stack.toString());
@@ -164,17 +164,17 @@ Future<List<TagGroup>> parseGalleryTags(Document document) async {
       for (final Element tagElm in tags) {
         String title = tagElm.text.trim();
         if (title.contains('|')) {
-          title = title.split('|')[0];
+          title = title.split('|')[0].trim();
         }
-        final String tagTranslat = await Get.find<TagTransController>()
+        final String tagTranslate = await Get.find<TagTransController>()
                 .getTagTranslateText(title, namespace: type) ??
             title;
 
         int tagVote = 0;
-        final String? tagclass = tagElm.attributes['class'];
-        if (tagclass == 'tup') {
+        final String? tagClass = tagElm.attributes['class'];
+        if (tagClass == 'tup') {
           tagVote = 1;
-        } else if (tagclass == 'tdn') {
+        } else if (tagClass == 'tdn') {
           tagVote = -1;
         }
 
@@ -182,7 +182,7 @@ Future<List<TagGroup>> parseGalleryTags(Document document) async {
           title: title,
           type: type,
           vote: tagVote,
-          tagTranslat: tagTranslat,
+          tagTranslat: tagTranslate,
         ));
       }
 
@@ -200,8 +200,6 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
   // 解析响应信息dom
   final Document document = parse(response);
 
-  // GalleryItem galleryProvider = const GalleryItem();
-
   // 封面图片
   final Element? imageElem = document.querySelector('#gd1 > div');
   final String _imageElemStyle = imageElem?.attributes['style'] ?? '';
@@ -217,24 +215,24 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
   }
 
   // 收藏夹序号
-  String _favcat = '';
-  final Element? _favcatElm = document.querySelector('#fav');
-  if (_favcatElm?.nodes.isNotEmpty ?? false) {
-    final Element? _div = _favcatElm?.querySelector('div');
+  String _favCat = '';
+  final Element? _favCatElm = document.querySelector('#fav');
+  if (_favCatElm?.nodes.isNotEmpty ?? false) {
+    final Element? _div = _favCatElm?.querySelector('div');
     final String _catStyle = _div?.attributes['style'] ?? '';
     final String _catPosition = RegExp(r'background-position:0px -(\d+)px;')
             .firstMatch(_catStyle)?[1] ??
         '';
-    _favcat = '${(int.parse(_catPosition) - 2) ~/ 19}';
+    _favCat = '${(int.parse(_catPosition) - 2) ~/ 19}';
   }
 
-  // apiuid
-  final String _apiuid =
+  // apiUid
+  final String _apiUid =
       RegExp(r'var\s*?apiuid\s*?=\s*?(\d+);').firstMatch(response)?.group(1) ??
           '';
 
   // apikey
-  final String _apikey = RegExp(r'var\s*?apikey\s*?=\s*?"([0-9a-f]+)";')
+  final String _apiKey = RegExp(r'var\s*?apikey\s*?=\s*?"([0-9a-f]+)";')
           .firstMatch(response)
           ?.group(1) ??
       '';
@@ -247,15 +245,6 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
   final String _ratingImageClass = _ratingImage?.attributes['class'] ?? '';
   final _colorRating = _ratingImageClass;
   final _isRatinged = _ratingImageClass.contains(RegExp(r'ir([rgby])'));
-
-  // 收藏次数
-  final String _favCount =
-      document.querySelector('#favcount')?.text.replaceFirstMapped(
-                RegExp(r'(\d+).+'),
-                (Match m) => m.group(1) ?? '',
-              ) ??
-          '';
-  final _favoritedCount = _favCount;
 
   // 评分人次
   final String _ratingCount =
@@ -285,21 +274,32 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
   final Element? _elmTorrent =
       document.querySelector('#gd5')?.children[2].children[1];
   // 种子数量
-  final _torrentcount =
+  final _torrentCount =
       RegExp(r'\d+').firstMatch(_elmTorrent?.text ?? '')?.group(0) ?? '0';
 
-  final String _language = document
-          .querySelector('#gdd > table > tbody > tr:nth-child(3) > td.gdt2')
-          ?.text
-          .replaceFirstMapped(
-            RegExp(r'(\w+).*'),
-            (Match m) => m.group(1) ?? '',
-          ) ??
-      '';
+  final _tBody = document.querySelector('#gdd > table > tbody');
+  final _listTr = _tBody?.children;
+  final _mapGdt = <String, Element>{};
+  // key gdt1, value gdt2
+  for (final Element? _tr in _listTr ?? []) {
+    final _listTd = _tr?.children;
+    if (_listTd?.length == 2) {
+      _mapGdt[_listTd![0].text.trim()] = _listTd[1];
+    }
+  }
 
-  final String _fileSize = document
-          .querySelector('#gdd > table > tbody > tr:nth-child(4) > td.gdt2')
-          ?.text ??
+  // print('^^^ $_mapGdt');
+
+  final String _parent = _mapGdt['Parent:']?.text.trim() ?? '';
+  final String _parentHref =
+      _mapGdt['Parent:']?.querySelector('a')?.attributes['href'] ?? '';
+  final String _visible = _mapGdt['Visible:']?.text.trim() ?? '';
+  final String _language = _mapGdt['Language:']?.text.trim() ?? '';
+  final String _fileSize = _mapGdt['File Size:']?.text.trim() ?? '';
+  final String _postTime = _mapGdt['Posted:']?.text.trim() ?? '';
+  final String _favCount = RegExp(r'\d+')
+          .firstMatch(_mapGdt['Favorited:']?.text.trim() ?? '')
+          ?.group(0) ??
       '';
 
   final Element? elmCategory = document.querySelector('#gdc > div');
@@ -310,8 +310,10 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
   final _uploader = document.querySelector('#gdn > a')?.text.trim() ?? '';
 
   final _galleryComments = parseGalleryComment(document);
-
   final _chapter = _parseChapter(_galleryComments);
+
+  // eventpane
+  final _eventpane = document.querySelector('#eventpane')?.text ?? '';
 
   final galleryProvider = GalleryProvider(
     imgUrl: _imageUrl,
@@ -320,23 +322,27 @@ Future<GalleryProvider> parseGalleryDetail(String response) async {
     galleryImages: parseGalleryImage(document),
     chapter: _chapter,
     favTitle: _favTitle,
-    favcat: _favcat,
-    apiuid: _apiuid,
-    apikey: _apikey,
+    favcat: _favCat,
+    apiuid: _apiUid,
+    apikey: _apiKey,
     archiverLink: _archiverLink,
     colorRating: _colorRating,
     isRatinged: _isRatinged,
-    favoritedCount: _favoritedCount,
+    favoritedCount: _favCount,
     ratingCount: _ratingCount,
     ratingFallBack: _ratingFB,
     rating: _ratingNum,
     englishTitle: _englishTitle,
     japaneseTitle: _japaneseTitle,
-    torrentcount: _torrentcount,
+    torrentcount: _torrentCount,
     language: _language,
     filesizeText: _fileSize,
     category: _category,
     uploader: _uploader,
+    postTime: _postTime,
+    parent: _parent,
+    parentHref: _parentHref,
+    visible: _visible,
   );
 
   return galleryProvider;
@@ -367,14 +373,12 @@ List<GalleryImage> parseGalleryImageFromHtml(String response) {
 
 /// 缩略图处理
 List<GalleryImage> parseGalleryImage(Document document) {
-  // 大图 #gdt > div.gdtl  小图 #gdt > div.gdtm
-  final List<Element> picLsit = document.querySelectorAll('#gdt > div.gdtm');
-
   final List<GalleryImage> galleryImages = [];
 
-  if (picLsit.isNotEmpty) {
-    // 小图的处理
-    for (final Element pic in picLsit) {
+  // 小图 #gdt > div.gdtm
+  List<Element> picList = document.querySelectorAll('#gdt > div.gdtm');
+  if (picList.isNotEmpty) {
+    for (final Element pic in picList) {
       final String picHref = pic.querySelector('a')?.attributes['href'] ?? '';
       final String style = pic.querySelector('div')?.attributes['style'] ?? '';
       final String picSrcUrl =
@@ -394,15 +398,18 @@ List<GalleryImage> parseGalleryImage(Document document) {
         largeThumb: false,
         href: picHref,
         thumbUrl: picSrcUrl,
-        thumbHeight: double.parse(height),
-        thumbWidth: double.parse(width),
-        offSet: double.parse(offSet),
+        thumbHeight: double.tryParse(height) ?? 0,
+        thumbWidth: double.tryParse(width) ?? 0,
+        offSet: double.tryParse(offSet) ?? 0,
       ));
     }
-  } else {
-    final List<Element> picLsit = document.querySelectorAll('#gdt > div.gdtl');
-    // 大图的处理
-    for (final Element pic in picLsit) {
+    return galleryImages;
+  }
+
+  // 大图 #gdt > div.gdtl
+  picList = document.querySelectorAll('#gdt > div.gdtl');
+  if (picList.isNotEmpty) {
+    for (final Element pic in picList) {
       final String picHref = pic.querySelector('a')?.attributes['href'] ?? '';
       final Element? imgElem = pic.querySelector('img');
       final String picSer = imgElem?.attributes['alt']?.trim() ?? '';
@@ -411,18 +418,62 @@ List<GalleryImage> parseGalleryImage(Document document) {
       final array = picSrcUrl.split('-');
       final String width = array[array.length - 3];
       final String height = array[array.length - 2];
-      logger.v('picSrcUrl: $picSrcUrl, width: $width, height: $height');
+      logger.t('picSrcUrl: $picSrcUrl, width: $width, height: $height');
 
       galleryImages.add(GalleryImage(
         ser: int.parse(picSer),
         largeThumb: true,
         href: picHref,
         thumbUrl: picSrcUrl,
-        oriWidth: double.parse(width),
-        oriHeight: double.parse(height),
+        oriWidth: double.tryParse(width) ?? 0,
+        oriHeight: double.tryParse(height) ?? 0,
       ));
     }
+    return galleryImages;
   }
 
+  // 里站 #gdt > a
+  // 新版缩略图dom, 统一了大小缩略图, 小图不再需要单独的分割处理
+  picList = document.querySelectorAll('#gdt > a');
+  if (picList.isNotEmpty) {
+    for (final Element pic in picList) {
+      final String picHref = pic.attributes['href'] ?? '';
+
+      // 对 label 不为空设置的处理
+      final divElm = pic.querySelector('div');
+      final childrenElms = divElm?.children;
+      // logger.d('>>>> childrenElms count: ${childrenElms?.length}');
+      final hasChildren = childrenElms?.isNotEmpty ?? false;
+      final destDivElm = hasChildren ? childrenElms![0] : divElm;
+      final String style = destDivElm?.attributes['style'] ?? '';
+      // logger.d('>>>> style: $style');
+
+      final String picSrcUrl =
+          RegExp(r'url\((.+)\)').firstMatch(style)?.group(1) ?? '';
+      final String height =
+          RegExp(r'height:(\d+)?px').firstMatch(style)?.group(1) ?? '0';
+      final String width =
+          RegExp(r'width:(\d+)?px').firstMatch(style)?.group(1) ?? '0';
+      final String offSet =
+          RegExp(r'\) -(\d+)?px ').firstMatch(style)?.group(1) ?? '0';
+
+      final String title = destDivElm?.attributes['title'] ?? '';
+      final String picSer =
+          RegExp(r'Page (\d+):').firstMatch(title)?.group(1) ?? '';
+
+      galleryImages.add(GalleryImage(
+        ser: int.parse(picSer),
+        largeThumb: false,
+        href: picHref,
+        thumbUrl: picSrcUrl,
+        thumbHeight: double.tryParse(height) ?? 0,
+        thumbWidth: double.tryParse(width) ?? 0,
+        offSet: double.tryParse(offSet) ?? 0,
+      ));
+    }
+    return galleryImages;
+  }
+
+  logger.e('No gallery images found');
   return galleryImages;
 }

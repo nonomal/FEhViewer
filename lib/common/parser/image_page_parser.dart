@@ -1,5 +1,7 @@
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/models/index.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/models/index.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:html_unescape/html_unescape.dart';
@@ -22,7 +24,7 @@ GalleryImage paraImage(String htmlText) {
   final Element? elmI2 = document.querySelector('#i2 > div:nth-child(1)');
   final RegExpMatch? _xy = RegExp(r'(\S+)\s+::\s+(\d+)\s+x\s+(\d+)(\s+::)?')
       .firstMatch(elmI2?.text ?? '');
-  final String? filename = _xy != null ? _xy.group(1)?.trim() : null;
+  final String? filename = _xy?.group(1)?.trim();
   final double? width = _xy != null ? double.parse(_xy.group(2)!) : null;
   final double? height = _xy != null ? double.parse(_xy.group(3)!) : null;
 
@@ -50,25 +52,31 @@ GalleryImage paraImage(String htmlText) {
   final int ser = int.parse(serElms[0].text);
 
   // 原图链接
-  final regExpOriginImageUrl = RegExp(r'<a href="([^"]+)fullimg.php([^"]+)">');
+  final regExpOriginImageUrl = RegExp(r'<a href="([^"]+)fullimg([^"]+)">');
   final match = regExpOriginImageUrl.firstMatch(htmlText);
   String? originImageUrl;
   if (match?.groupCount == 2) {
     originImageUrl =
-        '${htmlUnescape.convert(match!.group(1)!)}fullimg.php${htmlUnescape.convert(match.group(2)!)}';
+        '${htmlUnescape.convert(match!.group(1)!)}fullimg${htmlUnescape.convert(match.group(2)!)}';
   }
-  // print('====================>$originImageUrl');
+  logger.t('========>$originImageUrl');
+
+  // showKey 用于api请求后续图片 script中
+  final String showKey =
+      RegExp(r'showkey="(.*?)"').firstMatch(htmlText)?.group(1) ?? '';
+  logger.t('showKey $showKey');
 
   final GalleryImage _reImage = kDefGalleryImage.copyWith(
-    imageUrl: imageUrl,
-    sourceId: _sourceId,
-    imageWidth: width,
-    imageHeight: height,
-    gid: gid,
-    token: token,
+    imageUrl: imageUrl.oN,
+    sourceId: _sourceId.oN,
+    imageWidth: width.oN,
+    imageHeight: height.oN,
+    gid: gid.oN,
+    token: token.oN,
     ser: ser,
-    originImageUrl: originImageUrl,
-    filename: filename,
+    originImageUrl: originImageUrl.oN,
+    filename: filename.oN,
+    showKey: showKey.oN,
   );
 
   return _reImage;

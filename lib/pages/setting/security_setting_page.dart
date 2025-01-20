@@ -1,61 +1,63 @@
-import 'package:fehviewer/common/controller/auto_lock_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/component/setting_base.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/generated/l10n.dart';
+import 'package:eros_fe/common/controller/auto_lock_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class SecuritySettingPage extends StatelessWidget {
+  const SecuritySettingPage({super.key});
+
+  EhSettingService get _ehSettingService => Get.find<EhSettingService>();
+
   @override
   Widget build(BuildContext context) {
-    final Widget cps = Obx(() {
-      return CupertinoPageScaffold(
-          backgroundColor: !ehTheme.isDarkMode
-              ? CupertinoColors.secondarySystemBackground
-              : null,
-          navigationBar: CupertinoNavigationBar(
-            transitionBetweenRoutes: true,
-            middle: Text(L10n.of(context).security),
+    final _widgetList = _buildList(context);
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      navigationBar: CupertinoNavigationBar(
+        transitionBetweenRoutes: true,
+        middle: Text(L10n.of(context).security),
+      ),
+      child: CustomScrollView(
+        slivers: [
+          SliverSafeArea(
+            sliver: SliverCupertinoListSection.insetGrouped(
+              hasLeading: false,
+              additionalDividerMargin: 6,
+              itemBuilder: (context, index) {
+                return _widgetList[index];
+              },
+              itemCount: _widgetList.length,
+            ),
           ),
-          child: SafeArea(
-            child: ListViewSecuritySetting(),
-            bottom: false,
-          ));
-    });
-
-    return cps;
-  }
-}
-
-class ListViewSecuritySetting extends StatelessWidget {
-  EhConfigService get _ehConfigService => Get.find<EhConfigService>();
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> _list = <Widget>[
-      if (GetPlatform.isIOS)
-        TextSwitchItem(
-          L10n.of(context).security_blurredInRecentTasks,
-          value: _ehConfigService.blurredInRecentTasks.value,
-          onChanged: (val) => _ehConfigService.blurredInRecentTasks.value = val,
-        ),
-      _buildAutoLockItem(context, hideLine: true),
-    ];
-    return ListView.builder(
-      itemCount: _list.length,
-      itemBuilder: (BuildContext context, int index) {
-        return _list[index];
-      },
+        ],
+      ),
     );
+  }
+
+  List<Widget> _buildList(BuildContext context) {
+    return <Widget>[
+      if (GetPlatform.isMobile)
+        EhCupertinoListTile(
+          title: Text(L10n.of(context).security_blurredInRecentTasks),
+          trailing: Obx(() {
+            return CupertinoSwitch(
+              value: _ehSettingService.blurredInRecentTasks,
+              onChanged: (bool value) {
+                _ehSettingService.blurredInRecentTasks = value;
+              },
+            );
+          }),
+        ),
+      _buildAutoLockItem(context),
+    ];
   }
 }
 
 /// 自动锁定时间设置
-Widget _buildAutoLockItem(BuildContext context, {bool hideLine = false}) {
+Widget _buildAutoLockItem(BuildContext context) {
   final String _title = L10n.of(context).autoLock;
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
   final AutoLockController autoLockController = Get.find();
 
   String _getTimeText(int seconds) {
@@ -111,28 +113,29 @@ Widget _buildAutoLockItem(BuildContext context, {bool hideLine = false}) {
   }
 
   void _setAutoLockTimeOut(int timeOut) {
-    if (timeOut == ehConfigService.autoLockTimeOut.value) {
+    if (timeOut == ehSettingService.autoLockTimeOut.value) {
       return;
     }
 
-    if (timeOut == -1 || ehConfigService.autoLockTimeOut.value == -1) {
+    if (timeOut == -1 || ehSettingService.autoLockTimeOut.value == -1) {
       Future.delayed(const Duration(milliseconds: 400))
           .then((_) => autoLockController.checkBiometrics())
           .then((bool value) {
         autoLockController.resetLastLeaveTime();
         if (value) {
-          ehConfigService.autoLockTimeOut(timeOut);
+          ehSettingService.autoLockTimeOut(timeOut);
         }
       });
     } else {
-      ehConfigService.autoLockTimeOut(timeOut);
+      ehSettingService.autoLockTimeOut(timeOut);
     }
   }
 
-  return Obx(() => SelectorSettingItem(
-        title: _title,
-        hideDivider: hideLine,
-        selector: _getTimeText(ehConfigService.autoLockTimeOut.value),
+  return Obx(() => EhCupertinoListTile(
+        title: Text(_title),
+        trailing: const CupertinoListTileChevron(),
+        additionalInfo:
+            Text(_getTimeText(ehSettingService.autoLockTimeOut.value)),
         onTap: () async {
           final int? _result = await _showActionSheet(context);
           if (_result != null) {

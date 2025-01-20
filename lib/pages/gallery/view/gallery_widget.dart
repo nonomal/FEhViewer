@@ -1,13 +1,15 @@
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_state.dart';
-import 'package:fehviewer/pages/gallery/view/comment_item.dart';
-import 'package:fehviewer/pages/gallery/view/taginfo_dialog.dart';
-import 'package:fehviewer/widget/rating_bar.dart';
+import 'package:collection/collection.dart';
+import 'package:eros_fe/common/controller/block_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_state.dart';
+import 'package:eros_fe/pages/gallery/view/comment_item.dart';
+import 'package:eros_fe/pages/gallery/view/taginfo_dialog.dart';
+import 'package:eros_fe/widget/rating_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -116,22 +118,23 @@ class CoverImage extends StatelessWidget {
           width: kWidth,
           margin: const EdgeInsets.only(right: 10),
           child: Container(
-            decoration:
-                BoxDecoration(borderRadius: BorderRadius.circular(6.0), //圆角
-                    // ignore: prefer_const_literals_to_create_immutables
-                    boxShadow: [
+            decoration: BoxDecoration(
+                color: CupertinoColors.systemBackground,
+                borderRadius: BorderRadius.circular(6.0), //圆角
+                // ignore: prefer_const_literals_to_create_immutables
+                boxShadow: [
                   //阴影
                   const BoxShadow(
                     color: CupertinoColors.systemGrey2,
                     blurRadius: 2.0,
                   )
                 ]),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Container(
-                color: CupertinoColors.systemBackground,
-              ),
-            ),
+            // child: ClipRRect(
+            //   borderRadius: BorderRadius.circular(6),
+            //   child: Container(
+            //     color: CupertinoColors.systemBackground,
+            //   ),
+            // ),
           ),
         );
       }
@@ -175,7 +178,7 @@ class GalleryTitle extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           // height: 1.2,
           fontSize: 16,
-          fontWeight: FontWeight.w500,
+          // fontWeight: FontWeight.w500,
         ),
         strutStyle: const StrutStyle(
           height: 1.2,
@@ -215,7 +218,7 @@ class GalleryUploader extends StatelessWidget {
         ),
       ),
       onTap: () {
-        logger.v('search uploader:$uploader');
+        logger.t('search uploader:$uploader');
         NavigatorUtil.goSearchPageWithParam(simpleSearch: 'uploader:$uploader');
       },
     );
@@ -224,9 +227,9 @@ class GalleryUploader extends StatelessWidget {
 
 class ReadButton extends StatelessWidget {
   ReadButton({
-    Key? key,
+    super.key,
     required this.gid,
-  }) : super(key: key);
+  });
   final String gid;
 
   final GalleryPageController _pageController = Get.find(tag: pageCtrlTag);
@@ -236,21 +239,20 @@ class ReadButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => MouseRegionClick(
-        child: CupertinoButton(
-            child: Text(
-              (_pageState.lastIndex > 0)
-                  ? '${L10n.of(context).read.toUpperCase()} ${_pageState.lastIndex + 1}'
-                  : L10n.of(context).read.toUpperCase(),
-              style: const TextStyle(fontSize: 15, height: 1.2),
-            ),
+        child: CupertinoButton.filled(
             minSize: 24,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             borderRadius: BorderRadius.circular(20),
-            color: CupertinoColors.activeBlue,
+            // color: CupertinoColors.activeBlue,
             onPressed: _pageState.enableRead
                 ? () => _toViewPage(_pageState.galleryProvider?.gid ?? '0',
                     _pageState.lastIndex)
-                : null),
+                : null,
+            child: Text(
+                (_pageState.lastIndex > 0)
+                    ? '${L10n.of(context).read.toUpperCase()} ${_pageState.lastIndex + 1}'
+                    : L10n.of(context).read.toUpperCase(),
+                style: const TextStyle(fontSize: 15, height: 1.2))),
       ),
     );
   }
@@ -279,18 +281,18 @@ class GalleryCategory extends StatelessWidget {
     // final Color _colorCategory = CupertinoDynamicColor.resolve(
     //     ThemeColors.catColor[category ?? 'default']!, context);
     return GestureDetector(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      child: Container(
+        decoration: BoxDecoration(
           color: _colorCategory,
-          child: Text(
-            category ?? '',
-            style: const TextStyle(
-              fontSize: 14.5,
-              // height: 1.1,
-              color: CupertinoColors.white,
-            ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        child: Text(
+          category ?? '',
+          style: const TextStyle(
+            fontSize: 14.5,
+            // height: 1.1,
+            color: CupertinoColors.white,
           ),
         ),
       ),
@@ -338,16 +340,62 @@ class GalleryRating extends StatelessWidget {
 }
 
 class TopCommentEx extends StatelessWidget {
-  const TopCommentEx({Key? key, this.comments, this.max = 2}) : super(key: key);
+  const TopCommentEx({
+    Key? key,
+    this.comments,
+    this.max = 2,
+    required this.uploader,
+  }) : super(key: key);
   final List<GalleryComment>? comments;
   final int max;
+  final String? uploader;
+
+  EhSettingService get _ehSettingService => Get.find();
+  BlockController get _blockController => Get.find();
 
   @override
   Widget build(BuildContext context) {
     // 显示最前面两条
-    List<Widget> _topComment(List<GalleryComment>? comments, {int max = 2}) {
-      final Iterable<GalleryComment> _comments = comments?.take(max) ?? [];
-      return _comments
+    List<Widget> topComment(List<GalleryComment>? comments, {int max = 2}) {
+      Iterable<GalleryComment> commentsToShow = comments ?? [];
+
+      // 如果启用了仅显示上传者评论 则只显示上传者的评论，并且忽略评分筛选
+      if (_ehSettingService.showOnlyUploaderComment) {
+        final uploaderId = commentsToShow
+            .firstWhereOrNull((element) => element.score.isEmpty)
+            ?.memberId;
+        logger.d('_uploaderId $uploaderId');
+        if (uploaderId != null) {
+          commentsToShow =
+              commentsToShow.where((element) => element.memberId == uploaderId);
+        } else {
+          commentsToShow = commentsToShow
+              .where((element) => element.name == uploader?.trim());
+        }
+
+        logger.d('commentsToShow.length ${commentsToShow.length}');
+      } else if (_ehSettingService.filterCommentsByScore) {
+        commentsToShow = commentsToShow.where((comment) =>
+            comment.score.isEmpty ||
+            (int.tryParse(comment.score) ?? 0) >
+                _ehSettingService.scoreFilteringThreshold);
+      }
+
+      // 根据屏蔽规则过滤评论
+      commentsToShow = commentsToShow.where((element) {
+        return !_blockController.matchRule(
+              text: element.text,
+              blockType: BlockType.comment,
+            ) &&
+            !_blockController.matchRule(
+              text: element.name,
+              blockType: BlockType.commentator,
+            );
+      });
+
+      commentsToShow = commentsToShow.take(max);
+
+      return commentsToShow
           .map((GalleryComment comment) => CommentItem(
                 galleryComment: comment,
                 simple: true,
@@ -357,7 +405,7 @@ class TopCommentEx extends StatelessWidget {
 
     return Column(
       children: [
-        ..._topComment(comments, max: max),
+        ...topComment(comments, max: max),
         if ((comments?.length ?? 0) > max)
           const Padding(
             padding: EdgeInsets.only(top: 8.0),
@@ -387,9 +435,11 @@ class MorePreviewButton extends StatelessWidget {
   const MorePreviewButton({
     Key? key,
     required this.hasMorePreview,
+    this.padding,
   }) : super(key: key);
 
   final bool hasMorePreview;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -398,13 +448,13 @@ class MorePreviewButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       child: Text(
         hasMorePreview
-            ? L10n.of(Get.context!).morePreviews
-            : L10n.of(Get.context!).noMorePreviews,
+            ? L10n.of(Get.context!).more_thumbnails
+            : L10n.of(Get.context!).no_more_thumbnails,
         style: const TextStyle(fontSize: 16),
       ),
       onPressed: () {
         Get.toNamed(
-          EHRoutes.galleryAllPreviews,
+          EHRoutes.galleryAllThumbnails,
           id: isLayoutLarge ? 2 : null,
         );
       },
@@ -424,12 +474,12 @@ class TagGroupItem extends StatelessWidget {
     List<GalleryTag> galleryTags,
     BuildContext context,
   ) {
-    final EhConfigService ehConfigService = Get.find();
+    final EhSettingService ehSettingService = Get.find();
 
     return galleryTags.map((e) {
       final tag = e.setColor();
       return Obx(() => TagButton(
-            text: ehConfigService.isTagTranslat ? tag.tagTranslat : tag.title,
+            text: ehSettingService.isTagTranslate ? tag.tagTranslat : tag.title,
             color: ColorsUtil.hexStringToColor(tag.backgrondColor),
             textColor: () {
               switch (tag.vote) {
@@ -444,12 +494,13 @@ class TagGroupItem extends StatelessWidget {
               }
             }(),
             onPressed: () {
-              logger.v('search type[${tag.type}] tag[${tag.title}]');
+              logger.t('search type[${tag.type}] tag[${tag.title}]');
               NavigatorUtil.goSearchPageWithParam(
                   simpleSearch: '${tag.type}:${tag.title.trim()}');
             },
             onLongPress: () {
               showTagInfoDialog(
+                context,
                 tag.title,
                 translate: tag.tagTranslat,
                 type: tag.type,
@@ -462,13 +513,13 @@ class TagGroupItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EhConfigService ehConfigService = Get.find();
+    final EhSettingService ehSettingService = Get.find();
 
     final List<Widget> _tagBtnList =
         _initTagBtnList(tagGroupData.galleryTags, context);
     final String? _tagType = tagGroupData.tagType;
 
-    logger.v('tagType $_tagType');
+    logger.t('tagType $_tagType');
 
     final Container container = Container(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -485,7 +536,7 @@ class TagGroupItem extends StatelessWidget {
                             randomList<Color>(
                                 ThemeColors.tagColorTagType.values),
                         context),
-                    text: ehConfigService.isTagTranslat
+                    text: ehSettingService.isTagTranslate
                         ? EHConst.translateTagType[_tagType.trim()] ?? _tagType
                         : _tagType,
                   )
@@ -531,29 +582,27 @@ class TagButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       onLongPress: onLongPress,
-      child: ClipRRect(
-        // key: key,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: padding ?? const EdgeInsets.fromLTRB(6, 3, 6, 4),
+      child: Container(
+        decoration: BoxDecoration(
           color: color ??
               CupertinoDynamicColor.resolve(ThemeColors.tagBackground, context),
-          child: Column(
-            children: [
-              Text(
-                text,
-                style: TextStyle(
-                  color: textColor ??
-                      CupertinoDynamicColor.resolve(
-                          ThemeColors.tagText, context),
-                  fontSize: 13,
-                  fontWeight: textColor != null ? FontWeight.w500 : null,
-                  height: 1.3,
-                ),
-                strutStyle: const StrutStyle(height: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: padding ?? const EdgeInsets.fromLTRB(6, 3, 6, 4),
+        child: Column(
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                color: textColor ??
+                    CupertinoDynamicColor.resolve(ThemeColors.tagText, context),
+                fontSize: 13,
+                // fontWeight: textColor != null ? FontWeight.w600 : null,
+                height: 1.3,
               ),
-            ],
-          ),
+              strutStyle: const StrutStyle(height: 1),
+            ),
+          ],
         ),
       ),
     );
@@ -585,47 +634,46 @@ class SearchHisTagButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       onLongPress: onLongPress,
-      child: ClipRRect(
-        // key: key,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: padding ?? const EdgeInsets.fromLTRB(6, 3, 6, 4),
+      child: Container(
+        padding: padding ?? const EdgeInsets.fromLTRB(6, 3, 6, 4),
+        decoration: BoxDecoration(
           color: color ??
               CupertinoDynamicColor.resolve(ThemeColors.tagBackground, context),
-          child: IntrinsicWidth(
-            child: Column(
-              children: [
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: IntrinsicWidth(
+          child: Column(
+            children: [
+              Text(
+                text,
+                style: TextStyle(
+                  color: textColor ??
+                      CupertinoDynamicColor.resolve(
+                          ThemeColors.tagText, context),
+                  fontSize: 13,
+                  fontWeight: textColor != null ? FontWeight.w500 : null,
+                  height: 1.3,
+                ),
+                strutStyle: const StrutStyle(height: 1),
+              ),
+              if (desc != null && desc!.isNotEmpty)
+                Container(
+                  height: 0.1,
+                  color: ThemeColors.tagText,
+                ),
+              if (desc != null && desc!.isNotEmpty)
                 Text(
-                  text,
+                  desc!,
                   style: TextStyle(
                     color: textColor ??
                         CupertinoDynamicColor.resolve(
                             ThemeColors.tagText, context),
-                    fontSize: 13,
-                    fontWeight: textColor != null ? FontWeight.w500 : null,
+                    fontSize: 12,
                     height: 1.3,
+                    // fontWeight: FontWeight.w500,
                   ),
-                  strutStyle: const StrutStyle(height: 1),
                 ),
-                if (desc != null && desc!.isNotEmpty)
-                  Container(
-                    height: 0.1,
-                    color: ThemeColors.tagText,
-                  ),
-                if (desc != null && desc!.isNotEmpty)
-                  Text(
-                    desc!,
-                    style: TextStyle(
-                      color: textColor ??
-                          CupertinoDynamicColor.resolve(
-                              ThemeColors.tagText, context),
-                      fontSize: 12,
-                      height: 1.3,
-                      // fontWeight: FontWeight.w500,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -659,33 +707,31 @@ class TextBtn extends StatelessWidget {
           CupertinoThemeData(primaryColor: color ?? CupertinoColors.systemGrey),
       child: GestureDetector(
         // behavior: HitTestBehavior.opaque,
-        child: Container(
-          // padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: <Widget>[
-              Container(
-                padding: iconPadding,
-                child: MouseRegionClick(
-                  disable: onTap == null && onLongPress == null,
-                  child: CupertinoButton(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Icon(
-                      iconData,
-                      size: iconSize ?? 28,
-                      // color: CupertinoColors.systemGrey3,
-                    ),
-                    onPressed: onTap,
+        onLongPress: onLongPress,
+        // behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: <Widget>[
+            Container(
+              padding: iconPadding,
+              child: MouseRegionClick(
+                disable: onTap == null && onLongPress == null,
+                child: CupertinoButton(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  onPressed: onTap,
+                  child: Icon(
+                    iconData,
+                    size: iconSize ?? 28,
+                    // color: CupertinoColors.systemGrey3,
                   ),
                 ),
               ),
-              Text(
-                title ?? '',
-                style: const TextStyle(fontSize: 12, height: 1),
-              ),
-            ],
-          ),
+            ),
+            Text(
+              title ?? '',
+              style: const TextStyle(fontSize: 12, height: 1),
+            ),
+          ],
         ),
-        onLongPress: onLongPress,
       ),
     );
   }

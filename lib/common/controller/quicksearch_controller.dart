@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
-import 'package:fehviewer/common/controller/webdav_controller.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/common/controller/webdav_controller.dart';
+import 'package:eros_fe/index.dart';
 import 'package:get/get.dart';
 
 import 'base_controller.dart';
@@ -40,8 +40,8 @@ class QuickSearchController extends ProfileController {
     }
 
     final _rs = await webdavController.downloadQuickSearch(_remoteTimes.max);
-    final remoteTime = _rs?.item2 ?? 0;
-    final remoteList = _rs?.item1 ?? <String>[];
+    final remoteList = _rs?.$1 ?? <String>[];
+    final remoteTime = _rs?.$2 ?? 0;
     logger.d(
         '远程时间 $remoteTime, 本地最后更新时间 $lastEditTime, 需要下载: ${remoteTime > lastEditTime}');
     // 远程时间大于等于本地最后编辑时间 下载远程数据

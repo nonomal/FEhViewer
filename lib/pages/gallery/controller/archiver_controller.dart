@@ -1,8 +1,8 @@
-import 'package:fehviewer/common/controller/archiver_download_controller.dart';
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/network/request.dart';
+import 'package:eros_fe/common/controller/archiver_download_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/network/request.dart';
 import 'package:get/get.dart';
 
 import 'gallery_page_controller.dart';
@@ -71,7 +71,7 @@ class ArchiverController extends GetxController
         dlcheck: dlcheck,
       );
       logger.d('archiver downloadLoacal $_url');
-      _downloadController.downloadArchiverFile(
+      await _downloadController.downloadArchiverFile(
         gid: _pageState.galleryProvider?.gid ?? '0',
         title: _pageState.mainTitle,
         dlType: dltype,
@@ -79,8 +79,10 @@ class ArchiverController extends GetxController
         imgUrl: _pageState.galleryProvider?.imgUrl,
         galleryUrl: _pageState.galleryProvider?.url,
       );
-    } catch (e) {
+    } catch (e, stack) {
       showToast('$e');
+      logger.e('$e\n$stack');
+      rethrow;
     }
   }
 }

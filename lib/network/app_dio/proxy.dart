@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/io.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/index.dart';
 import 'package:flutter_socks_proxy/socks_proxy.dart';
 import 'package:get/get.dart';
 import 'package:system_network_proxy/system_network_proxy.dart';
@@ -9,17 +9,17 @@ import 'package:system_proxy/system_proxy.dart';
 
 class HttpProxyAdapter extends IOHttpClientAdapter {
   HttpProxyAdapter({required this.proxy, bool? skipCertificate}) {
-    onHttpClientCreate = (HttpClient client) {
-      final _client = createProxyHttpClient();
+    createHttpClient = () {
+      final client = createProxyHttpClient();
       if (proxy.isNotEmpty) {
         // logger.d('set proxy $proxy');
-        _client.findProxy = (url) => proxy;
+        client.findProxy = (url) => proxy;
       }
       if (proxy != 'DIRECT' || (skipCertificate ?? false)) {
-        _client.badCertificateCallback =
+        client.badCertificateCallback =
             (X509Certificate cert, String host, int port) => true;
       }
-      return _client;
+      return client;
     };
   }
 

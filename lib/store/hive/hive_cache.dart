@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:fehviewer/fehviewer.dart';
-import 'package:flutter/widgets.dart';
+import 'package:eros_fe/index.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path/path.dart' if (dart.library.html) 'src/stub/path.dart'
@@ -17,7 +16,7 @@ class HiveCacheHelper {
   static final _cacheBox = Hive.box<String>(kCacheBox);
 
   Future<void> init() async {
-    WidgetsFlutterBinding.ensureInitialized();
+    // WidgetsFlutterBinding.ensureInitialized();
 
     Hive.init(path_helper.join(Global.tempPath, 'hive'));
 
@@ -28,7 +27,7 @@ class HiveCacheHelper {
     await Hive.openBox<String>(
       kCacheBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('entries $entries');
+        logger.t('entries $entries');
         return entries > 10;
       },
     );

@@ -1,13 +1,15 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:fehviewer/store/db/entity/gallery_task.dart';
-import 'package:fehviewer/store/db/entity/tag_translate_info.dart';
-import 'package:fehviewer/store/db/entity/view_history.dart';
-import 'package:fehviewer/store/db/isar.dart';
+import 'package:eros_fe/store/db/entity/gallery_task.dart';
+import 'package:eros_fe/store/db/entity/tag_translate_info.dart';
+import 'package:eros_fe/store/db/entity/view_history.dart';
+import 'package:eros_fe/store/db/isar.dart';
+import 'package:eros_fe/store/db/isar_isolate.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
-import '../../fehviewer.dart';
+import '../../index.dart';
 import 'entity/gallery_image_task.dart';
 import 'entity/tag_translat.dart';
 
@@ -19,13 +21,13 @@ class IsarHelper {
   }
 
   Future<List<GalleryProvider>> getAllHistory() async {
-    final viewHistorys =
+    final viewHistories =
         await isar.viewHistorys.where().sortByLastViewTimeDesc().findAll();
-    final _historys = viewHistorys
+    final _histories = viewHistories
         .map((e) => GalleryProvider.fromJson(
             jsonDecode(e.galleryProviderText) as Map<String, dynamic>))
         .toList();
-    return _historys;
+    return _histories;
   }
 
   Future<GalleryProvider?> getHistory(String gid) async {
@@ -38,7 +40,8 @@ class IsarHelper {
         jsonDecode(viewHistory.galleryProviderText) as Map<String, dynamic>);
   }
 
-  Future<void> addHistory(GalleryProvider galleryProvider) async {
+  Future<void> addHistoryAsync(GalleryProvider galleryProvider) async {
+    // return;
     final gid = int.tryParse(galleryProvider.gid ?? '0') ?? 0;
     final lastViewTime = galleryProvider.lastViewTime ?? 0;
 
@@ -48,6 +51,11 @@ class IsarHelper {
           lastViewTime: lastViewTime,
           galleryProviderText: jsonEncode(galleryProvider)));
     });
+  }
+
+  Future<void> addHistoryIsolate(GalleryProvider galleryProvider) async {
+    // return;
+    compute(iAddHistory, galleryProvider);
   }
 
   Future<void> removeHistory(String gid) async {
@@ -63,8 +71,8 @@ class IsarHelper {
     });
   }
 
-  Future<void> addHistorys(List<GalleryProvider> allHistory) async {
-    final viewHistorys = allHistory
+  Future<void> addHistoriesAsync(List<GalleryProvider> allHistory) async {
+    final viewHistories = allHistory
         .map((e) => ViewHistory(
             gid: int.tryParse(e.gid ?? '0') ?? 0,
             lastViewTime: e.lastViewTime ?? 0,
@@ -72,28 +80,39 @@ class IsarHelper {
         .toList();
 
     await isar.writeTxn(() async {
-      await isar.viewHistorys.putAll(viewHistorys);
+      await isar.viewHistorys.putAll(viewHistories);
     });
+  }
+
+  Future<void> addHistoriesIsolate(List<GalleryProvider> allHistory) async {
+    compute(iAddHistories, allHistory);
   }
 
   Future<void> putAllTagTranslate(
     List<TagTranslat> tagTranslates,
   ) async {
-    final tagTranslats = isar.tagTranslats;
+    final tagTranslate = isar.tagTranslats;
     await isar.writeTxn(() async {
-      await tagTranslats.putAll(tagTranslates);
+      await tagTranslate.putAll(tagTranslates);
     });
+  }
+
+  Future<void> putAllTagTranslateIsolate(
+    List<TagTranslat> tagTranslates,
+  ) async {
+    compute(iPutAllTagTranslate, tagTranslates);
   }
 
   Future<List<String?>> findAllTagNamespace() async {
     final result = await isar.tagTranslats
         .where()
         .distinctByNamespace()
-        .nameProperty()
+        .namespaceProperty()
         .findAll();
     return result;
   }
 
+  // 查询 tag
   Future<TagTranslat?> findTagTranslate(String key, {String? namespace}) async {
     if (namespace != null && namespace.isNotEmpty) {
       final result = await isar.tagTranslats
@@ -114,7 +133,7 @@ class IsarHelper {
     }
   }
 
-  // 模糊查询
+  // 模糊查询 通过tag或者tag翻译的部分内容
   Future<List<TagTranslat>> findTagTranslateContains(
       String text, int limit) async {
     final result = await isar.tagTranslats
@@ -135,12 +154,12 @@ class IsarHelper {
     return result;
   }
 
-  Future<void> tapTagTranslate(TagTranslat tagTranslat) async {
-    final newTagTranslat = tagTranslat.copyWith(
+  Future<void> tapTagTranslate(TagTranslat tagTranslate) async {
+    final newTagTranslate = tagTranslate.copyWith(
       lastUseTime: DateTime.now().millisecondsSinceEpoch,
     );
     await isar.writeTxn(() async {
-      await isar.tagTranslats.putByKeyNamespace(newTagTranslat);
+      await isar.tagTranslats.putByKeyNamespace(newTagTranslate);
     });
   }
 
@@ -153,12 +172,23 @@ class IsarHelper {
 
   /// GalleryTasks
   Future<List<GalleryTask>> findAllGalleryTasks() async {
-    final taks = await isar.galleryTasks.where().sortByAddTimeDesc().findAll();
-    return taks;
+    return await isar.galleryTasks.where().sortByAddTimeDesc().findAll();
+  }
+
+  Future<List<GalleryTask>> findAllGalleryTasksIsolate() async {
+    return compute(iFindAllGalleryTasks, null);
+  }
+
+  GalleryTask? findGalleryTaskByGidSync(int gid) {
+    return isar.galleryTasks.getSync(gid);
   }
 
   Future<GalleryTask?> findGalleryTaskByGid(int gid) async {
     return await isar.galleryTasks.get(gid);
+  }
+
+  Future<GalleryTask?> findGalleryTaskByGidIsolate(int gid) async {
+    return compute(iFindGalleryTaskByGid, gid);
   }
 
   Future<void> putGalleryTask(GalleryTask galleryTask,
@@ -179,13 +209,55 @@ class IsarHelper {
     }
   }
 
-  Future<void> putAllGalleryTasks(
-    List<GalleryTask> galleryTasks, {
+  Future<void> putGalleryTaskIsolate(
+    GalleryTask galleryTask, {
     bool replaceOnConflict = true,
   }) async {
+    compute(iPutGalleryTaskIsolate, (galleryTask, replaceOnConflict));
+  }
+
+  Future<void> updateGalleryTask(
+    int gid,
+    GalleryTask Function(GalleryTask) func,
+  ) async {
+    final galleryTask = await findGalleryTaskByGid(gid);
+    if (galleryTask != null) {
+      await isar.writeTxn(() async {
+        await isar.galleryTasks.put(func(galleryTask));
+      });
+    }
+  }
+
+  Future<void> updateGalleryTaskShowKey(
+    int gid,
+    String showKey,
+  ) async {
+    final galleryTask = await findGalleryTaskByGid(gid);
+    if (galleryTask != null) {
+      await isar.writeTxn(() async {
+        await isar.galleryTasks.put(galleryTask.copyWith(showKey: showKey));
+      });
+    }
+  }
+
+  Future<void> updateGalleryTaskIsolate(
+    int gid,
+    GalleryTask Function(GalleryTask) func,
+  ) async {
+    compute(iUpdateGalleryTaskIsolate, (gid, func));
+  }
+
+  Future<void> putAllGalleryTasks(List<GalleryTask> galleryTasks) async {
     await isar.writeTxn(() async {
       await isar.galleryTasks.putAll(galleryTasks);
     });
+  }
+
+  Future<void> putAllGalleryTasksIsolate(
+    List<GalleryTask> galleryTasks, {
+    bool replaceOnConflict = true,
+  }) async {
+    compute(iPutAllGalleryTasks, galleryTasks);
   }
 
   Future<void> removeGalleryTask(int gid) async {
@@ -201,6 +273,10 @@ class IsarHelper {
         .gidEqualTo(gid)
         .sortBySer()
         .findAll();
+  }
+
+  Future<List<GalleryImageTask>> findImageTaskAllByGidIsolate(int gid) async {
+    return compute(iFindImageTaskAllByGid, gid);
   }
 
   List<GalleryImageTask> findImageTaskAllByGidSync(int gid) {
@@ -219,16 +295,28 @@ class IsarHelper {
     return isar.galleryImageTasks.getByGidSer(gid, ser);
   }
 
+  Future<GalleryImageTask?> findImageTaskAllByGidSerIsolate(int gid, int ser) {
+    return compute(iFindImageTaskAllByGidSer, (gid, ser));
+  }
+
   Future<void> putImageTask(GalleryImageTask imageTask) async {
     await isar.writeTxn(() async {
       await isar.galleryImageTasks.putByGidSer(imageTask);
     });
   }
 
+  Future<void> putImageTaskIsolate(GalleryImageTask imageTask) async {
+    compute(iPutImageTask, imageTask);
+  }
+
   Future<void> putAllImageTask(List<GalleryImageTask> imageTasks) async {
     await isar.writeTxn(() async {
       await isar.galleryImageTasks.putAllByGidSer(imageTasks);
     });
+  }
+
+  Future<void> putAllImageTaskIsolate(List<GalleryImageTask> imageTasks) async {
+    compute(iPutAllImageTask, imageTasks);
   }
 
   Future<void> removeImageTask(int gid) async {
@@ -238,8 +326,8 @@ class IsarHelper {
   }
 
   Future<void> updateImageTaskStatus(int gid, int ser, int status) async {
-    final tasks = await isar.galleryImageTasks.getByGidSer(gid, ser);
     await isar.writeTxn(() async {
+      final tasks = await isar.galleryImageTasks.getByGidSer(gid, ser);
       if (tasks != null) {
         await isar.galleryImageTasks
             .putByGidSer(tasks.copyWith(status: status));
@@ -247,14 +335,60 @@ class IsarHelper {
     });
   }
 
+  Future<List<GalleryImageTask>> onDownloadComplete(
+    int gid,
+    int ser,
+    int status,
+  ) async {
+    return await isar.writeTxn(() async {
+      final tasks = await isar.galleryImageTasks.getByGidSer(gid, ser);
+      if (tasks != null) {
+        await isar.galleryImageTasks
+            .putByGidSer(tasks.copyWith(status: status));
+      }
+      return await isar.galleryImageTasks
+          .where()
+          .gidEqualTo(gid)
+          .filter()
+          .statusEqualTo(status)
+          .findAll();
+    });
+  }
+
+  // 在同一个事务中 updateImageTaskStatus 然后 finaAllImageTaskByGidAndStatus
+  Future<List<GalleryImageTask>> onDownloadCompleteIsolate(
+    int gid,
+    int ser,
+    int status,
+  ) async {
+    return compute(iOnDownloadComplete, (gid, ser, status));
+  }
+
+  Future<void> updateImageTaskStatusIsolate(
+    int gid,
+    int ser,
+    int status,
+  ) async {
+    compute(iUpdateImageTaskStatus, (gid, ser, status));
+  }
+
   Future<List<GalleryImageTask>> finaAllImageTaskByGidAndStatus(
-      int gid, int status) async {
+    int gid,
+    int status,
+  ) async {
     return await isar.galleryImageTasks
         .where()
         .gidEqualTo(gid)
         .filter()
         .statusEqualTo(status)
         .findAll();
+  }
+
+  Future<List<GalleryImageTask>> finaAllImageTaskByGidAndStatusIsolate(
+    int gid,
+    int status,
+  ) async {
+    return compute(iFinaAllImageTaskByGidAndStatus, (gid, status));
   }
 
   Future<void> putTagTranslateVersion(String version) async {

@@ -1,21 +1,21 @@
 import 'dart:collection';
 
-import 'package:fehviewer/common/controller/quicksearch_controller.dart';
-import 'package:fehviewer/common/controller/tag_trans_controller.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/common/service/locale_service.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/pages/tab/view/tab_base.dart';
-import 'package:fehviewer/route/navigator_util.dart';
-import 'package:fehviewer/route/routes.dart';
-import 'package:fehviewer/store/db/entity/tag_translat.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/vibrate.dart';
+import 'package:eros_fe/common/controller/quicksearch_controller.dart';
+import 'package:eros_fe/common/controller/tag_trans_controller.dart';
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/common/service/locale_service.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/pages/tab/view/list/tab_base.dart';
+import 'package:eros_fe/route/navigator_util.dart';
+import 'package:eros_fe/route/routes.dart';
+import 'package:eros_fe/store/db/entity/tag_translat.dart';
+import 'package:eros_fe/utils/logger.dart';
+import 'package:eros_fe/utils/vibrate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -44,9 +44,9 @@ class SearchPageController extends DefaultTabViewController {
   bool textIsGalleryUrl = false;
   String? _jumpToUrl;
 
-  bool get translateSearchHistory => ehConfigService.translateSearchHistory;
+  bool get translateSearchHistory => ehSettingService.translateSearchHistory;
   set translateSearchHistory(bool value) =>
-      ehConfigService.translateSearchHistory = value;
+      ehSettingService.translateSearchHistory = value;
 
   final TagTransController tagTransController = Get.find<TagTransController>();
 
@@ -58,7 +58,7 @@ class SearchPageController extends DefaultTabViewController {
 
   String get placeholderText {
     final BuildContext context = Get.context!;
-    // logger.v('$searchType');
+    // logger.t('$searchType');
     switch (searchType) {
       case SearchType.favorite:
         return '${L10n.of(context).search} ${L10n.of(context).tab_favorite}';
@@ -93,12 +93,12 @@ class SearchPageController extends DefaultTabViewController {
   final QuickSearchController quickSearchController = Get.find();
   final LocaleService localeService = Get.find();
 
-  bool get isTagTranslat => ehConfigService.isTagTranslat;
+  bool get isTagTranslat => ehSettingService.isTagTranslate;
 
   /// 控制右侧按钮展开折叠
-  bool get isSearchBarComp => ehConfigService.isSearchBarComp.value;
+  bool get isSearchBarComp => ehSettingService.isSearchBarComp.value;
 
-  set isSearchBarComp(bool val) => ehConfigService.isSearchBarComp.value = val;
+  set isSearchBarComp(bool val) => ehSettingService.isSearchBarComp.value = val;
 
   @override
   FetchListClient getFetchListClient(FetchParams fetchParams) {
@@ -113,6 +113,7 @@ class SearchPageController extends DefaultTabViewController {
     resetResultPage();
 
     searchText = searchTextController.text.trim();
+    Global.analytics?.logSearch(searchTerm: searchText);
 
     if (searchText.isNotEmpty) {
       _addHistory();
@@ -159,7 +160,7 @@ class SearchPageController extends DefaultTabViewController {
   Future<void> _delayedSearch() async {
     searchText = searchTextController.text.trim();
     update([GetIds.SEARCH_CLEAR_BTN]);
-    logger.v(' _delayedSearch');
+    logger.t(' _delayedSearch');
     const Duration _duration = Duration(milliseconds: 500);
     _lastInputCompleteAt = DateTime.now();
     await Future<void>.delayed(_duration);
@@ -167,7 +168,7 @@ class SearchPageController extends DefaultTabViewController {
     if (lastSearchText.trim() != searchTextController.text.trim() &&
         DateTime.now().difference(_lastInputCompleteAt) >= _duration) {
       if (searchTextController.text.trim().isEmpty) {
-        logger.v('ListType to ListType.init');
+        logger.t('ListType to ListType.init');
         listType = ListType.init;
         textIsGalleryUrl = false;
         update([GetIds.SEARCH_CLEAR_BTN]);
@@ -185,7 +186,7 @@ class SearchPageController extends DefaultTabViewController {
       listType = ListType.tag;
 
       // url 直接打开
-      if (await canLaunchUrlString(searchText)) {
+      if (searchText.isURL && await canLaunchUrlString(searchText)) {
         if (regGalleryUrl.hasMatch(searchText) ||
             regGalleryPageUrl.hasMatch(searchText)) {
           _jumpToUrl = regGalleryUrl.firstMatch(searchText)?.group(0) ??
@@ -202,6 +203,7 @@ class SearchPageController extends DefaultTabViewController {
       }
 
       currQryText = searchTextController.text.split(RegExp(r'[ ;"]')).last;
+      logger.d('currQryText $currQryText');
       if (currQryText.isEmpty) {
         qryTags([]);
         return;

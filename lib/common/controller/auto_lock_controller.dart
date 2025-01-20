@@ -1,11 +1,12 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/index.dart';
-import 'package:fehviewer/route/routes.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/models/index.dart';
+import 'package:eros_fe/route/routes.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:get/get.dart';
 import 'package:local_auth_android/local_auth_android.dart';
-import 'package:local_auth_ios/local_auth_ios.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 import '../global.dart';
 
@@ -13,7 +14,7 @@ class AutoLockController extends GetxController {
   AutoLock get autoLock => Global.profile.autoLock;
   set autoLock(AutoLock val) =>
       Global.profile = Global.profile.copyWith(autoLock: val);
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
 
   static final IOSAuthMessages iOSAuthMessages = IOSAuthMessages(
       cancelButton: L10n.of(Get.context!).cancel,
@@ -34,7 +35,7 @@ class AutoLockController extends GetxController {
   int get lastLeaveTime => _lastLeaveTime;
   set lastLeaveTime(int val) {
     _lastLeaveTime = val;
-    autoLock = autoLock.copyWith(lastLeaveTime: val);
+    autoLock = autoLock.copyWith(lastLeaveTime: val.oN);
     Global.saveProfile();
   }
 
@@ -46,7 +47,7 @@ class AutoLockController extends GetxController {
   bool get isLocking => _isLocking;
   set isLocking(bool val) {
     _isLocking = val;
-    autoLock = autoLock.copyWith(isLocking: val);
+    autoLock = autoLock.copyWith(isLocking: val.oN);
     Global.saveProfile();
   }
 
@@ -67,28 +68,30 @@ class AutoLockController extends GetxController {
     if (!_isLocking) {
       resetLastLeaveTime();
       _isResumed = false;
-      logger.v('更新最后离开时间 $lastLeaveTime');
+      logger.d('更新最后离开时间 $lastLeaveTime');
     } else {
-      logger.v('保持原离开时间 不更新');
+      logger.t('保持原离开时间 不更新');
     }
   }
 
-  Future<void> resumed({bool forceLock = false}) async {
+  Future<void> checkLock({bool forceLock = false}) async {
     final nowTime = DateTime.now().millisecondsSinceEpoch;
     final subTime = nowTime - lastLeaveTime;
-    final autoLockTimeOut = _ehConfigService.autoLockTimeOut.value;
+    final autoLockTimeOut = _ehSettingService.autoLockTimeOut.value;
 
-    final _needUnLock =
+    logger.t('now time $nowTime, lastLeaveTime: $lastLeaveTime');
+
+    final locked =
         autoLockTimeOut >= 0 && (subTime / 1000 > autoLockTimeOut || forceLock);
-    logger
-        .v('离开时间为: ${subTime}ms  锁定超时为: $autoLockTimeOut  需要解锁: $_needUnLock');
+    logger.t('离开时间为: ${subTime}ms  锁定超时为: $autoLockTimeOut  需要解锁: $locked');
 
-    if (_needUnLock && !_isResumed) {
+    if (locked && !_isResumed) {
       _isLocking = true;
 
-      final rult = await Get.toNamed(EHRoutes.unlockPage);
-      if (rult is bool) {
-        final bool didAuthenticate = rult;
+      final result = await Get.toNamed(EHRoutes.unlockPage);
+
+      if (result is bool) {
+        final bool didAuthenticate = result;
         if (didAuthenticate) {
           localAuth.stopAuthentication();
           _isResumed = true;

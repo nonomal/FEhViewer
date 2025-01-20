@@ -1,14 +1,13 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/pages/filter/gallery_filter_view.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/utility.dart';
-import 'package:fehviewer/utils/vibrate.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/pages/filter/gallery_filter_view.dart';
+import 'package:eros_fe/utils/logger.dart';
+import 'package:eros_fe/utils/utility.dart';
+import 'package:eros_fe/utils/vibrate.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// 筛选画廊类型的按钮
@@ -71,18 +70,16 @@ class _GalleryCatButtonState extends State<GalleryCatButton> {
   @override
   Widget build(BuildContext context) {
     // loggerNoStack.v('GalleryCatButton build [${widget.text}] [$_value]');
-    return Container(
-      child: GestureDetector(
-        onLongPress: _onLongPress,
-        child: CupertinoButton(
-          padding: const EdgeInsets.all(2.0),
-          onPressed: _onPressed,
-          pressedOpacity: 1.0,
-          child: Text(
-            widget.text,
-            style: TextStyle(color: _textColor),
-          ),
-          color: _color,
+    return GestureDetector(
+      onLongPress: _onLongPress,
+      child: CupertinoButton(
+        padding: const EdgeInsets.all(2.0),
+        onPressed: _onPressed,
+        pressedOpacity: 1.0,
+        color: _color,
+        child: Text(
+          widget.text,
+          style: TextStyle(color: _textColor),
         ),
       ),
     );
@@ -94,7 +91,7 @@ class _GalleryCatButtonState extends State<GalleryCatButton> {
   }
 
   void _onPressed() {
-    // logger.v('_pressBtn ${widget.text}');
+    // logger.t('_pressBtn ${widget.text}');
     vibrateUtil.light();
     _value = !_value;
     _textColor = _value ? widget.onTextColor : widget.offTextColor;
@@ -153,7 +150,7 @@ class _GalleryCatFilterState extends State<GalleryCatFilter> {
             offTextColor: CupertinoColors.systemGrey,
             value: _catMap[catName] ?? true,
             onChanged: (bool value) {
-              logger.v('$catName changed to ${!value}');
+              logger.t('$catName changed to ${!value}');
               setState(() {
                 final tempMap = _catMap;
                 tempMap[catName] = !value;
@@ -164,7 +161,7 @@ class _GalleryCatFilterState extends State<GalleryCatFilter> {
             onLongPress: () {
               final tempMap = _catMap;
               final bool _selState = tempMap[catName] ?? true;
-              logger.v('onLongPress [$catName] [$_selState]');
+              logger.t('onLongPress [$catName] [$_selState]');
 
               tempMap.forEach((key, value) {
                 if (key != catName) {
@@ -188,7 +185,7 @@ class _GalleryCatFilterState extends State<GalleryCatFilter> {
 
   @override
   Widget build(BuildContext context) {
-    // logger.v('build GalleryCatFilter $_catNum');
+    // logger.t('build GalleryCatFilter $_catNum');
 
     late Widget _gridView;
 
@@ -273,7 +270,7 @@ class AdvanceSearchSwitchItem extends StatelessWidget {
 /// 设置类型筛选
 /// 弹出toast 全局维护cat的值
 Future<void> showFilterSetting() async {
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
   return showCupertinoDialog<void>(
     context: Get.overlayContext!,
     barrierDismissible: true,
@@ -281,9 +278,9 @@ Future<void> showFilterSetting() async {
       return CupertinoAlertDialog(
         title: Text(L10n.of(context).search),
         content: GalleryFilterView(
-          catNum: _ehConfigService.catFilter.value,
+          catNum: _ehSettingService.catFilter.value,
           catNumChanged: (int toNum) {
-            _ehConfigService.catFilter.value = toNum;
+            _ehSettingService.catFilter.value = toNum;
           },
         ),
         actions: [],

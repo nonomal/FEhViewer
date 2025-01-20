@@ -1,5 +1,5 @@
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +11,7 @@ class EmptyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    logger.v('isDarkMode ${ehTheme.isDarkMode}');
+    logger.t('isDarkMode ${ehTheme.isDarkMode}');
     return Obx(() {
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: ehTheme.isDarkMode

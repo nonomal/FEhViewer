@@ -1,12 +1,12 @@
 import 'dart:math';
 
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_state.dart';
-import 'package:fehviewer/pages/gallery/view/gallery_widget.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_state.dart';
+import 'package:eros_fe/pages/gallery/view/gallery_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -136,31 +136,27 @@ class GalleryInfoBarSliver extends StatelessWidget {
           icon: FontAwesomeIcons.solidClock,
         );
 
-    // final postTimeTextSize =
-    //     getTextSize(_pageState.galleryProvider?.postTime ?? '', _hearTextStyle);
     final postTimeTextSize = getTextSize('0000-00-00 00:00', _hearTextStyle);
     final _maxCrossAxisExtent = max(160.0, postTimeTextSize.width + 60.0);
-    logger.v('_maxCrossAxisExtent $_maxCrossAxisExtent  $postTimeTextSize');
+    logger.t('_maxCrossAxisExtent $_maxCrossAxisExtent  $postTimeTextSize');
 
     Widget infoWidget() => Container(
-          // constraints: const BoxConstraints(maxHeight: 50),
           margin: const EdgeInsets.only(top: 8),
           child: Container(
-            // color: CupertinoDynamicColor.resolve(
-            //     CupertinoColors.secondarySystemBackground, context),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (!context.isTablet)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      width: 4,
-                      height: 48,
+                  Container(
+                    decoration: BoxDecoration(
                       color: CupertinoDynamicColor.resolve(
                           CupertinoColors.secondaryLabel, context),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ).paddingOnly(right: 6),
+                    margin: const EdgeInsets.only(right: 6),
+                    width: 4,
+                    height: 48,
+                  ),
                 Expanded(
                   child: GridView(
                     physics: const NeverScrollableScrollPhysics(),
@@ -194,64 +190,58 @@ class GalleryInfoBarSliver extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: ClipRRect(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            // color: CupertinoDynamicColor.resolve(
-            //     CupertinoColors.systemGrey5, Get.context!),
-            child: GetBuilder<GalleryPageController>(
-              assignId: true,
-              tag: pageCtrlTag,
-              id: GetIds.PAGE_VIEW_HEADER,
-              builder: (logic) {
-                final GalleryPageState _pageState = logic.gState;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.only(top: 8.0, right: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        // ignore: prefer_const_literals_to_create_immutables
-                        children: <Widget>[
-                          // 评分
-                          GalleryRating(
-                            rating: _pageState.galleryProvider?.rating ?? 0,
-                            ratingFB:
-                                _pageState.galleryProvider?.ratingFallBack ?? 0,
-                            color: ThemeColors.colorRatingMap[_pageState
-                                    .galleryProvider?.colorRating
-                                    ?.trim() ??
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        child: GetBuilder<GalleryPageController>(
+          assignId: true,
+          tag: pageCtrlTag,
+          id: GetIds.PAGE_VIEW_HEADER,
+          builder: (logic) {
+            final GalleryPageState _pageState = logic.gState;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 8.0, right: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    // ignore: prefer_const_literals_to_create_immutables
+                    children: <Widget>[
+                      // 评分
+                      GalleryRating(
+                        rating: _pageState.galleryProvider?.rating ?? 0,
+                        ratingFB:
+                            _pageState.galleryProvider?.ratingFallBack ?? 0,
+                        color: ThemeColors.colorRatingMap[
+                            _pageState.galleryProvider?.colorRating?.trim() ??
                                 'ir'],
-                          ),
-                          // 评分人次
-                          // Padding(
-                          //   padding: const EdgeInsets.symmetric(horizontal: 4),
-                          //   child: Text(
-                          //       _pageState.galleryProvider?.ratingCount ?? '',
-                          //       style: TextStyle(
-                          //         fontSize: 10,
-                          //         color: CupertinoDynamicColor.resolve(
-                          //             CupertinoColors.secondaryLabel, context),
-                          //       )),
-                          // ),
-                          const Spacer(),
-                          // 类型
-                          GalleryCategory(
-                              category:
-                                  _pageState.galleryProvider?.category ?? ''),
-                        ],
                       ),
-                    ),
-                    infoWidget(),
-                  ],
-                );
-              },
-            ),
-          ),
+                      // 评分人次
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 4),
+                      //   child: Text(
+                      //       _pageState.galleryProvider?.ratingCount ?? '',
+                      //       style: TextStyle(
+                      //         fontSize: 10,
+                      //         color: CupertinoDynamicColor.resolve(
+                      //             CupertinoColors.secondaryLabel, context),
+                      //       )),
+                      // ),
+                      const Spacer(),
+                      // 类型
+                      GalleryCategory(
+                          category: _pageState.galleryProvider?.category ?? ''),
+                    ],
+                  ),
+                ),
+                infoWidget(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -403,14 +393,17 @@ class GalleryInfoView extends StatelessWidget {
 
     Widget infoWidget() => Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+              ),
+              padding: const EdgeInsets.only(right: 6),
               child: Container(
                 width: 2,
                 color: CupertinoDynamicColor.resolve(
                     CupertinoColors.secondaryLabel, context),
               ),
-            ).paddingOnly(right: 6),
+            ),
             Expanded(
               child: ListView(
                 // mainAxisSize: MainAxisSize.min,

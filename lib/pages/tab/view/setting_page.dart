@@ -1,21 +1,20 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/pages/item/user_item.dart';
-import 'package:fehviewer/pages/tab/controller/setting_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/item/user_item.dart';
+import 'package:eros_fe/pages/tab/controller/setting_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class SettingTab extends GetView<SettingViewController> {
-  const SettingTab({Key? key}) : super(key: key);
+  const SettingTab({super.key});
 
   @override
   Widget build(BuildContext context) {
     controller.initData(context);
     final String _title = L10n.of(context).tab_setting;
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoTheme.of(context).brightness != Brightness.dark
-          ? CupertinoColors.secondarySystemBackground
-          : null,
+      backgroundColor: CupertinoColors.systemGroupedBackground,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
@@ -33,7 +32,7 @@ class SettingTab extends GetView<SettingViewController> {
                   _title,
                 ),
                 const Spacer(),
-                if (Get.find<EhConfigService>().isSafeMode.value)
+                if (Get.find<EhSettingService>().isSafeMode.value)
                   Container()
                 else
                   UserWidget().paddingOnly(right: 20),
@@ -42,17 +41,11 @@ class SettingTab extends GetView<SettingViewController> {
           ),
           SliverSafeArea(
             top: false,
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final _itemList = controller.itemList;
-                  if (index < _itemList.length) {
-                    return _itemList[index];
-                  } else {
-                    return null;
-                  }
-                },
-              ),
+            sliver: SliverCupertinoListSection.insetGrouped(
+              itemCount: controller.itemCount,
+              itemBuilder: (context, index) {
+                return controller.cupertinoListTileBuilder(index);
+              },
             ),
           ),
         ],

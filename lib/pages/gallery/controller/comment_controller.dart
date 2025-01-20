@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/utils/openl/translator_helper.dart';
+import 'package:eros_fe/common/controller/user_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/utils/openl/translator_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:html/dom.dart' as dom;
@@ -26,14 +26,19 @@ class CommentController extends GetxController {
   CommentController();
 
   GalleryPageController get pageController {
-    logger.v('CommentController -> pageCtrlDepth: $pageCtrlTag');
+    logger.t('CommentController -> pageCtrlDepth: $pageCtrlTag');
     return Get.find(tag: pageCtrlTag);
   }
+
+  UserController get userController => Get.find();
+  bool get isLogin => userController.isLogin;
 
   BCDCode get bcdCode => BCDCode(code0: '·', code1: '-');
 
   GalleryPageState get _pageState => pageController.gState;
   List<GalleryComment>? get comments => _pageState.comments;
+
+  String? get uploader => _pageState.galleryProvider?.uploader;
 
   // id降序排序
   List<GalleryComment> get commentsSorted => List<GalleryComment>.from(
@@ -63,13 +68,19 @@ class CommentController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    logger.v('CommentController onInit');
+    logger.t('CommentController onInit');
   }
 
   @override
   void onClose() {
-    _tgr.forEach((element) => element.dispose());
+    for (final element in _tgr) {
+      element.dispose();
+    }
     super.onClose();
+  }
+
+  Future<void> onRefresh() async {
+    await pageController.handOnRefresh();
   }
 
   final List<TapGestureRecognizer> _tgr = [];
@@ -187,7 +198,7 @@ class CommentController extends GetxController {
           commentsSorted.getRange(curIndex, commentsSorted.length).toList();
 
       for (int i = 0; i < match.groupCount + 1; i++) {
-        logger.v('($i)  ${match.group(i)}');
+        logger.t('($i)  ${match.group(i)}');
       }
 
       final reptyUserName = match.group(1);
@@ -213,7 +224,7 @@ class CommentController extends GetxController {
         // reptyUserName发表的离当前评论最进的评论
         repty =
             fill.firstWhereOrNull((element) => element.name == reptyUserName);
-        logger.v('没有明确的评论id 或id和所 @用户名 对应不上的\n${repty?.toJson()}');
+        logger.t('没有明确的评论id 或id和所 @用户名 对应不上的\n${repty?.toJson()}');
       }
 
       if (repty == null) {
@@ -257,7 +268,7 @@ class CommentController extends GetxController {
 
   // 翻译评论内容
   Future<void> commitTranslate(String _id) async {
-    logger.v('commitTranslate');
+    logger.t('commitTranslate');
     final int? _commentIndex =
         comments?.indexWhere((element) => element.id == _id.toString());
     final comment = comments?[_commentIndex!];
@@ -265,7 +276,7 @@ class CommentController extends GetxController {
     if (comment?.translatedElement != null &&
         comment?.translatedElement is dom.Element) {
       comments![_commentIndex!] = comments![_commentIndex].copyWith(
-        showTranslate: !(comments![_commentIndex].showTranslate ?? false),
+        showTranslate: (!(comments![_commentIndex].showTranslate ?? false)).oN,
       );
 
       return;
@@ -285,8 +296,8 @@ class CommentController extends GetxController {
     logger.d('t :${_translatedTextList.join('\n')}');
 
     comments![_commentIndex!] = comments![_commentIndex].copyWith(
-      showTranslate: !(comments![_commentIndex].showTranslate ?? false),
-      translatedElement: _translatedElement,
+      showTranslate: (!(comments![_commentIndex].showTranslate ?? false)).oN,
+      translatedElement: _translatedElement.oN,
     );
 
     // update([_id]);
@@ -314,7 +325,7 @@ class CommentController extends GetxController {
         } else if (node is dom.Text) {
           final text = node.text;
           if (text.trim().isNotEmpty) {
-            final translate = await translatorHelper.translateText(text);
+            final translate = await translatorHelper.translateText(text) ?? '';
             node.text = translate;
           }
           translatedTextList.add(node.text);
@@ -329,10 +340,10 @@ class CommentController extends GetxController {
       return;
     }
 
-    logger.v('commit up id $_id');
+    logger.t('commit up id $_id');
     final int? _commentIndex =
         comments?.indexWhere((element) => element.id == _id.toString());
-    comments![_commentIndex!] = comments![_commentIndex].copyWith(vote: 1);
+    comments![_commentIndex!] = comments![_commentIndex].copyWith(vote: 1.oN);
 
     update([_id]);
     final CommitVoteRes rult = await Api.commitVote(
@@ -351,10 +362,11 @@ class CommentController extends GetxController {
 
   // 点踩
   Future<void> commitVoteDown(String _id) async {
-    logger.v('commit down id $_id');
+    logger.t('commit down id $_id');
     final int? _commentIndex =
         comments?.indexWhere((element) => element.id == _id.toString());
-    comments![_commentIndex!] = comments![_commentIndex].copyWith(vote: -1);
+    comments![_commentIndex!] =
+        comments![_commentIndex].copyWith(vote: (-1).oN);
     update([_id]);
     final CommitVoteRes rult = await Api.commitVote(
       apikey: _item?.apikey ?? '',
@@ -372,22 +384,22 @@ class CommentController extends GetxController {
 
   // 点赞和踩的响应处理
   void _paraRes(CommitVoteRes rult) {
-    logger.v('${rult.toJson()}');
+    logger.t('${rult.toJson()}');
 
     final int? _commentIndex = comments?.indexWhere(
         (GalleryComment element) => element.id == rult.commentId.toString());
     comments![_commentIndex!] = comments![_commentIndex]
-        .copyWith(vote: rult.commentVote, score: '${rult.commentScore}');
+        .copyWith(vote: rult.commentVote.oN, score: '${rult.commentScore}');
 
     update();
-    logger.v('update CommentController id ${rult.commentId}');
+    logger.t('update CommentController id ${rult.commentId}');
   }
 
   // 推送评论
   Future<void> _postComment(String comment,
       {bool isEdit = false, String? commentId}) async {
     logger.d('_postComment\n$comment');
-    // final bool rult = await Api.postComment(
+    // final bool result = await Api.postComment(
     //   gid: pageController.gid,
     //   token: pageController.galleryProvider?.token ?? '',
     //   comment: comment,
@@ -395,10 +407,10 @@ class CommentController extends GetxController {
     //   isEdit: isEdit,
     // );
     //
-    // if (rult) {
+    // if (result) {
     //   await pageController.handOnRefresh();
     // }
-    final rult = await postComment(
+    final result = await postComment(
       gid: _pageState.gid,
       token: _pageState.galleryProvider?.token ?? '',
       comment: comment,
@@ -406,7 +418,7 @@ class CommentController extends GetxController {
       isEdit: isEdit,
     );
 
-    if (rult ?? false) {
+    if (result ?? false) {
       logger.d('_postComment handOnRefresh');
       await pageController.handOnRefresh();
     }
@@ -429,9 +441,9 @@ class CommentController extends GetxController {
           isEdit: editState == EditState.editComment,
           commentId: commentId,
         );
-        pressCancle();
+        pressCancel();
         // await Future.delayed(const Duration(seconds: 3));
-        logger.v('_postComment $comment');
+        logger.t('_postComment $comment');
       },
     );
   }
@@ -455,7 +467,7 @@ class CommentController extends GetxController {
     SmartDialog.showLoading(builder: (_) => indicator, backDismiss: false);
 
     // await Future.delayed(const Duration(seconds: 2));
-    logger.v('_postComment $comment');
+    logger.t('_postComment $comment');
     try {
       await _postComment(
         comment,
@@ -463,12 +475,12 @@ class CommentController extends GetxController {
         commentId: commentId,
       );
     } finally {
-      pressCancle();
+      pressCancel();
       SmartDialog.dismiss();
     }
   }
 
-  void pressCancle() {
+  void pressCancel() {
     oriComment = '';
     commentTextController.clear();
     editState = EditState.newComment;
@@ -521,7 +533,7 @@ Future<void> showLoadingDialog(
   Completer completer,
   Function function,
 ) async {
-  logger.v('showLoadingDialog');
+  logger.t('showLoadingDialog');
 
   Future<void> runFunc() async {
     try {

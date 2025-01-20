@@ -1,12 +1,5 @@
-# FEhViewer
-English | [简体中文](https://github.com/honjow/FEhViewer/blob/master/README_cn.md)
-
-[![](https://img.shields.io/github/downloads/honjow/FEhViewer/total.svg)](https://gitHub.com/honjow/FEhViewer/releases)
-[![](https://img.shields.io/github/downloads/honjow/FEhViewer/latest/total)](https://github.com/honjow/FEhViewer/releases/latest)
-[![](https://img.shields.io/github/v/release/honjow/FEhViewer)](https://github.com/honjow/FEhViewer/releases/latest)
-[![](https://img.shields.io/github/stars/honjow/FEhViewer)]()
-[![Telegram](https://img.shields.io/badge/chat-on%20Telegram-blue.svg)](https://t.me/joinchat/AEj27KMQe0JiMmUx)
-[![QQ](https://img.shields.io/badge/chat-QQ-blue.svg)](https://qm.qq.com/cgi-bin/qm/qr?k=fr6P5pYFbbdzh9djpE0QEMcX0sJd9ISj&jump_from=webapi)
+# Eros-FE
+English | [简体中文](https://github.com/3003h/Eros-FE/blob/master/README_cn.md)
 
 ## Introduction
 
@@ -18,7 +11,7 @@ Please submit a pull request if you want to help with translation.
 App Strings: `lib/l10n/{lang}.arb`
 
 ## Installation for iOS
-1. Get the ipa file from [Releases](https://github.com/honjow/FEhViewer/releases/latest).
+1. Get the ipa file from [Releases](https://github.com/3003h/Eros-FE/releases/latest).
 2. Use some software like [AltStore](https://altstore.io) to install the ipa file on your device. Or [AltStore.json](https://config-feh.vercel.app/AltStore.json)
 
 ## Descriptions
@@ -44,24 +37,29 @@ EhTagTranslation
 Translation
 - [KeepSOBP](https://github.com/KeepSOBP) Korean translation
 - [pursel](https://github.com/pursel), [Gigas002](https://github.com/Gigas002) -- Russian translation
+- [cristal-node](https://github.com/cristal-node) -- Japanese translation
 
 ## Screenshot
 
 ### Home Page List
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/home1.jpg" >
+<img width="200" src="./screenshot/home.png" > 
+
+### Settings
+
+<img width="200" src="./screenshot/setting.png" >
 
 ### Gallery
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery2.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery3.jpg" >
+<img width="200" src="./screenshot/gallery1.png" > <img width="200" src="./screenshot/gallery2.png" > 
 
 ### Search
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search2.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search3.jpg" >
+<img width="200" src="./screenshot/search1.png" > <img width="200" src="./screenshot/search2.png" >
 
 ### Read
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/read1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/read2.jpg" >
+<img width="200" src="./screenshot/read1.png" > <img width="200" src="./screenshot/read2.png" >
 
 ## Function
 
@@ -98,4 +96,5 @@ Translation
 ## About compiling
 
 flutter version is the latest release version \
-rename `/lib/config/config.dart.sample` to `/lib/config/config.dart`
+rename `lib/config/config.dart.sample` to `lib/config/config.dart` \
+rename `lib/firebase_options_sample.dart` to `lib/firebase_options.dart`

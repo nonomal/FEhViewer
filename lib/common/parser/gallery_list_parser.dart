@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/index.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' show parse;
 import 'package:intl/intl.dart';
@@ -20,7 +20,7 @@ bool isGalleryListDmL(String response) {
         ?.parent
         ?.nextElementSibling
         ?.querySelectorAll('option');
-    logger.v('searchnav optionElms length ${optionElms?.length}');
+    logger.t('searchnav optionElms length ${optionElms?.length}');
   }
 
   for (final dom.Element elm in optionElms ?? []) {
@@ -43,7 +43,7 @@ bool? isFavoriteOrder(String response) {
       document.querySelector('.searchnav')?.children.firstOrNull;
 
   if (orderElm != null) {
-    logger.v('ooo ${orderElm.text}');
+    logger.t('ooo ${orderElm.text}');
     final options = orderElm.querySelectorAll('option');
     return (options
                 .where((e) => e.attributes['selected'] == 'selected')
@@ -57,7 +57,7 @@ bool? isFavoriteOrder(String response) {
 
     if (domList.length > 2) {
       final dom.Element? orderElm = domList[2].querySelector('div > span');
-      logger.v('${orderElm?.text}');
+      logger.t('${orderElm?.text}');
       return orderElm?.text.trim() == 'Favorited';
     }
 
@@ -124,7 +124,7 @@ GalleryList parseGalleryList(
               0) -
           1;
 
-  logger.v('$_curPage , _nextPage:$_nextPage , _prevPage:$_prevPage');
+  logger.t('$_curPage , _nextPage:$_nextPage , _prevPage:$_prevPage');
 
   const searchnavSelector = '.searchnav';
   final searchnavElm = document.querySelector(searchnavSelector);
@@ -139,7 +139,7 @@ GalleryList parseGalleryList(
   final nextHref = nextElm?.attributes['href'];
   final _next = nextHref?.split('=').last;
 
-  logger.v('parse next:$_next, prev:$_prev');
+  logger.t('parse next:$_next, prev:$_prev');
 
 // 画廊列表
   List<dom.Element> gallerys = document.querySelectorAll(_listSelector);
@@ -212,7 +212,7 @@ GalleryList parseGalleryList(
                   backgrondColor: '',
                 ));
 
-        _translated = EHUtils.getLangeage(_langTag?.text ?? '');
+        _translated = EHUtils.getLanguage(_langTag?.text ?? '');
       }
     } catch (e, stack) {
       // logger.e('$e\n$stack');
@@ -228,8 +228,8 @@ GalleryList parseGalleryList(
     final String imageStyle = img?.attributes['style'] ?? '';
     final RegExpMatch? match =
         RegExp(r'height:(\d+)px;width:(\d+)px').firstMatch(imageStyle);
-    final double imageHeight = double.parse(match?[1] ?? '0');
-    final double imageWidth = double.parse(match?[2] ?? '0');
+    final int imageHeight = int.parse(match?[1] ?? '0');
+    final int imageWidth = int.parse(match?[2] ?? '0');
 
 // 评分星级计算
     final String ratPx = tr
@@ -336,7 +336,7 @@ GalleryList parseGalleryList(
     _addIiem();
 
 // safeMode检查
-//     if (Platform.isIOS && (ehConfigService.isSafeMode.value)) {
+//     if (Platform.isIOS && (ehSettingService.isSafeMode.value)) {
 //       if (category.trim() == 'Non-H') {
 //         _addIiem();
 //       }

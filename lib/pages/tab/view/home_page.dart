@@ -1,8 +1,7 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/tabhome_controller.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/tab/controller/tabhome_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,36 +10,44 @@ import 'home_page_large.dart';
 import 'home_page_small.dart';
 
 class HomePage extends GetView<TabHomeController> {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    controller.init(inContext: context);
+    // controller.init(inContext: context);
     final LayoutServices layoutServices = Get.find();
-    final EhConfigService _ehConfigService = Get.find();
+    final EhSettingService ehSettingService = Get.find();
 
-    final WillPopScope willPopScope = WillPopScope(
-      onWillPop: controller.onWillPop,
-      child: Obx(
-        () {
-          final tabletLayoutType = _ehConfigService.tabletLayoutType;
-          final half = layoutServices.half;
-          final vOffset = layoutServices.sideProportion;
+    final child = Obx(
+      () {
+        final tabletLayoutType = ehSettingService.tabletLayoutType;
+        final half = layoutServices.half;
+        final vOffset = layoutServices.sideProportion;
 
-          logger.v(' ${context.width} ${context.height}');
+        logger.t(' ${context.width} ${context.height}');
 
-          layoutServices.layoutMode = getLayoutMode(context, tabletLayoutType);
+        layoutServices.layoutMode = getLayoutMode(context, tabletLayoutType);
 
-          if (isLayoutLarge) {
-            return TabHomeLarge(
-              sideProportion: vOffset,
-            );
-          } else {
-            return const TabHomeSmall();
-          }
-        },
-      ),
+        if (isLayoutLarge) {
+          return TabHomeLarge(
+            sideProportion: vOffset,
+          );
+        } else {
+          return const TabHomeSmall();
+        }
+      },
     );
 
-    return willPopScope;
+    // return PopScope(
+    //   canPop: false,
+    //   onPopInvoked: controller.onPopInvoked,
+    //   child: child,
+    // );
+
+    return WillPopScope(
+      onWillPop: controller.onWillPop,
+      child: child,
+    );
   }
 
   LayoutMode getLayoutMode(

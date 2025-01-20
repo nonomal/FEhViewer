@@ -1,11 +1,10 @@
-import 'package:fehviewer/common/controller/history_controller.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/index.dart';
-import 'package:fehviewer/pages/tab/controller/default_tabview_controller.dart';
-import 'package:fehviewer/route/routes.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/controller/history_controller.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/models/index.dart';
+import 'package:eros_fe/pages/tab/controller/default_tabview_controller.dart';
+import 'package:eros_fe/route/routes.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 class HistoryViewController extends DefaultTabViewController {
@@ -24,10 +23,10 @@ class HistoryViewController extends DefaultTabViewController {
   }
 
   Future<List<GalleryProvider>> loadData() async {
-    logger.v('_loadData ');
-    final List<GalleryProvider> historys = historyController.historys;
+    logger.t('_loadData ');
+    final List<GalleryProvider> histories = historyController.histories;
 
-    return Future<List<GalleryProvider>>.value(historys);
+    return Future<List<GalleryProvider>>.value(histories);
   }
 
   Future<void> reloadData() async {
@@ -65,9 +64,6 @@ class HistoryViewController extends DefaultTabViewController {
   }
 
   Future<void> syncHistory() async {
-    // await for (final rult in historyController.syncHistory()) {
-    //   logger.d('${rult.runtimeType}');
-    // }
     historyController.syncHistory();
     await Future.delayed(const Duration(seconds: 1));
   }

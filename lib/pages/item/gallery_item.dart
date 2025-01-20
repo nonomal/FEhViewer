@@ -1,17 +1,10 @@
-import 'package:blur/blur.dart';
-import 'package:fehviewer/common/exts.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/extension.dart';
-import 'package:fehviewer/models/index.dart';
-import 'package:fehviewer/pages/item/controller/galleryitem_controller.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/utility.dart';
-import 'package:fehviewer/widget/blur_image.dart';
-import 'package:fehviewer/widget/image/eh_network_image.dart';
-import 'package:fehviewer/widget/rating_bar.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/item/controller/galleryitem_controller.dart';
+import 'package:eros_fe/widget/rating_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -26,7 +19,7 @@ const double kCardRadius = 12.0;
 
 const double kFixedHeight = 204.0;
 
-final EhConfigService _ehConfigService = Get.find();
+final EhSettingService _ehSettingService = Get.find();
 
 /// 画廊列表项
 class GalleryItemWidget extends StatelessWidget {
@@ -43,11 +36,17 @@ class GalleryItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => itemController.onTap(tabTag),
+      onTapDown: itemController.onTapDown,
+      onTapUp: itemController.onTapUp,
+      onTapCancel: itemController.onTapCancel,
+      onLongPress: itemController.onLongPress,
       child: Center(
         child: Stack(
           children: [
             _buildCardItem(),
-            if (Get.find<EhConfigService>().debugMode)
+            if (Get.find<EhSettingService>().debugMode)
               Positioned(
                 left: 4,
                 top: 4,
@@ -66,12 +65,6 @@ class GalleryItemWidget extends StatelessWidget {
           ],
         ),
       ),
-      behavior: HitTestBehavior.opaque,
-      onTap: () => itemController.onTap(tabTag),
-      onTapDown: itemController.onTapDown,
-      onTapUp: itemController.onTapUp,
-      onTapCancel: itemController.onTapCancel,
-      onLongPress: itemController.onLongPress,
     ).autoCompressKeyboard(context);
   }
 
@@ -79,7 +72,8 @@ class GalleryItemWidget extends StatelessWidget {
     return Obx(
       () {
         return Container(
-          height: _ehConfigService.fixedHeightOfListItems ? kFixedHeight : null,
+          height:
+              _ehSettingService.fixedHeightOfListItems ? kFixedHeight : null,
           decoration: BoxDecoration(
             boxShadow: ehTheme.isDarkMode
                 ? null
@@ -141,7 +135,7 @@ class GalleryItemWidget extends StatelessWidget {
                         const Spacer(),
                         const SizedBox(height: 6),
                         // 标签
-                        if (_ehConfigService.fixedHeightOfListItems)
+                        if (_ehSettingService.fixedHeightOfListItems)
                           TagWaterfallFlowViewBox(
                             simpleTags: galleryProvider.simpleTags,
                             crossAxisCount: itemController.tagLine,
@@ -169,7 +163,7 @@ class GalleryItemWidget extends StatelessWidget {
                             ),
                             // 收藏图标
                             Obx(() {
-                              logger.v(
+                              logger.t(
                                   '${itemController.galleryProvider.gid} favCat ${itemController.favCat}');
                               return _FavcatIcon(
                                 favCat: itemController.favCat,
@@ -217,22 +211,23 @@ class GalleryItemWidget extends StatelessWidget {
 
 class _CoverImage extends StatelessWidget {
   const _CoverImage({
-    Key? key,
+    super.key,
     required this.galleryProviderController,
     this.tabTag,
     this.cardType = false,
-  }) : super(key: key);
+  });
+
   final GalleryItemController galleryProviderController;
   final dynamic tabTag;
   final bool cardType;
 
   @override
   Widget build(BuildContext context) {
-    final EhConfigService ehConfigService = Get.find();
+    final EhSettingService ehSettingService = Get.find();
     final GalleryProvider _item = galleryProviderController.galleryProvider;
 
-    // 图片高宽比
-    final imageRatio = (_item.imgHeight ?? 0) / (_item.imgWidth ?? 1);
+    // 图片宽高比
+    final imageRatio = (_item.imgWidth ?? 0) / (_item.imgHeight ?? 1);
 
     // 计算图片容器宽度
     final double coverImageWidth = Get.context!.isPhone
@@ -240,70 +235,72 @@ class _CoverImage extends StatelessWidget {
         : 0.7 * kFixedHeight;
 
     // 计算图片容器高度
-    late double? coverImageHeigth;
+    late double? coverImageHeight;
 
-    if (_ehConfigService.fixedHeightOfListItems) {
-      coverImageHeigth = kFixedHeight;
+    if (_ehSettingService.fixedHeightOfListItems) {
+      coverImageHeight = kFixedHeight;
     } else {
       if ((_item.imgWidth ?? 0) >= coverImageWidth) {
         // 如果实际宽度大于限制的最大宽度[coverImageWidth] 按照比例计算高度
-        coverImageHeigth =
+        coverImageHeight =
             (_item.imgHeight ?? 0) * coverImageWidth / (_item.imgWidth ?? 0);
       } else {
         // 否者返回实际高度
-        coverImageHeigth = _item.imgHeight;
+        coverImageHeight = _item.imgHeight?.toDouble();
       }
     }
 
-    logger.v('iRatio:$imageRatio\n'
+    logger.t('iRatio:$imageRatio\n'
         'w:${_item.imgWidth} h:${_item.imgHeight}\n'
-        'cW:$coverImageWidth  cH:$coverImageHeigth');
+        'cW:$coverImageWidth  cH:$coverImageHeight');
 
-    final containRatio = (coverImageHeigth ?? 0) / coverImageWidth;
+    final containRatio = coverImageWidth / (coverImageHeight ?? 0);
 
-    BoxFit _fit = BoxFit.contain;
+    BoxFit _fit = BoxFit.cover;
 
-    // todo
-    if (imageRatio < containRatio && containRatio - imageRatio < 0.5) {
-      _fit = BoxFit.fitHeight;
+    if (!_ehSettingService.fixedHeightOfListItems) {
+      if (imageRatio > 1 || imageRatio < 3 / 5) {
+        _fit = BoxFit.contain;
+      }
+    } else {
+      if (imageRatio - containRatio > 0.28 || containRatio - imageRatio > 0.2) {
+        _fit = BoxFit.contain;
+      }
     }
 
-    if (imageRatio > containRatio && imageRatio - containRatio < 1.0) {
-      _fit = BoxFit.cover;
-    }
-
-    loggerSimple.v('imageRatio:$imageRatio  containRatio:$containRatio  $_fit');
+    loggerSimple.t('imageRatio:$imageRatio  containRatio:$containRatio  $_fit');
 
     Widget image = CoverImg(
+      // expand: _ehSettingService.fixedHeightOfListItems,
       imgUrl: _item.imgUrl ?? '',
-      width: _item.imgWidth,
-      height: _item.imgHeight,
+      width: _item.imgWidth?.toDouble(),
+      height: _item.imgHeight?.toDouble(),
       fit: _fit,
     );
 
-    Widget getImageBlureFittedBox() {
-      Widget imageBlureFittedBox = CoverImg(
+    Widget getImageBlurFittedBox() {
+      Widget imageBlurFittedBox = CoverImg(
+        blurHash: true,
         imgUrl: _item.imgUrl ?? '',
         width: coverImageWidth,
-        fit: BoxFit.contain,
-      );
-
-      imageBlureFittedBox = FittedBox(
         fit: BoxFit.cover,
-        child: imageBlureFittedBox.blurred(
-          blur: 10,
-          colorOpacity: ehTheme.isDarkMode ? 0.5 : 0.1,
-          blurColor:
-              CupertinoTheme.of(context).barBackgroundColor.withOpacity(1),
-        ),
       );
 
-      return imageBlureFittedBox;
+      // imageBlurFittedBox = Blur(
+      //   blur: 0,
+      //   colorOpacity: ehTheme.isDarkMode ? 0.5 : 0.1,
+      //   blurColor: CupertinoTheme.of(context).barBackgroundColor.withOpacity(1),
+      //   child: imageBlurFittedBox,
+      // );
+
+      return imageBlurFittedBox;
     }
 
     Widget coverBackground(BoxFit fit, bool blurringOfCoverBackground) {
+      // return getImageBlurFittedBox();
+
       if (_fit == BoxFit.contain && blurringOfCoverBackground) {
-        return getImageBlureFittedBox();
+        return getImageBlurFittedBox();
       } else {
         return Container(
           color: CupertinoDynamicColor.resolve(
@@ -313,13 +310,11 @@ class _CoverImage extends StatelessWidget {
     }
 
     if (!cardType) {
-      image = Container(
-        child: HeroMode(
-          enabled: !isLayoutLarge,
-          child: Hero(
-            tag: '${_item.gid}_cover_$tabTag',
-            child: image,
-          ),
+      image = HeroMode(
+        enabled: !isLayoutLarge,
+        child: Hero(
+          tag: '${_item.gid}_cover_$tabTag',
+          child: image,
         ),
       );
 
@@ -346,7 +341,7 @@ class _CoverImage extends StatelessWidget {
           Obx(() {
             return coverBackground(
               _fit,
-              ehConfigService.blurringOfCoverBackground,
+              ehSettingService.blurringOfCoverBackground,
             );
           }),
           Center(
@@ -373,7 +368,7 @@ class _CoverImage extends StatelessWidget {
         // borderRadius: BorderRadius.circular(kCardRadius),
         child: Container(
           child: image,
-          height: coverImageHeigth,
+          height: coverImageHeight,
           width: coverImageWidth,
         ),
       );
@@ -384,8 +379,7 @@ class _CoverImage extends StatelessWidget {
 }
 
 class _Title extends StatelessWidget {
-  const _Title({Key? key, required this.galleryItemController})
-      : super(key: key);
+  const _Title({super.key, required this.galleryItemController});
   final GalleryItemController galleryItemController;
 
   @override
@@ -394,12 +388,12 @@ class _Title extends StatelessWidget {
 
     return Obx(() => Text(
           galleryItemController.title,
-          maxLines: _ehConfigService.fixedHeightOfListItems ? maxLine : 4,
+          maxLines: _ehSettingService.fixedHeightOfListItems ? maxLine : 4,
           textAlign: TextAlign.left, // 对齐方式
           overflow: TextOverflow.ellipsis, // 超出部分省略号
           style: const TextStyle(
             fontSize: 14.5,
-            fontWeight: FontWeight.w500,
+            // fontWeight: FontWeight.normal,
             // color: CupertinoColors.label,
           ),
         ));
@@ -514,18 +508,18 @@ class _Category extends StatelessWidget {
             CupertinoColors.systemBackground,
         Get.context!);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 3, 6, 3),
+    return Container(
+      decoration: BoxDecoration(
         color: _colorCategory,
-        child: Text(
-          category ?? '',
-          style: const TextStyle(
-            fontSize: 14,
-            height: 1,
-            color: CupertinoColors.white,
-          ),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.fromLTRB(6, 3, 6, 3),
+      child: Text(
+        category ?? '',
+        style: const TextStyle(
+          fontSize: 14,
+          height: 1,
+          color: CupertinoColors.white,
         ),
       ),
     );
@@ -537,35 +531,34 @@ class TagItem extends StatelessWidget {
     Key? key,
     this.text,
     this.color,
-    this.backgrondColor,
+    this.backgroundColor,
   }) : super(key: key);
 
   final String? text;
   final Color? color;
-  final Color? backgrondColor;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        // height: 18,
-        padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
-        color: backgrondColor ??
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor ??
             CupertinoDynamicColor.resolve(ThemeColors.tagBackground, context),
-        child: Text(
-          text ?? '',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 12,
-            height: 1,
-            fontWeight:
-                backgrondColor == null ? FontWeight.w400 : FontWeight.w500,
-            color: color ??
-                CupertinoDynamicColor.resolve(ThemeColors.tagText, context),
-          ),
-          strutStyle: const StrutStyle(height: 1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
+      child: Text(
+        text ?? '',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 12,
+          height: 1,
+          // fontWeight:
+          //     backgrondColor == null ? FontWeight.w400 : FontWeight.w500,
+          color: color ??
+              CupertinoDynamicColor.resolve(ThemeColors.tagText, context),
         ),
+        strutStyle: const StrutStyle(height: 1),
       ),
     );
   }
@@ -580,11 +573,11 @@ class TagBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EhConfigService _ehConfigService = Get.find();
+    final EhSettingService _ehSettingService = Get.find();
 
     return Obx(() {
       List<SimpleTag>? _simpleTags =
-          getLimitSimpleTags(simpleTags, _ehConfigService.listViewTagLimit);
+          getLimitSimpleTags(simpleTags, _ehSettingService.listViewTagLimit);
 
       if (_simpleTags == null || _simpleTags.isEmpty) {
         return const SizedBox.shrink();
@@ -596,13 +589,14 @@ class TagBox extends StatelessWidget {
           spacing: 4, //主轴上子控件的间距
           runSpacing: 4, //交叉轴上子控件之间的间距
           children: List<Widget>.from(_simpleTags.map((SimpleTag _simpleTag) {
-            final String? _text = _ehConfigService.isTagTranslat
+            final String? _text = _ehSettingService.isTagTranslate
                 ? _simpleTag.translat
                 : _simpleTag.text;
             return TagItem(
               text: _text,
               color: ColorsUtil.getTagColor(_simpleTag.color),
-              backgrondColor: ColorsUtil.getTagColor(_simpleTag.backgrondColor),
+              backgroundColor:
+                  ColorsUtil.getTagColor(_simpleTag.backgrondColor),
             );
           }).toList()), //要显示的子控件集合
         ),
@@ -614,12 +608,14 @@ class TagBox extends StatelessWidget {
 /// 封面图片Widget
 class CoverImg extends StatelessWidget {
   const CoverImg({
-    Key? key,
+    super.key,
     required this.imgUrl,
     this.height,
     this.width,
     this.fit = BoxFit.contain,
-  }) : super(key: key);
+    this.expand = true,
+    this.blurHash = false,
+  });
 
   final String imgUrl;
   final double? height;
@@ -627,35 +623,49 @@ class CoverImg extends StatelessWidget {
 
   final BoxFit fit;
 
+  final bool expand;
+
+  final bool blurHash;
+
   @override
   Widget build(BuildContext context) {
-    final EhConfigService ehConfigService = Get.find();
+    final EhSettingService ehSettingService = Get.find();
 
     Widget image() {
       if (imgUrl.isNotEmpty) {
-        return EhNetworkImage(
-          placeholder: (_, __) {
-            return Container(
-              alignment: Alignment.center,
-              child: const CupertinoActivityIndicator(),
-            );
-          },
-          width: width,
-          height: height,
-          // httpHeaders: _httpHeaders,
-          imageUrl: imgUrl.handleUrl,
-          fit: fit, //
-        );
+        return Obx(() {
+          return EhNetworkImage(
+            blurHash: ehSettingService.isGalleryImgBlur.value || blurHash,
+            placeholder: (_, __) {
+              return Container(
+                alignment: Alignment.center,
+                child: const CupertinoActivityIndicator(),
+              );
+            },
+            width: width,
+            height: height,
+            // httpHeaders: _httpHeaders,
+            imageUrl: imgUrl.handleUrl,
+            fit: fit, //
+          );
+        });
       } else {
         return Container();
       }
     }
 
-    return Obx(
-      () => BlurImage(
-        child: image(),
-        isBlur: ehConfigService.isGalleryImgBlur.value,
-      ),
-    );
+    return image();
+
+    // final BlurhashTheImage blurhashTheImage = BlurhashTheImage(
+    //   getEhImageProvider(imgUrl.handleUrl),
+    // );
+
+    // return Obx(
+    //   () => BlurImage(
+    //     expand: expand,
+    //     isBlur: ehSettingService.isGalleryImgBlur.value,
+    //     child: image(),
+    //   ),
+    // );
   }
 }

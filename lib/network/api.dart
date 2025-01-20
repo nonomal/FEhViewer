@@ -6,19 +6,19 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/pages/setting/controller/eh_mysettings_controller.dart';
+import 'package:eros_fe/store/db/entity/tag_translat.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/pages/setting/controller/eh_mysettings_controller.dart';
-import 'package:fehviewer/store/db/entity/tag_translat.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart' hide Response, FormData;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:image_save/image_save.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
 import 'package:share_plus/share_plus.dart';
@@ -45,12 +45,17 @@ class Api {
   static CacheOptions cacheOption = CacheOptions(
     store: BackupCacheStore(
       primary: MemCacheStore(),
-      secondary: HiveCacheStore(Global.appSupportPath),
+      // secondary: HiveCacheStore(Global.tempPath),
+      // secondary: FileCacheStore(Global.tempPath),
+      secondary: BackupCacheStore(
+        primary: HiveCacheStore(Global.tempPath),
+        secondary: FileCacheStore(Global.tempPath),
+      ),
     ),
-    // store: HiveCacheStore(Global.appSupportPath),
-    policy: CachePolicy.forceCache,
+    // store: MemCacheStore(),
+    policy: CachePolicy.refresh,
     hitCacheOnErrorExcept: [401, 403, 503],
-    maxStale: const Duration(days: 7),
+    maxStale: const Duration(days: 3),
     priority: CachePriority.normal,
     cipher: null,
     keyBuilder: CacheOptions.defaultCacheKeyBuilder,
@@ -59,22 +64,22 @@ class Api {
 
   static String getBaseUrl({bool? isSiteEx}) {
     return EHConst.getBaseSite(
-        isSiteEx ?? Get.find<EhConfigService>().isSiteEx.value);
+        isSiteEx ?? Get.find<EhSettingService>().isSiteEx.value);
   }
 
   static String getBaseHost({bool? isSiteEx}) {
     return EHConst.getBaseHost(
-        isSiteEx ?? Get.find<EhConfigService>().isSiteEx.value);
+        isSiteEx ?? Get.find<EhSettingService>().isSiteEx.value);
   }
 
   static String getSiteFlg() {
-    return (Get.find<EhConfigService>().isSiteEx.value) ? 'EH' : 'EX';
+    return (Get.find<EhSettingService>().isSiteEx.value) ? 'EH' : 'EX';
   }
 
   static _printCookie() async {
     final List<io.Cookie> _cookies =
         await (await cookieJar).loadForRequest(Uri.parse(getBaseUrl()));
-    logger.v('${_cookies.map((e) => '$e').join('\n')} ');
+    logger.t('${_cookies.map((e) => '$e').join('\n')} ');
   }
 
   /// 通过api请求获取更多信息
@@ -92,95 +97,99 @@ class Api {
     }
 
     // 通过api获取画廊详细信息
-    final List<List<String>> _gidlist = <List<String>>[];
+    final List<List<String>> gidlist = <List<String>>[];
 
-    galleryProviders.forEach((GalleryProvider galleryProvider) {
-      _gidlist.add([galleryProvider.gid!, galleryProvider.token!]);
-    });
+    for (final galleryProvider in galleryProviders) {
+      if (galleryProvider.gid == null || galleryProvider.token == null) {
+        continue;
+      }
+      if (galleryProvider.gid!.isEmpty || galleryProvider.token!.isEmpty) {
+        continue;
+      }
+      gidlist.add([galleryProvider.gid!, galleryProvider.token!]);
+    }
 
     // 25个一组分割
-    List _group = EHUtils.splitList(_gidlist, 25);
+    List group = EHUtils.splitList(gidlist, 25);
 
-    final rultList = <dynamic>[];
+    final resultList = <dynamic>[];
 
     // 查询 合并结果
-    for (int i = 0; i < _group.length; i++) {
-      Map reqMap = {'gidlist': _group[i], 'method': 'gdata'};
+    for (int i = 0; i < group.length; i++) {
+      Map reqMap = {'gidlist': group[i], 'method': 'gdata'};
       final String reqJsonStr = jsonEncode(reqMap);
+      logger.d('reqJsonStr $reqJsonStr');
+      final result = await postEhApi(reqJsonStr);
 
-      final rult = await postEhApi(reqJsonStr);
+      logger.d('result $result');
 
-      final jsonObj = jsonDecode(rult.toString());
+      final jsonObj = jsonDecode(result.toString());
       final tempList = jsonObj['gmetadata'] as List<dynamic>;
-      rultList.addAll(tempList);
+      resultList.addAll(tempList);
     }
 
     final HtmlUnescape unescape = HtmlUnescape();
 
     for (int i = 0; i < galleryProviders.length; i++) {
       // 标题
-      final _englishTitle = unescape.convert(rultList[i]['title'] as String);
+      final englishTitle = unescape.convert('${resultList[i]['title']}');
 
       // 日语标题
-      final _japaneseTitle =
-          unescape.convert(rultList[i]['title_jpn'] as String);
+      final japaneseTitle = unescape.convert('${resultList[i]['title_jpn']}');
 
       // 详细评分
-      final rating = rultList[i]['rating'] as String?;
-      final _rating = rating != null
-          ? double.parse(rating)
+      final ratingStr = resultList[i]['rating'] as String?;
+      final rating = ratingStr != null
+          ? double.parse(ratingStr)
           : galleryProviders[i].ratingFallBack;
 
       // 封面图片
-      final String thumb = rultList[i]['thumb'] as String;
-      final _imgUrlL = thumb;
+      final String thumb = resultList[i]['thumb'] as String;
+      final imgUrlL = thumb;
 
       // 文件数量
-      final _filecount = rultList[i]['filecount'] as String?;
-
-      // logger.d('_filecount $_filecount');
+      final fileCount = resultList[i]['filecount'] as String?;
 
       // 上传者
-      final _uploader = rultList[i]['uploader'] as String?;
-      final _category = rultList[i]['category'] as String?;
+      final uploader = resultList[i]['uploader'] as String?;
+      final category = resultList[i]['category'] as String?;
 
       // 标签
-      final List<dynamic> tags = rultList[i]['tags'] as List<dynamic>;
-      final _tagsFromApi = tags;
+      final List<dynamic> tags = resultList[i]['tags'] as List<dynamic>;
+      final tagsFromApi = tags;
 
       // 大小
-      final _filesize = rultList[i]['filesize'] as int?;
+      final filesize = resultList[i]['filesize'] as int?;
 
       // 种子数量
-      final _torrentcount = rultList[i]['torrentcount'] as String?;
+      final torrentcount = resultList[i]['torrentcount'] as String?;
 
       // 种子列表
-      final List<dynamic> torrents = rultList[i]['torrents'] as List<dynamic>;
+      final List<dynamic> torrents = resultList[i]['torrents'] as List<dynamic>;
       final _torrents = <GalleryTorrent>[];
-      torrents.forEach((dynamic element) {
-        // final Map<String, dynamic> e = element as Map<String, dynamic>;
+      for (final element in torrents) {
         _torrents.add(GalleryTorrent.fromJson(element as Map<String, dynamic>));
-      });
+      }
 
       /// 判断获取语言标识
-      String _translated = '';
+      String translated = '';
       if (tags.isNotEmpty) {
-        _translated = EHUtils.getLangeage(tags[0] as String);
+        translated = EHUtils.getLanguage(tags[0] as String);
       }
 
       galleryProviders[i] = galleryProviders[i].copyWith(
-        englishTitle: _englishTitle,
-        japaneseTitle: _japaneseTitle,
-        rating: _rating,
-        imgUrlL: _imgUrlL,
-        filecount: _filecount,
-        uploader: _uploader,
-        category: _category,
-        tagsFromApi: _tagsFromApi,
-        filesize: _filesize,
-        torrentcount: _torrentcount,
-        torrents: _torrents,
-        translated: _translated,
+        englishTitle: englishTitle.oN,
+        japaneseTitle: japaneseTitle.oN,
+        rating: rating?.oN,
+        imgUrlL: imgUrlL.oN,
+        filecount: fileCount?.oN,
+        uploader: uploader?.oN,
+        category: category?.oN,
+        tagsFromApi: tagsFromApi.oN,
+        filesize: filesize?.oN,
+        torrentcount: torrentcount?.oN,
+        torrents: _torrents.oN,
+        translated: translated.oN,
       );
     }
 
@@ -318,7 +327,7 @@ class Api {
 
   //
   static Future<bool?> selEhProfile() async {
-    if (!Get.find<EhConfigService>().autoSelectProfile) {
+    if (!Get.find<EhSettingService>().autoSelectProfile) {
       logger.d('do not to select profile');
       return null;
     }
@@ -337,7 +346,7 @@ class Api {
   /// 选用feh单独的profile 没有就新建
   static Future<bool?> _selEhProfile() async {
     // 不能带_
-    const kProfileName = 'FEhViewer';
+    const kProfileName = 'Eros-FE';
 
     final uconfig = await getEhSettings(refresh: true);
 
@@ -352,7 +361,7 @@ class Api {
     final bool existFEhProfile = fepIndex > -1;
 
     if (ehProfiles.isNotEmpty)
-      logger.v('ehProfiles\n${ehProfiles.map((e) => e.toJson()).join('\n')} ');
+      logger.t('ehProfiles\n${ehProfiles.map((e) => e.toJson()).join('\n')} ');
 
     if (existFEhProfile) {
       // 存在名称为 FEhViewer 的配置
@@ -383,15 +392,15 @@ class Api {
   }) async {
     final RegExp urlRex =
         RegExp(r'(http?s://e([-x])hentai.org)?/g/(\d+)/(\w+)/?$');
-    // logger.v(galleryProvider.url);
+    logger.d('>> galleryProvider.url ${galleryProvider.url}');
     final RegExpMatch? urlRult = urlRex.firstMatch(galleryProvider.url ?? '');
-    // logger.v(urlRult.groupCount);
+    // logger.t(urlRult.groupCount);
 
-    final String gid = urlRult?.group(3) ?? '';
-    final String token = urlRult?.group(4) ?? '';
+    final gid = urlRult?.group(3);
+    final token = urlRult?.group(4);
 
     final GalleryProvider tempProvider =
-        galleryProvider.copyWith(gid: gid, token: token);
+        galleryProvider.copyWith(gid: gid?.oN, token: token?.oN);
 
     final List<GalleryProvider> reqGalleryItems = <GalleryProvider>[
       tempProvider
@@ -493,7 +502,7 @@ class Api {
     final double width = double.parse(rultJson['x'].toString());
     final double height = double.parse(rultJson['y'].toString());
 
-//    logger.v('$imageUrl');
+//    logger.t('$imageUrl');
 
     final GalleryImage _reImage = GalleryImage(
       imageUrl: imageUrl,
@@ -516,7 +525,7 @@ class Api {
     String? saveDir;
     io.File? saveFile;
     late String realSavePath;
-    if (imageUrl.contains('/fullimg.php?')) {
+    if (imageUrl.contains('/fullimg')) {
       saveDir = path.join(
           Global.tempPath, 'ori_image_temp', gid ?? '0', '${ser ?? 0}');
       if (!io.Directory(saveDir).existsSync()) {
@@ -540,7 +549,7 @@ class Api {
       await ehDownload(
           progressCallback: progressCallback,
           url: imageUrl,
-          savePath: (Headers headers) {
+          savePathBuilder: (Headers headers) {
             logger.d('headers:\n$headers');
             final contentDisposition = headers.value('content-disposition');
             logger.d('contentDisposition $contentDisposition');
@@ -581,21 +590,23 @@ class Api {
     logger.d('imageUrl $imageUrl');
 
     // 权限检查
-    // final permission =
-    //     await requestPhotosPermission(context: context, addOnly: true);
-    // if (!permission) {
-    //   throw EhError(error: 'Permission denied');
-    // }
+    final permission =
+        await requestPhotosPermission(context: context, addOnly: true);
+    if (!permission) {
+      throw EhError(error: 'Permission denied');
+    }
 
     logger.d('开始下载图片');
 
     io.File? file;
     late String realFileName;
+    bool isCached = false;
 
     // 从缓存中获取
     file = await getCachedImageFile(imageUrl);
 
     if (file != null) {
+      isCached = true;
       realFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
     } else {
       // 无缓存下载
@@ -606,7 +617,7 @@ class Api {
         ser: ser,
         fileName: filename,
         progressCallback: (count, total) {
-          logger.d('count $count, total $total');
+          logger.t('count $count, total $total');
           progressCallback?.call(count, total);
         },
       );
@@ -618,27 +629,53 @@ class Api {
     if (gid != null) {
       realFileName = '$gid-$realFileName';
     }
-    logger.d('保存图片到相册 $realFileName lengthSync:${file.lengthSync()}');
+    logger.d('^^^^ 保存图片到相册 $realFileName lengthSync:${file.lengthSync()}');
 
     try {
-      // final result =
-      //     await ImageGallerySaver.saveFile(file.path, name: realFileName);
-      // logger.d('${result.runtimeType} $result');
-      // if (result == null || result == '') {
-      //   throw EhError(error: 'Save image fail');
-      // }
+      late final dynamic result;
 
-      final result = await ImageSave.saveImage(
-        file.readAsBytesSync(),
-        realFileName,
-        albumName: EHConst.appTitle,
-        overwriteSameNameFile: false,
-      );
-      if (result == null || !result) {
+      if (Platform.isAndroid || !isCached) {
+        // Android 直接使用缓存路径的图片文件, 或者非缓存图片（通常为下载原图）
+        result = await ImageGallerySaver.saveFile(
+          file.path,
+          name: realFileName,
+        );
+      } else {
+        // iOS 不能直接使用缓存路径的图片文件， 所以需要先读取文件内容
+        result = await ImageGallerySaver.saveImage(
+          file.readAsBytesSync(),
+          name: realFileName,
+          quality: 100,
+        );
+      }
+
+      logger.d('${result.runtimeType} $result');
+
+      if (result == null || result == '') {
         throw EhError(error: 'Save image fail');
       }
+
+      if (result is Map) {
+        final isSuccess = result['isSuccess'] as bool;
+        final errorMessage = result['errorMessage'] as String?;
+        if (!isSuccess) {
+          throw EhError(error: errorMessage ?? 'Save image fail');
+        }
+      }
+
+      // final result = await ImageSave.saveImage(
+      //   file.readAsBytesSync(),
+      //   realFileName,
+      //   albumName: EHConst.appTitle,
+      //   overwriteSameNameFile: false,
+      // );
+      // if (result == null || !result) {
+      //   throw EhError(error: 'Save image fail');
+      // }
+    } on EhError catch (e) {
+      rethrow;
     } catch (e, s) {
-      logger.e('保存图片到相册失败', e, s);
+      logger.e('保存图片到相册失败', error: e, stackTrace: s);
       throw EhError(error: '保存失败');
     }
   }

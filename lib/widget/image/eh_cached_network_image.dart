@@ -1,7 +1,9 @@
+import 'package:blurhash_ffi/blurhash_ffi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:fehviewer/common/controller/image_hide_controller.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/app_dio/dio_file_service.dart';
+import 'package:eros_fe/common/controller/image_block_controller.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/app_dio/dio_file_service.dart';
+import 'package:eros_fe/widget/image/rect_image_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
@@ -11,7 +13,7 @@ import 'package:octo_image/octo_image.dart';
 
 class EhCachedNetworkImage extends StatelessWidget {
   EhCachedNetworkImage({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.height,
     this.width,
@@ -25,7 +27,9 @@ class EhCachedNetworkImage extends StatelessWidget {
     this.checkQRCodeHide = false,
     this.onHideFlagChanged,
     this.ser,
-  }) : super(key: key);
+    this.blurHash = false,
+    this.sourceRect,
+  });
 
   final String imageUrl;
   final double? height;
@@ -41,24 +45,58 @@ class EhCachedNetworkImage extends StatelessWidget {
   final bool checkQRCodeHide;
   final ValueChanged<bool>? onHideFlagChanged;
 
+  final bool blurHash;
+
   final int? ser;
 
-  final ImageHideController imageHideController = Get.find();
+  final Rect? sourceRect;
+
+  final ImageBlockController imageHideController = Get.find();
 
   Future<bool> _future() async {
-    if (checkPHashHide && checkQRCodeHide) {
-      return await imageHideController.checkPHashHide(imageUrl) ||
-          await imageHideController.checkQRCodeHide(imageUrl);
-    }
+    // if (checkPHashHide && checkQRCodeHide) {
+    //   return await imageHideController.checkPHashHide(
+    //         imageUrl,
+    //         sourceRect: sourceRect,
+    //       ) ||
+    //       await imageHideController.checkQRCodeHide(
+    //         imageUrl,
+    //         sourceRect: sourceRect,
+    //       );
+    // }
+    // if (checkPHashHide) {
+    //   return await imageHideController.checkPHashHide(imageUrl,
+    //       sourceRect: sourceRect);
+    // } else {
+    //   return await imageHideController.checkQRCodeHide(imageUrl,
+    //       sourceRect: sourceRect);
+    // }
+    bool result = false;
     if (checkPHashHide) {
-      return await imageHideController.checkPHashHide(imageUrl);
-    } else {
-      return await imageHideController.checkQRCodeHide(imageUrl);
+      result = await imageHideController.checkPHashHide(imageUrl,
+          sourceRect: sourceRect);
     }
+    if (checkQRCodeHide) {
+      result = await imageHideController.checkQRCodeHide(imageUrl,
+          sourceRect: sourceRect);
+    }
+    return result;
   }
 
   ImageWidgetBuilder get imageWidgetBuilder => (context, imageProvider) {
-        final _image = OctoImage(
+        if (blurHash) {
+          imageProvider = BlurhashTheImage(imageProvider);
+        }
+
+        if (sourceRect != null) {
+          logger.t('sourceRect $sourceRect');
+          imageProvider = RectImageProvider(
+            imageProvider,
+            sourceRect!,
+          );
+        }
+
+        final octoImage = OctoImage(
           image: imageProvider,
           width: width,
           height: height,
@@ -70,52 +108,50 @@ class EhCachedNetworkImage extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (snapshot.hasError) {
-                    return _image;
+                    return octoImage;
                   }
                   final showHidePlaceWidget = snapshot.data ?? false;
                   onHideFlagChanged?.call(showHidePlaceWidget);
                   return showHidePlaceWidget
-                      ? Container(
-                          child: Center(
-                            child: Icon(
-                              CupertinoIcons.xmark_shield_fill,
-                              size: 32,
-                              color: CupertinoDynamicColor.resolve(
-                                  CupertinoColors.systemGrey3, context),
-                            ),
+                      ? Center(
+                          child: Icon(
+                            CupertinoIcons.xmark_shield_fill,
+                            size: 32,
+                            color: CupertinoDynamicColor.resolve(
+                                CupertinoColors.systemGrey3, context),
                           ),
                         )
-                      : _image;
+                      : octoImage;
                 } else {
                   return placeholder?.call(context, imageUrl) ??
                       Container(
                         alignment: Alignment.center,
                         child: const CupertinoActivityIndicator(),
                       );
-                  // return _image;
+                  // return octoImage;
                 }
               });
         } else {
-          return _image;
+          return octoImage;
         }
       };
 
   @override
   Widget build(BuildContext context) {
-    final _httpHeaders = {
+    final imgHttpHeaders = {
       'Cookie': Global.profile.user.cookie,
       'Host': Uri.parse(imageUrl).host,
       'User-Agent': EHConst.CHROME_USER_AGENT,
       'Accept-Encoding': 'gzip, deflate, br'
     };
     if (httpHeaders != null) {
-      _httpHeaders.addAll(httpHeaders!);
+      imgHttpHeaders.addAll(httpHeaders!);
     }
 
     final image = CachedNetworkImage(
       cacheManager: imageCacheManager(ser: ser),
       imageBuilder: imageWidgetBuilder,
-      httpHeaders: _httpHeaders,
+      httpHeaders: imgHttpHeaders,
       width: width,
       height: height,
       fit: fit,

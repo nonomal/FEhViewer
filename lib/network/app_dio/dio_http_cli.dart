@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/utils/logger.dart';
 
 import 'app_dio.dart';
 import 'http_response.dart';
@@ -31,7 +31,7 @@ class DioHttpClient {
         onReceiveProgress: onReceiveProgress,
       );
       return handleResponse(response, httpTransformer: httpTransformer);
-    } on DioError catch (e, stack) {
+    } on DioException catch (e, stack) {
       // logger.e('DioError:\n$e\n$stack');
       return handleException(e, data: e.response?.data);
     } on Exception catch (e, stack) {
@@ -129,15 +129,18 @@ class DioHttpClient {
     }
   }
 
-  Future<Response> download(String urlPath, savePath,
-      {ProgressCallback? onReceiveProgress,
-      Map<String, dynamic>? queryParameters,
-      CancelToken? cancelToken,
-      bool deleteOnError = true,
-      String lengthHeader = Headers.contentLengthHeader,
-      data,
-      Options? options,
-      HttpTransformer? httpTransformer}) async {
+  Future<Response> download(
+    String urlPath,
+    DioSavePath savePath, {
+    ProgressCallback? onReceiveProgress,
+    Map<String, dynamic>? queryParameters,
+    CancelToken? cancelToken,
+    bool deleteOnError = true,
+    String lengthHeader = Headers.contentLengthHeader,
+    data,
+    Options? options,
+    HttpTransformer? httpTransformer,
+  }) async {
     try {
       var response = await _dio.download(
         urlPath,
@@ -148,7 +151,7 @@ class DioHttpClient {
         deleteOnError: deleteOnError,
         lengthHeader: lengthHeader,
         data: data,
-        options: data as Options?,
+        options: options,
       );
       return response;
     } catch (e) {

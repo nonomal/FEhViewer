@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/index.dart';
 import 'package:get/get.dart';
 
 import '../../fetch_list.dart';
@@ -28,7 +28,7 @@ class CustomSubListController extends TabViewController {
   CustomProfile? get profile => _customTabbarController.profileMap[profileUuid];
 
   FetchListClient getFetchListClient(FetchParams fetchParams) {
-    logger.v('CustomSubListController getFetchListClient $fetchParams');
+    logger.t('CustomSubListController getFetchListClient $fetchParams');
     return SearchFetchListClient(fetchParams: fetchParams);
   }
 
@@ -52,7 +52,9 @@ class CustomSubListController extends TabViewController {
   Future<GalleryList?> fetchData({bool refresh = false}) async {
     cancelToken = CancelToken();
 
-    logger.v(' ${jsonEncode(profile)}');
+    logger.t('fetchData , refresh:$refresh');
+
+    logger.t(' ${jsonEncode(profile)}');
 
     // 普通搜索
     final fetchConfig = FetchParams(

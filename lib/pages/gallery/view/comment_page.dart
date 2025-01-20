@@ -1,12 +1,11 @@
-import 'dart:ui';
-
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/comment_controller.dart';
-import 'package:fehviewer/pages/gallery/view/const.dart';
+import 'package:eros_fe/common/controller/block_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/comment_controller.dart';
+import 'package:eros_fe/pages/gallery/view/const.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
@@ -26,6 +25,8 @@ const Border _kDefaultEditBorder = Border(
 );
 
 class CommentPage extends StatefulWidget {
+  const CommentPage({super.key});
+
   @override
   State<CommentPage> createState() => _CommentPageState();
 }
@@ -33,6 +34,9 @@ class CommentPage extends StatefulWidget {
 class _CommentPageState extends State<CommentPage>
     with AutomaticKeepAliveClientMixin {
   late CommentController controller;
+
+  EhSettingService get _ehSettingService => Get.find();
+  BlockController get _blockController => Get.find();
 
   @override
   void initState() {
@@ -43,8 +47,8 @@ class _CommentPageState extends State<CommentPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    logger.d('pageCtrlTag $pageCtrlTag');
-    final cps = CupertinoPageScaffold(
+    // logger.d('pageCtrlTag $pageCtrlTag');
+    return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(L10n.of(context).gallery_comments),
         previousPageTitle: L10n.of(context).back,
@@ -62,40 +66,103 @@ class _CommentPageState extends State<CommentPage>
         ],
       ),
     );
-
-    return cps;
   }
 
   // 评论列表
   Widget commentListView(BuildContext context) {
-    return Obx(() {
-      logger.d('build commentListView');
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: kPadding),
-        child: ListView.builder(
-          padding: EdgeInsets.only(
-            bottom: 60 + context.mediaQueryPadding.bottom,
-            top: context.mediaQueryPadding.top +
-                kMinInteractiveDimensionCupertino,
-          ),
-          itemBuilder: (context, index) {
-            if (controller.comments == null || controller.comments!.isEmpty) {
-              return const SizedBox();
-            }
+    if (!_ehSettingService.showComments) {
+      return const SizedBox();
+    }
 
-            final comment = controller.comments?[index];
-            if (comment != null) {
-              return CommentItem(
-                galleryComment: comment,
-              ).autoCompressKeyboard(context);
-            } else {
-              return const SizedBox();
-            }
-          },
-          itemCount: controller.comments?.length ?? 0,
-        ),
+    return Obx(() {
+      logger.t('build commentListView');
+
+      List<GalleryComment> comments =
+          _filterComments(controller.comments) ?? [];
+
+      return CustomScrollView(
+        slivers: [
+          SliverSafeArea(
+            bottom: false,
+            sliver: CupertinoSliverRefreshControl(
+              onRefresh: controller.onRefresh,
+            ),
+          ),
+          if (comments.isEmpty)
+            const SliverFillRemaining()
+          else
+            SliverSafeArea(
+              top: false,
+              minimum: EdgeInsets.only(
+                  left: kPadding,
+                  right: kPadding,
+                  bottom: 64 + context.mediaQueryPadding.bottom),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return _itemBuilder(comments[index]);
+                  },
+                  childCount: comments.length,
+                ),
+              ),
+            ),
+        ],
       );
     });
+  }
+
+  List<GalleryComment>? _filterComments(List<GalleryComment>? comments) {
+    List<GalleryComment>? commentsFilter;
+
+    if (_ehSettingService.showOnlyUploaderComment) {
+      final uploaderId =
+          comments?.firstWhere((element) => element.score.isEmpty).memberId;
+
+      if (uploaderId != null) {
+        commentsFilter = comments
+            ?.where((element) => element.memberId == uploaderId)
+            .toList();
+      } else {
+        commentsFilter = comments
+            ?.where((element) => element.name == controller.uploader)
+            .toList();
+      }
+    } else {
+      commentsFilter = comments;
+    }
+
+    // 根据屏蔽规则过滤评论
+    commentsFilter = commentsFilter?.where((element) {
+      return !_blockController.matchRule(
+            text: element.text,
+            blockType: BlockType.comment,
+          ) &&
+          !_blockController.matchRule(
+            text: element.name,
+            blockType: BlockType.commentator,
+          );
+    }).toList();
+
+    return commentsFilter;
+  }
+
+  Widget _itemBuilder(GalleryComment comment) {
+    if (controller.comments == null || controller.comments!.isEmpty) {
+      return const SizedBox();
+    }
+
+    final hideComment = _ehSettingService.filterCommentsByScore &&
+        (comment.score.isNotEmpty &&
+            (int.tryParse(comment.score) ?? 0) <=
+                _ehSettingService.scoreFilteringThreshold);
+
+    if (!hideComment) {
+      return CommentItem(
+        galleryComment: comment,
+      ).autoCompressKeyboard(context);
+    } else {
+      return const SizedBox();
+    }
   }
 
   // 原始消息
@@ -166,12 +233,12 @@ class _CommentPageState extends State<CommentPage>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 minSize: 0,
+                onPressed: controller.pressCancel,
                 child: const Icon(
                   FontAwesomeIcons.xmark,
                   // FontAwesomeIcons.solidCheckCircle,
                   size: 24,
                 ),
-                onPressed: controller.pressCancle,
               )
             ],
           );
@@ -236,6 +303,7 @@ class _CommentPageState extends State<CommentPage>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                     minSize: 0,
+                    onPressed: controller.pressSend,
                     child: Obx(
                       () => AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
@@ -244,7 +312,7 @@ class _CommentPageState extends State<CommentPage>
                         transitionBuilder: (child, animation) =>
                             // ScaleTransition(
                             //     scale: animation, child: child),
-                            FadeTransition(child: child, opacity: animation),
+                            FadeTransition(opacity: animation, child: child),
                         child: controller.isEditStat || controller.isReptyStat
                             ? Icon(
                                 FontAwesomeIcons.solidCircleCheck,
@@ -258,7 +326,6 @@ class _CommentPageState extends State<CommentPage>
                               ),
                       ),
                     ),
-                    onPressed: controller.pressSend,
                   ),
                 ),
               ],

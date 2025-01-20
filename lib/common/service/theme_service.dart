@@ -1,18 +1,18 @@
 import 'package:enum_to_string/enum_to_string.dart';
-import 'package:fehviewer/common/colors.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/common/service/base_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
+import 'package:eros_fe/common/colors.dart';
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/common/service/base_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import 'ehconfig_service.dart';
+import 'ehsetting_service.dart';
 
 class ThemeService extends ProfileService {
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
   final Rx<ThemesModeEnum> _themeModel = ThemesModeEnum.system.obs;
   Rx<Brightness?> platformBrightness =
-      WidgetsBinding.instance.window.platformBrightness.obs;
+      WidgetsBinding.instance.platformDispatcher.platformBrightness.obs;
 
   set themeModel(ThemesModeEnum value) {
     _themeModel.value = value;
@@ -22,7 +22,7 @@ class ThemeService extends ProfileService {
     return _themeModel.value;
   }
 
-  CupertinoThemeData get _getDarkTheme => _ehConfigService.isPureDarkTheme.value
+  CupertinoThemeData get _getDarkTheme => _ehSettingService.isPureDarkTheme
       ? ThemeColors.darkPureTheme
       : ThemeColors.darkGrayTheme;
 
@@ -31,13 +31,11 @@ class ThemeService extends ProfileService {
       case ThemesModeEnum.system:
         return platformBrightness.value == Brightness.dark
             ? _getDarkTheme
-            : ThemeColors.ligthTheme;
+            : ThemeColors.lightTheme;
       case ThemesModeEnum.lightMode:
-        return ThemeColors.ligthTheme;
+        return ThemeColors.lightTheme;
       case ThemesModeEnum.darkMode:
         return _getDarkTheme;
-      default:
-        return null;
     }
   }
 
@@ -47,7 +45,7 @@ class ThemeService extends ProfileService {
     _themeModel.value =
         EnumToString.fromString(ThemesModeEnum.values, Global.profile.theme) ??
             ThemesModeEnum.system;
-    everFromEunm(_themeModel, (String value) {
+    everFromEnum(_themeModel, (String value) {
       Global.profile = Global.profile.copyWith(theme: value);
     });
   }
@@ -57,10 +55,10 @@ final EHTheme ehTheme = EHTheme();
 
 class EHTheme {
   ThemeService get _themeService => Get.find();
-  EhConfigService get _ehConfigService => Get.find();
+  EhSettingService get _ehSettingService => Get.find();
 
   Color? _getColorWithTheme(EhDynamicColor ehcolor) {
-    final Color effDarkColor = _ehConfigService.isPureDarkTheme.value
+    final Color effDarkColor = _ehSettingService.isPureDarkTheme
         ? ehcolor.darkColor
         : ehcolor.darkGrayColor;
 

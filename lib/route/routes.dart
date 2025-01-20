@@ -26,10 +26,14 @@ class EHRoutes {
   static const String proxySetting = '/proxySetting';
   static const String logfile = '/logfile';
   static const String webDavSetting = '/webDavSetting';
+  static const String mysqlSync = '/mysqlSync';
   static const String mySettings = '/mySettings';
   static const String myTags = '/myTags';
   static const String userTags = '/userTags';
-  static const String tagTranslat = '/tagTranslat';
+  static const String tagTranslate = '/tagTranslate';
+  static const String blockers = '/blockers';
+  static const String blockRules = '/blockRules';
+  static const String blockRuleEdit = '/blockRuleEdit';
 
   static const String imageHide = '/imageHide';
   static const String mangaHidedImage = '/imageHide/mangaHidedImage';
@@ -58,7 +62,7 @@ class EHRoutes {
   static const String searchImage = '/searchImage';
 
   static const String galleryComment = '/galleryPage/comment';
-  static const String galleryAllPreviews = '/galleryPage/allPreviews';
+  static const String galleryAllThumbnails = '/galleryPage/allThumbnails';
   static const String galleryView = '/galleryPage/view';
   static const String galleryViewExt = '/galleryPage/viewExt';
   static const String galleryPage = '/galleryPage';

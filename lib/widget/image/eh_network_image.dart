@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class EhNetworkImage extends StatefulWidget {
   const EhNetworkImage({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.height,
     this.width,
@@ -17,12 +17,16 @@ class EhNetworkImage extends StatefulWidget {
     this.httpHeaders,
     this.checkHide = false,
     this.onHideFlagChanged,
-  }) : super(key: key);
+    this.blurHash = false,
+    this.sourceRect,
+  });
 
   final String imageUrl;
   final double? height;
   final double? width;
   final BoxFit? fit;
+
+  final bool blurHash;
 
   final Map<String, String>? httpHeaders;
 
@@ -33,26 +37,39 @@ class EhNetworkImage extends StatefulWidget {
   final bool checkHide;
   final ValueChanged<bool>? onHideFlagChanged;
 
+  final Rect? sourceRect;
+
   @override
   State<EhNetworkImage> createState() => _EhNetworkImageState();
 }
 
 class _EhNetworkImageState extends State<EhNetworkImage> {
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
   @override
   Widget build(BuildContext context) {
-    if (Get.find<EhConfigService>().isSiteEx.value && false) {
-      return NetworkExtendedImage(
-        url: widget.imageUrl.handleUrl,
-        width: widget.width,
-        height: widget.height,
-        fit: widget.fit,
-        placeholder: widget.placeholder,
-        errorWidget: widget.errorWidget,
-        progressIndicatorBuilder: widget.progressIndicatorBuilder,
-        checkPHashHide: widget.checkHide,
-      );
-    }
+    // if (Get.find<EhSettingService>().isSiteEx.value && false) {
+    //   return NetworkExtendedImage(
+    //     url: widget.imageUrl.handleUrl,
+    //     width: widget.width,
+    //     height: widget.height,
+    //     fit: widget.fit,
+    //     placeholder: widget.placeholder,
+    //     errorWidget: widget.errorWidget,
+    //     progressIndicatorBuilder: widget.progressIndicatorBuilder,
+    //     checkPHashHide: widget.checkHide,
+    //   );
+    // }
+
+    // if (widget.sourceRect != null) {
+    //   return ExtendedImageRect(
+    //     width: widget.width,
+    //     height: widget.height,
+    //     fit: widget.fit,
+    //     url: widget.imageUrl.handleUrl,
+    //     httpHeaders: widget.httpHeaders,
+    //     sourceRect: widget.sourceRect,
+    //   );
+    // }
 
     return EhCachedNetworkImage(
       width: widget.width,
@@ -63,9 +80,11 @@ class _EhNetworkImageState extends State<EhNetworkImage> {
       placeholder: widget.placeholder,
       errorWidget: widget.errorWidget,
       progressIndicatorBuilder: widget.progressIndicatorBuilder,
-      checkPHashHide: widget.checkHide && ehConfigService.enablePHashCheck,
-      checkQRCodeHide: widget.checkHide && ehConfigService.enableQRCodeCheck,
+      checkPHashHide: widget.checkHide && ehSettingService.enablePHashCheck,
+      checkQRCodeHide: widget.checkHide && ehSettingService.enableQRCodeCheck,
       onHideFlagChanged: widget.onHideFlagChanged,
+      blurHash: widget.blurHash,
+      sourceRect: widget.sourceRect,
     );
   }
 }

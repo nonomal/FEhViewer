@@ -1,7 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import 'intl/messages_all.dart';
 
 // **************************************************************************
@@ -51,10 +50,10 @@ class L10n {
     return Localizations.of<L10n>(context, L10n);
   }
 
-  /// `FEhViewer`
+  /// `Eros-FE`
   String get app_title {
     return Intl.message(
-      'FEhViewer',
+      'Eros-FE',
       name: 'app_title',
       desc: '',
       args: [],
@@ -321,41 +320,41 @@ class L10n {
     );
   }
 
-  /// `All Preview`
-  String get all_preview {
+  /// `All Thumbnails`
+  String get all_thumbnails {
     return Intl.message(
-      'All Preview',
-      name: 'all_preview',
+      'All Thumbnails',
+      name: 'all_thumbnails',
       desc: '',
       args: [],
     );
   }
 
-  /// `More previews`
-  String get morePreviews {
+  /// `More Thumbnails`
+  String get more_thumbnails {
     return Intl.message(
-      'More previews',
-      name: 'morePreviews',
+      'More Thumbnails',
+      name: 'more_thumbnails',
       desc: '',
       args: [],
     );
   }
 
-  /// `No more previews`
-  String get noMorePreviews {
+  /// `No more Thumbnails`
+  String get no_more_thumbnails {
     return Intl.message(
-      'No more previews',
-      name: 'noMorePreviews',
+      'No more Thumbnails',
+      name: 'no_more_thumbnails',
       desc: '',
       args: [],
     );
   }
 
-  /// `Previews`
-  String get previews {
+  /// `Thumbnails`
+  String get thumbnails {
     return Intl.message(
-      'Previews',
-      name: 'previews',
+      'Thumbnails',
+      name: 'thumbnails',
       desc: '',
       args: [],
     );
@@ -1601,21 +1600,21 @@ class L10n {
     );
   }
 
-  /// `Default Favorites`
-  String get default_favorites {
+  /// `One Step Favorite`
+  String get one_step_favorite {
     return Intl.message(
-      'Default Favorites',
-      name: 'default_favorites',
+      'One Step Favorite',
+      name: 'one_step_favorite',
       desc: '',
       args: [],
     );
   }
 
-  /// `Manually select favorites`
-  String get manually_sel_favorites {
+  /// `Quickly add gallery to favorite, short press to save to the last selected favorite, long press to display the favorite dialog.`
+  String get one_step_favorite_desc {
     return Intl.message(
-      'Manually select favorites',
-      name: 'manually_sel_favorites',
+      'Quickly add gallery to favorite, short press to save to the last selected favorite, long press to display the favorite dialog.',
+      name: 'one_step_favorite_desc',
       desc: '',
       args: [],
     );
@@ -2011,10 +2010,10 @@ class L10n {
     );
   }
 
-  /// `Normally, images are resampled to 1280 pixels of horizontal resolution for online viewing. You can alternatively select one of the following resample resolutions. To avoid murdering the staging servers, resolutions above 1280x are temporarily restricted to donators, people with any hath perk, and people with a UID below 3,000,000.`
+  /// `Images are normally resampled to 1280 pixels of horizontal resolution for online viewing. You can select one of the above alternative resolutions.`
   String get uc_res_res_desc {
     return Intl.message(
-      'Normally, images are resampled to 1280 pixels of horizontal resolution for online viewing. You can alternatively select one of the following resample resolutions. To avoid murdering the staging servers, resolutions above 1280x are temporarily restricted to donators, people with any hath perk, and people with a UID below 3,000,000.',
+      'Images are normally resampled to 1280 pixels of horizontal resolution for online viewing. You can select one of the above alternative resolutions.',
       name: 'uc_res_res_desc',
       desc: '',
       args: [],
@@ -2071,10 +2070,10 @@ class L10n {
     );
   }
 
-  /// `rchiver Settings`
+  /// `Archiver Settings`
   String get uc_archiver_set {
     return Intl.message(
-      'rchiver Settings',
+      'Archiver Settings',
       name: 'uc_archiver_set',
       desc: '',
       args: [],
@@ -2491,10 +2490,10 @@ class L10n {
     );
   }
 
-  /// `Show Page Numbers`
+  /// `Thumbnail Labeling`
   String get uc_show_page_num {
     return Intl.message(
-      'Show Page Numbers',
+      'Thumbnail Labeling',
       name: 'uc_show_page_num',
       desc: '',
       args: [],
@@ -2541,10 +2540,10 @@ class L10n {
     );
   }
 
-  /// `Use original images instead of the resampled versions where applicable?`
+  /// `Use original images instead of the resampled versions? Resampled images will still be used if you select a horizonal resolution different than "Auto" above and the image in question is wider, or if the original image is larger than 10 MiB (or 4 MiB for galleries older than one year).`
   String get uc_ori_image_desc {
     return Intl.message(
-      'Use original images instead of the resampled versions where applicable?',
+      'Use original images instead of the resampled versions? Resampled images will still be used if you select a horizonal resolution different than "Auto" above and the image in question is wider, or if the original image is larger than 10 MiB (or 4 MiB for galleries older than one year).',
       name: 'uc_ori_image_desc',
       desc: '',
       args: [],
@@ -3081,21 +3080,31 @@ class L10n {
     );
   }
 
-  /// `Normal`
+  /// `Auto`
   String get uc_ts_0 {
     return Intl.message(
-      'Normal',
+      'Auto',
       name: 'uc_ts_0',
       desc: '',
       args: [],
     );
   }
 
-  /// `Large`
+  /// `Normal`
   String get uc_ts_1 {
     return Intl.message(
-      'Large',
+      'Normal',
       name: 'uc_ts_1',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Small`
+  String get uc_ts_2 {
+    return Intl.message(
+      'Small',
+      name: 'uc_ts_2',
       desc: '',
       args: [],
     );
@@ -3171,40 +3180,50 @@ class L10n {
     );
   }
 
-  /// `No`
+  /// `None`
   String get uc_pn_0 {
     return Intl.message(
-      'No',
+      'None',
       name: 'uc_pn_0',
       desc: '',
       args: [],
     );
   }
 
-  /// `Yes`
+  /// `Page Number Only`
   String get uc_pn_1 {
     return Intl.message(
-      'Yes',
+      'Page Number Only',
       name: 'uc_pn_1',
       desc: '',
       args: [],
     );
   }
 
-  /// `Nope`
+  /// `Page Number + Name`
+  String get uc_pn_2 {
+    return Intl.message(
+      'Page Number + Name',
+      name: 'uc_pn_2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Prefer resampled images`
   String get uc_oi_0 {
     return Intl.message(
-      'Nope',
+      'Prefer resampled images',
       name: 'uc_oi_0',
       desc: '',
       args: [],
     );
   }
 
-  /// `Yup, I can take it`
+  /// `Prefer original images`
   String get uc_oi_1 {
     return Intl.message(
-      'Yup, I can take it',
+      'Prefer original images',
       name: 'uc_oi_1',
       desc: '',
       args: [],
@@ -3825,41 +3844,51 @@ class L10n {
     );
   }
 
-  /// `Image Hide`
-  String get image_hide {
+  /// `Image Block`
+  String get image_block {
     return Intl.message(
-      'Image Hide',
-      name: 'image_hide',
+      'Image Block',
+      name: 'image_block',
       desc: '',
       args: [],
     );
   }
 
-  /// `QR code Check`
-  String get QR_code_check {
+  /// `Block images containing QR codes`
+  String get QR_code_block {
     return Intl.message(
-      'QR code Check',
-      name: 'QR_code_check',
+      'Block images containing QR codes',
+      name: 'QR_code_block',
       desc: '',
       args: [],
     );
   }
 
-  /// `Perceptual Hash Check`
+  /// `Perceptual Hash Check (Block similar images)`
   String get phash_check {
     return Intl.message(
-      'Perceptual Hash Check',
+      'Perceptual Hash Check (Block similar images)',
       name: 'phash_check',
       desc: '',
       args: [],
     );
   }
 
-  /// `Manage Hidden Images`
-  String get mange_hidden_images {
+  /// `Perceptual Hash Block List`
+  String get phash_block_list {
     return Intl.message(
-      'Manage Hidden Images',
-      name: 'mange_hidden_images',
+      'Perceptual Hash Block List',
+      name: 'phash_block_list',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add to Perceptual Hash Block List`
+  String get add_to_phash_block_list {
+    return Intl.message(
+      'Add to Perceptual Hash Block List',
+      name: 'add_to_phash_block_list',
       desc: '',
       args: [],
     );
@@ -4244,6 +4273,266 @@ class L10n {
       args: [],
     );
   }
+
+  /// `Native HTTP Client Adapter`
+  String get native_http_client_adapter {
+    return Intl.message(
+      'Native HTTP Client Adapter',
+      name: 'native_http_client_adapter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Japanese Title in Gallery`
+  String get japanese_title_in_gallery {
+    return Intl.message(
+      'Japanese Title in Gallery',
+      name: 'japanese_title_in_gallery',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only effective in gallery page`
+  String get japanese_title_in_gallery_summary {
+    return Intl.message(
+      'Only effective in gallery page',
+      name: 'japanese_title_in_gallery_summary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Blockers`
+  String get blockers {
+    return Intl.message(
+      'Blockers',
+      name: 'blockers',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Filter Comments By Score`
+  String get filter_comments_by_score {
+    return Intl.message(
+      'Filter Comments By Score',
+      name: 'filter_comments_by_score',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Comments below/equal to this score will be hidden`
+  String get filter_comments_by_score_summary {
+    return Intl.message(
+      'Comments below/equal to this score will be hidden',
+      name: 'filter_comments_by_score_summary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Show Comments`
+  String get show_comments {
+    return Intl.message(
+      'Show Comments',
+      name: 'show_comments',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Show Only Uploader Comment`
+  String get show_only_uploader_comment {
+    return Intl.message(
+      'Show Only Uploader Comment',
+      name: 'show_only_uploader_comment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Show Gallery Tags`
+  String get show_gallery_tags {
+    return Intl.message(
+      'Show Gallery Tags',
+      name: 'show_gallery_tags',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hide Thumbnails`
+  String get hide_thumbnails {
+    return Intl.message(
+      'Hide Thumbnails',
+      name: 'hide_thumbnails',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hide Gallery Thumbnails`
+  String get hide_gallery_thumbnails {
+    return Intl.message(
+      'Hide Gallery Thumbnails',
+      name: 'hide_gallery_thumbnails',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Horizontal Thumbnails`
+  String get horizontal_thumbnails {
+    return Intl.message(
+      'Horizontal Thumbnails',
+      name: 'horizontal_thumbnails',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Block Rules`
+  String get block_rules {
+    return Intl.message(
+      'Block Rules',
+      name: 'block_rules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit Block Rule`
+  String get edit_block_rule {
+    return Intl.message(
+      'Edit Block Rule',
+      name: 'edit_block_rule',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Block Rule`
+  String get block_rule {
+    return Intl.message(
+      'Block Rule',
+      name: 'block_rule',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable`
+  String get enable {
+    return Intl.message(
+      'Enable',
+      name: 'enable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Regex`
+  String get regex {
+    return Intl.message(
+      'Regex',
+      name: 'regex',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Title`
+  String get title {
+    return Intl.message(
+      'Title',
+      name: 'title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Comment`
+  String get comment {
+    return Intl.message(
+      'Comment',
+      name: 'comment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Commentator`
+  String get commentator {
+    return Intl.message(
+      'Commentator',
+      name: 'commentator',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Regex format error`
+  String get regex_format_error {
+    return Intl.message(
+      'Regex format error',
+      name: 'regex_format_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Experimental feature`
+  String get experimental_feature {
+    return Intl.message(
+      'Experimental feature',
+      name: 'experimental_feature',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Page View Type`
+  String get page_view_type {
+    return Intl.message(
+      'Page View Type',
+      name: 'page_view_type',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Slide Out Page`
+  String get slide_out_page {
+    return Intl.message(
+      'Slide Out Page',
+      name: 'slide_out_page',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `High Resolution Images Limited`
+  String get high_resolution_images_limited {
+    return Intl.message(
+      'High Resolution Images Limited',
+      name: 'high_resolution_images_limited',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh Igneous`
+  String get refresh_igneous {
+    return Intl.message(
+      'Refresh Igneous',
+      name: 'refresh_igneous',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<L10n> {
@@ -4252,6 +4541,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<L10n> {
   List<Locale> get supportedLocales {
     return const <Locale>[
       Locale.fromSubtags(languageCode: 'en'),
+      Locale.fromSubtags(languageCode: 'ja'),
       Locale.fromSubtags(languageCode: 'ko', countryCode: 'KR'),
       Locale.fromSubtags(languageCode: 'ru'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),

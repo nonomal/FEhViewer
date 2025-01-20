@@ -1,12 +1,12 @@
 import 'package:blur/blur.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/tab/controller/favorite/favorite_tabbar_controller.dart';
+import 'package:eros_fe/pages/tab/controller/search_page_controller.dart';
+import 'package:eros_fe/pages/tab/controller/tabhome_controller.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/favorite/favorite_tabbar_controller.dart';
-import 'package:fehviewer/pages/tab/controller/search_page_controller.dart';
-import 'package:fehviewer/pages/tab/controller/tabhome_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -17,20 +17,20 @@ import '../constants.dart';
 import 'favorite_sub_page.dart';
 
 class FavoriteTabTabBarPage extends StatefulWidget {
-  const FavoriteTabTabBarPage({Key? key}) : super(key: key);
+  const FavoriteTabTabBarPage({super.key});
 
   @override
-  _FavoriteTabTabBarPageState createState() => _FavoriteTabTabBarPageState();
+  State<FavoriteTabTabBarPage> createState() => _FavoriteTabTabBarPageState();
 }
 
 class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
   final EhTabController ehTabController = EhTabController();
   final LinkScrollBarController linkScrollBarController =
       LinkScrollBarController();
-  final controller = Get.find<FavoriteTabberController>();
+  final controller = Get.find<FavoriteTabBarController>();
   late PageController pageController;
 
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
     final headerMaxHeight = context.mediaQueryPadding.top + kHeaderMaxHeight;
 
     return Obx(() {
-      final hideTopBarOnScroll = _ehConfigService.hideTopBarOnScroll;
+      final hideTopBarOnScroll = _ehSettingService.hideTopBarOnScroll;
 
       final scrollView =
           buildNestedScrollView(headerMaxHeight, hideTopBarOnScroll);
@@ -60,7 +60,7 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
     double offset,
     double maxExtentCallBackValue,
   ) {
-    return Container(
+    return SizedBox(
       height: maxExtentCallBackValue,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -80,7 +80,7 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
                   blurColor: CupertinoTheme.of(context)
                       .barBackgroundColor
                       .withOpacity(1),
-                  colorOpacity: 0.7,
+                  colorOpacity: kEnableImpeller ? 1.0 : 0.7,
                   child: Container(
                     height: kTopTabbarHeight,
                   ),
@@ -99,7 +99,9 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
   }
 
   Widget buildNestedScrollView(
-      double headerMaxHeight, bool hideTopBarOnScroll) {
+    double headerMaxHeight,
+    bool hideTopBarOnScroll,
+  ) {
     return ExtendedNestedScrollView(
       floatHeaderSlivers: true,
       onlyOneScrollInBody: true,
@@ -107,7 +109,8 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
         return [
           SliverOverlapAbsorber(
             handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(
-                context),
+              context,
+            ),
             sliver: SliverPersistentHeader(
               floating: true,
               pinned: true,
@@ -124,7 +127,7 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
                 maxHeight: headerMaxHeight,
               ),
             ),
-          )
+          ),
         ];
       },
       body: buildBody(),
@@ -139,17 +142,15 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
           linkScrollBarController.enableScrollToItem();
         },
         child: Obx(() {
-          final hideTopBarOnScroll = _ehConfigService.hideTopBarOnScroll;
+          final hideTopBarOnScroll = _ehSettingService.hideTopBarOnScroll;
           return PageView(
             key: ValueKey(controller.showBarsBtn), // 登录状态变化后能刷新
             controller: pageController,
             children: [
-              ...controller.favcatList
-                  .map((e) => FavoriteSubPage(
-                        favcat: e.favId,
-                        pinned: !hideTopBarOnScroll,
-                      ))
-                  .toList(),
+              ...controller.favcatList.map((e) => FavoriteSubPage(
+                    favcat: e.favId,
+                    pinned: !hideTopBarOnScroll,
+                  )),
             ],
             onPageChanged: (index) {
               linkScrollBarController.scrollToItem(index);
@@ -164,6 +165,9 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
   Widget getNavigationBar(BuildContext context) {
     return Obx(() {
       return CupertinoNavigationBar(
+        backgroundColor: kEnableImpeller
+            ? CupertinoTheme.of(context).barBackgroundColor.withOpacity(1)
+            : null,
         transitionBetweenRoutes: false,
         border: Border(
           bottom: BorderSide(
@@ -180,12 +184,13 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
             children: [
               Text(L10n.of(context).tab_favorite),
               Obx(() {
-                if (controller.isBackgroundRefresh)
+                if (controller.isBackgroundRefresh) {
                   return const CupertinoActivityIndicator(
                     radius: 10,
                   ).paddingSymmetric(horizontal: 8);
-                else
+                } else {
                   return const SizedBox();
+                }
               }),
             ],
           ),
@@ -277,59 +282,17 @@ class _FavoriteTabTabBarPageState extends State<FavoriteTabTabBarPage> {
   }
 }
 
-// class PageSelectorButton extends StatelessWidget {
-//   const PageSelectorButton({
-//     Key? key,
-//     required this.controller,
-//   }) : super(key: key);
-//
-//   final FavoriteTabberController controller;
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return CupertinoButton(
-//       padding: const EdgeInsets.all(0),
-//       minSize: 36,
-//       child: Container(
-//         alignment: Alignment.center,
-//         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-//         constraints: const BoxConstraints(minWidth: 24, maxHeight: 26),
-//         decoration: BoxDecoration(
-//             border: Border.all(
-//               color: CupertinoDynamicColor.resolve(
-//                   CupertinoColors.activeBlue, context),
-//               width: 1.8,
-//             ),
-//             borderRadius: const BorderRadius.all(Radius.circular(8))),
-//         child: Obx(() => Text(
-//               '${max(1, controller.curPage + 1)}',
-//               textAlign: TextAlign.center,
-//               textScaleFactor: 0.9,
-//               style: TextStyle(
-//                   fontWeight: FontWeight.bold,
-//                   height: 1.25,
-//                   color: CupertinoDynamicColor.resolve(
-//                       CupertinoColors.activeBlue, context)),
-//             )),
-//       ),
-//       onPressed: () {
-//         controller.showJumpToPage();
-//       },
-//     );
-//   }
-// }
-
 class FavoriteTabBar extends StatelessWidget {
   const FavoriteTabBar({
-    Key? key,
+    super.key,
     required this.pageController,
     required this.linkScrollBarController,
     required this.controller,
-  }) : super(key: key);
+  });
 
   final PageController pageController;
   final LinkScrollBarController linkScrollBarController;
-  final FavoriteTabberController controller;
+  final FavoriteTabBarController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +304,7 @@ class FavoriteTabBar extends StatelessWidget {
         left: context.mediaQueryPadding.left,
         right: context.mediaQueryPadding.right,
       ),
-      child: Container(
+      child: SizedBox(
         height: kTopTabbarHeight,
         child: Obx(() {
           return Row(

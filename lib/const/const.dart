@@ -1,8 +1,9 @@
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -16,6 +17,10 @@ final urlRegExp = RegExp(
 
 final commentUrlRegExp = RegExp(
     r'(?<!(">\n?|="))(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]');
+
+const kEnableImpeller = false;
+
+const double kTabViewCacheExtent = 500;
 
 enum ListModeEnum {
   list,
@@ -46,7 +51,7 @@ enum FavoriteOrder {
 
 enum ViewMode {
   topToBottom,
-  LeftToRight,
+  leftToRight,
   rightToLeft,
 }
 
@@ -156,7 +161,7 @@ const GalleryImage kDefGalleryImage = GalleryImage(
 );
 
 const EhConfig kDefEhConfig = EhConfig(
-  jpnTitle: false,
+  jpnTitleInGalleryPage: false,
   tagTranslat: false,
   tagTranslatVer: '',
   favoritesOrder: '',
@@ -221,7 +226,7 @@ final RegExp regExpMpvThumbName = RegExp(r'[0-9a-f]{40}-(\d+)-(\d+)-(\d+)');
 
 // ignore: avoid_classes_with_only_static_members
 class EHConst {
-  static const String appTitle = 'FEhViewer';
+  static const String appTitle = 'Eros-FE';
 
   // 网页登陆页面
   static const String URL_SIGN_IN =
@@ -254,8 +259,14 @@ class EHConst {
   static const String EH_TORRENT_URL = 'https://ehtracker.org/get';
   static const String EX_TORRENT_URL = 'https://exhentai.org/torrent';
 
-  static const String URL_PREFIX_THUMB_E = 'https://ehgt.org/';
-  static const String URL_PREFIX_THUMB_EX = 'https://exhentai.org/t/';
+  static const String URL_PREFIX_THUMB_EH = 'https://ehgt.org';
+
+  static const String REG_URL_PREFIX_THUMB_EX = r'https://(.*)?exhentai.org/t';
+
+  static const String REG_URL_THUMB =
+      r'(https://.+)/([0-9a-f]{2}/[0-9a-f]{2}/([(0-9a-f]{40})-(\d+)-(\d+)-(\d+)-(\w+)\.(jpg|png|gif))';
+
+  static const String REG_509_URL = r'\.org/.+/509s?\.gif';
 
   static const String DB_NAME = 'feh.db';
 
@@ -268,7 +279,7 @@ class EHConst {
       isEx ? EX_BASE_HOST : EH_BASE_HOST;
 
   static String get torrentBaseUrl =>
-      (Get.find<EhConfigService>().isSiteEx.value)
+      (Get.find<EhSettingService>().isSiteEx.value)
           ? EX_TORRENT_URL
           : EH_TORRENT_URL;
 
@@ -294,8 +305,11 @@ class EHConst {
   static List<int> preloadImage = <int>[
     if (Global.inDebugMode) 0,
     1,
+    2,
     3,
+    4,
     5,
+    6,
     7,
   ];
 
@@ -313,11 +327,12 @@ class EHConst {
 
   static List<int> multiDownload = <int>[
     1,
+    2,
     3,
+    4,
     5,
-    7,
-    9,
-    11,
+    if (!kReleaseMode) 9,
+    if (!kReleaseMode) 11,
     if (Global.inDebugMode) 100,
   ];
 
@@ -363,6 +378,7 @@ class EHConst {
 
   static const int sumCats = 1023;
   static const Map<String, int> cats = {
+    'Misc': 1,
     'Doujinshi': 2,
     'Manga': 4,
     'Artist CG': 8,
@@ -372,7 +388,6 @@ class EHConst {
     'Image Set': 32,
     'Cosplay': 64,
     'Asian Porn': 128,
-    'Misc': 1,
   };
 
   static List<String> catList = <String>[
@@ -448,11 +463,26 @@ class EHConst {
     'vietnamese': 'VI',
   };
 
-  static final List<String> fontFamilyFallback = [
-    'miui',
-    // if (GetPlatform.isAndroid) 'SourceHanSansSC',
-    'sans-serif',
-  ];
+  static const String fontFamily = 'MiSans';
+
+  static final List<String> fontFamilyFallback = GetPlatform.isIOS
+      ? [
+          '.SF Pro Text',
+          'PingFang SC',
+          'Heiti SC',
+        ]
+      : [
+          'MiSans',
+          'HarmonyOSSans',
+          'OPPO Sans',
+          'miui',
+          'Inter',
+          'Source Han Sans SC VF',
+          'Noto Sans CJK SC',
+          if (GetPlatform.isAndroid) 'Roboto',
+          if (GetPlatform.isAndroid) 'SourceHanSansSC',
+          'sans-serif',
+        ];
   static const List<String> monoFontFamilyFallback = [
     'monaco',
     'monospace',

@@ -1,8 +1,6 @@
 import 'dart:convert';
 
-import 'package:logger/src/ansi_color.dart';
-import 'package:logger/src/log_printer.dart';
-import 'package:logger/src/logger.dart';
+import 'package:logger/logger.dart';
 
 class EhPrettyPrinter extends LogPrinter {
   // static const topLeftCorner = '┌';
@@ -20,21 +18,21 @@ class EhPrettyPrinter extends LogPrinter {
   static const singleDivider = '┄';
 
   static final levelColors = {
-    Level.verbose: AnsiColor.fg(AnsiColor.grey(0.5)),
+    Level.trace: AnsiColor.fg(AnsiColor.grey(0.5)),
     Level.debug: AnsiColor.none(),
     Level.info: AnsiColor.fg(12),
     Level.warning: AnsiColor.fg(208),
     Level.error: AnsiColor.fg(196),
-    Level.wtf: AnsiColor.fg(199),
+    Level.fatal: AnsiColor.fg(199),
   };
 
   static final levelEmojis = {
-    Level.verbose: '',
+    Level.trace: '',
     Level.debug: '[D] ',
     Level.info: '[I] ',
     Level.warning: '[W] ',
     Level.error: '[E] ',
-    Level.wtf: '[WTF] ',
+    Level.fatal: '[WTF] ',
   };
 
   /// Matches a stacktrace line as generated on Android/iOS devices.
@@ -185,7 +183,7 @@ class EhPrettyPrinter extends LogPrinter {
     if (match == null) {
       return false;
     }
-    return match.group(2)!.startsWith('package:fehviewer/utils/logger/');
+    return match.group(2)!.startsWith('package:eros_fe/utils/logger/');
   }
 
   String getTime() {
@@ -281,7 +279,9 @@ class EhPrettyPrinter extends LogPrinter {
     }
 
     if (time != null) {
-      buffer..add(color('$verticalLine $time'))..add(color(_middleBorder));
+      buffer
+        ..add(color('$verticalLine $time'))
+        ..add(color(_middleBorder));
     }
 
     var emoji = _getEmoji(level);

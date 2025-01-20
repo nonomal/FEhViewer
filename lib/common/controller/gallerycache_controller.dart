@@ -1,12 +1,12 @@
 import 'dart:collection';
 import 'dart:convert';
 
-import 'package:fehviewer/common/controller/webdav_controller.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/pages/image_view/common.dart';
-import 'package:fehviewer/store/get_store.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/controller/mysql_controller.dart';
+import 'package:eros_fe/common/controller/webdav_controller.dart';
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/pages/image_view/common.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:get/get.dart';
 import 'package:throttling/throttling.dart';
 
@@ -15,9 +15,10 @@ import '../../pages/gallery/controller/gallery_page_state.dart';
 const _kMaxPageState = 60;
 
 class GalleryCacheController extends GetxController {
-  final GStore gStore = Get.find<GStore>();
   final WebdavController webdavController = Get.find();
   LinkedHashMap<String, GalleryCache> gCacheMap = LinkedHashMap();
+
+  final MysqlController mysqlController = Get.find();
 
   final Map<String, GalleryProvider?> _galleryProviderCache = {};
 
@@ -26,7 +27,7 @@ class GalleryCacheController extends GetxController {
   }
 
   void setGalleryProviderCache(String? gid, GalleryProvider? galleryProvider) {
-    logger.v('setGalleryProviderCache');
+    logger.t('setGalleryProviderCache');
     // clone一个新的对象 避免后续加载更多image影响
     _galleryProviderCache[gid ?? ''] = galleryProvider?.clone();
   }
@@ -37,7 +38,7 @@ class GalleryCacheController extends GetxController {
     String gid, {
     bool sync = true,
   }) async* {
-    final _localCache = hiveHelper.getCache(gid) ?? gStore.getCache(gid);
+    final _localCache = hiveHelper.getCache(gid);
 
     if (!gCacheMap.containsKey(gid) && _localCache != null) {
       logger.d('get from store');
@@ -46,30 +47,53 @@ class GalleryCacheController extends GetxController {
 
     yield gCacheMap[gid];
 
-    if (sync && webdavController.syncReadProgress) {
+    if (sync) {
+      GalleryCache? remote = await getRemote(gid);
+
+      if (_localCache == null && remote != null) {
+        logger.t('local null');
+        gCacheMap[gid] = GalleryCache(lastIndex: remote.lastIndex);
+        yield gCacheMap[gid];
+      } else if (_localCache != null && remote != null) {
+        logger.t('both not null');
+        if ((remote.time ?? 0) > (_localCache.time ?? 0)) {
+          gCacheMap[gid] = _localCache.copyWith(
+              lastIndex: remote.lastIndex.oN, time: remote.time.oN);
+          yield gCacheMap[gid];
+        }
+      }
+    }
+  }
+
+  Future<GalleryCache?> getRemote(String gid) async {
+    List<GalleryCache?> remotes = [];
+    if (webdavController.syncReadProgress) {
       try {
-        final remotelist = await webdavController.getRemotReadList();
-        logger.v('remotelist $remotelist');
-        if (remotelist.contains(gid)) {
-          final remote = await webdavController.downloadRead(gid);
-          logger.v('远程 ${remote?.toJson()}');
-          if (_localCache == null && remote != null) {
-            logger.v('local null');
-            gCacheMap[gid] = GalleryCache(lastIndex: remote.lastIndex);
-            yield gCacheMap[gid];
-          } else if (_localCache != null && remote != null) {
-            logger.v('both not null');
-            if ((remote.time ?? 0) > (_localCache.time ?? 0)) {
-              gCacheMap[gid] = _localCache.copyWith(
-                  lastIndex: remote.lastIndex, time: remote.time);
-              yield gCacheMap[gid];
-            }
-          }
+        final remoteList = await webdavController.getRemotReadList();
+        logger.t('remoteList $remoteList');
+        if (remoteList.contains(gid)) {
+          final remoteWebdav = await webdavController.downloadRead(gid);
+          remotes.add(remoteWebdav);
         }
       } catch (e) {
         logger.e('$e');
       }
     }
+
+    if (mysqlController.syncReadProgress) {
+      final remoteMysql = await mysqlController.downloadRead(gid);
+      remotes.add(remoteMysql);
+    }
+
+    return remotes.reduce((value, element) {
+      if (value == null) {
+        return element;
+      } else if (element == null) {
+        return value;
+      } else {
+        return (element.time ?? 0) > (value.time ?? 0) ? element : value;
+      }
+    });
   }
 
   Future<void> setIndex(
@@ -82,36 +106,43 @@ class GalleryCacheController extends GetxController {
       return;
     }
     final GalleryCache? _ori = await listenGalleryCache(gid, sync: false).first;
-    // logger.d('_ori ${_ori?.toJson()}');
+    logger.t('_ori ${_ori?.toJson()}');
     final _time = DateTime.now().millisecondsSinceEpoch;
     if (_ori == null) {
       final _newCache = GalleryCache(gid: gid, lastIndex: index, time: _time);
+      logger.d('_newCache ${_newCache.toJson()}');
       gCacheMap[gid] = _newCache;
       if (saveToStore) {
-        // gStore.saveCache(_newCache);
         hiveHelper.saveCache(_newCache);
-        if (webdavController.syncReadProgress) {
-          debSync.debounce(() => webdavController.uploadRead(_newCache));
-        }
+        _uploadRead(_newCache);
       }
     } else {
-      final _newCache = _ori.copyWith(lastIndex: index, time: _time);
+      final _newCache =
+          _ori.copyWith(lastIndex: index.oN, time: _time.oN, gid: gid.oN);
       gCacheMap[gid] = _newCache;
       if (saveToStore) {
-        // gStore.saveCache(_newCache);
         hiveHelper.saveCache(_newCache);
-        if (webdavController.syncReadProgress) {
-          debSync.debounce(() => webdavController.uploadRead(_newCache));
-        }
+        _uploadRead(_newCache);
       }
     }
   }
 
+  void _uploadRead(GalleryCache read) {
+    debSync.debounce(() {
+      if (webdavController.syncReadProgress) {
+        return webdavController.uploadRead(read);
+      }
+
+      if (mysqlController.syncReadProgress) {
+        return mysqlController.uploadRead(read);
+      }
+    });
+  }
+
   void saveAll() {
-    logger.v(
+    logger.t(
         'save All GalleryCache \n${gCacheMap.entries.map((e) => jsonEncode(e.value)).join('\n')}');
     gCacheMap.forEach((key, value) {
-      // gStore.saveCache(value);
       hiveHelper.saveCache(value);
     });
   }
@@ -120,11 +151,9 @@ class GalleryCacheController extends GetxController {
     final GalleryCache? _ori = await listenGalleryCache(gid, sync: false).first;
     if (_ori == null) {
       gCacheMap[gid] = GalleryCache(gid: gid).copyWithMode(columnMode);
-      // gStore.saveCache(GalleryCache(gid: gid).copyWithMode(columnMode));
       hiveHelper.saveCache(GalleryCache(gid: gid).copyWithMode(columnMode));
     } else {
       gCacheMap[gid] = _ori.copyWithMode(columnMode);
-      // gStore.saveCache(_ori.copyWithMode(columnMode));
       hiveHelper.saveCache(_ori.copyWithMode(columnMode));
     }
   }
@@ -147,7 +176,7 @@ class GalleryCacheController extends GetxController {
       }
       pageStateList.add(state);
     }
-    logger.v(
+    logger.t(
         'pageStateList\n${pageStateList.map((e) => '${e.mainTitle} - ${e.galleryProvider?.favcat}').join('\n')}');
   }
 

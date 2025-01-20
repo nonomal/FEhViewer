@@ -1,16 +1,16 @@
-import 'package:fehviewer/common/controller/download_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/pages/gallery/gallery_repository.dart';
+import 'package:eros_fe/common/controller/download_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/pages/gallery/gallery_repository.dart';
 import 'package:get/get.dart';
 
-import '../../../fehviewer.dart';
+import '../../../index.dart';
 import '../../item/controller/galleryitem_controller.dart';
 
 class GalleryPageState {
   GalleryPageState();
 
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
   DownloadController get _downloadController => Get.find();
 
   late final GalleryRepository? galleryRepository;
@@ -75,7 +75,7 @@ class GalleryPageState {
 
   /// 是否已经存在本地收藏中
   set localFav(bool value) {
-    galleryProvider = galleryProvider?.copyWith(localFav: value);
+    galleryProvider = galleryProvider?.copyWith(localFav: value.oN);
   }
 
   bool get localFav => galleryProvider?.localFav ?? false;
@@ -99,42 +99,50 @@ class GalleryPageState {
   String get subTitle {
     // logger.d('${galleryProvider.japaneseTitle} ${galleryProvider.englishTitle}');
 
-    // if ((_ehConfigService.isJpnTitle.value) &&
-    //     (galleryProvider?.japaneseTitle?.isNotEmpty ?? false)) {
-    //   return galleryProvider?.englishTitle ?? '';
-    // } else {
-    //   return galleryProvider?.japaneseTitle ?? '';
-    // }
-
-    if (firstMainTitle == galleryProvider?.englishTitle) {
-      return galleryProvider?.japaneseTitle ?? '';
-    } else {
+    if ((_ehSettingService.jpnTitleInGalleryPage) &&
+        (galleryProvider?.japaneseTitle?.isNotEmpty ?? false)) {
       return galleryProvider?.englishTitle ?? '';
+    } else {
+      return galleryProvider?.japaneseTitle ?? '';
     }
+
+    // if (_subTitle.value.isNotEmpty) {
+    //   return _subTitle.value;
+    // }
+    //
+    // if (firstMainTitle == galleryProvider?.englishTitle) {
+    //   _subTitle.value = galleryProvider?.japaneseTitle ?? '';
+    //   // return galleryProvider?.japaneseTitle ?? '';
+    // } else {
+    //   // return galleryProvider?.englishTitle ?? '';
+    //   _subTitle.value = galleryProvider?.englishTitle ?? '';
+    // }
+    //
+    // return _subTitle.value;
   }
 
   String firstMainTitle = '';
 
   // 根据设置的语言显示的标题
   String get mainTitle {
-    // if ((_ehConfigService.isJpnTitle.value) &&
-    //     (galleryProvider?.japaneseTitle?.isNotEmpty ?? false)) {
-    //   return galleryProvider?.japaneseTitle ?? '';
-    // } else {
-    //   return galleryProvider?.englishTitle ?? '';
-    // }
-
-    if (firstMainTitle.isEmpty) {
-      firstMainTitle = galleryProvider?.englishTitle ?? '';
-    }
-
-    if (firstMainTitle == galleryProvider?.englishTitle) {
-      return galleryProvider?.englishTitle ?? '';
+    if ((_ehSettingService.jpnTitleInGalleryPage) &&
+        (galleryProvider?.japaneseTitle?.isNotEmpty ?? false)) {
+      return galleryProvider?.japaneseTitle ?? '';
     } else {
-      return galleryProvider?.japaneseTitle ??
-          galleryProvider?.englishTitle ??
-          '';
+      return galleryProvider?.englishTitle ?? '';
     }
+
+    // if (firstMainTitle.isEmpty) {
+    //   firstMainTitle = galleryProvider?.englishTitle ?? '';
+    // }
+    //
+    // if (firstMainTitle == galleryProvider?.englishTitle) {
+    //   return galleryProvider?.englishTitle ?? '';
+    // } else {
+    //   return galleryProvider?.japaneseTitle ??
+    //       galleryProvider?.englishTitle ??
+    //       '';
+    // }
   }
 
   GalleryItemController? get itemController {

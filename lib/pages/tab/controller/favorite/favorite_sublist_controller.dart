@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart';
-import 'package:fehviewer/common/controller/localfav_controller.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/pages/controller/favorite_sel_controller.dart';
-import 'package:fehviewer/pages/tab/controller/tabview_controller.dart';
+import 'package:eros_fe/common/controller/localfav_controller.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/pages/controller/favorite_sel_controller.dart';
+import 'package:eros_fe/pages/tab/controller/tabview_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
@@ -34,7 +34,7 @@ class FavoriteSubListController extends TabViewController {
         galleryListType: GalleryListType.favorite,
       );
 
-      logger.v(
+      logger.t(
           'favcat $favcat, result prev:${result?.prevPage} next:${result?.nextPage}, max:${result?.maxPage}');
 
       _favoriteSelectorController?.addAllFavList(result?.favList ?? []);
@@ -42,7 +42,7 @@ class FavoriteSubListController extends TabViewController {
       return result;
     } else {
       // 本地收藏夹
-      logger.v('本地收藏');
+      logger.t('本地收藏');
       final List<GalleryProvider> localFav = _localFavController.loacalFavs;
 
       return Future<GalleryList>.value(GalleryList(gallerys: localFav));
@@ -120,7 +120,7 @@ class FavoriteSubListController extends TabViewController {
   }
 
   Future<void> setOrder(BuildContext context) async {
-    final FavoriteOrder? order = await ehConfigService.showFavOrder(context);
+    final FavoriteOrder? order = await ehSettingService.showFavOrder(context);
     if (order != null) {
       change(state, status: RxStatus.loading());
       reloadData();

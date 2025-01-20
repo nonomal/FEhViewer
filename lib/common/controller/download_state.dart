@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:eros_fe/component/quene_task/quene_task.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/store/db/entity/gallery_task.dart';
 import 'package:executor/executor.dart';
-import 'package:fehviewer/component/quene_task/quene_task.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/store/db/entity/gallery_task.dart';
 import 'package:get/get.dart';
 
 /// 轮询周期间隔 单位秒
@@ -26,6 +26,8 @@ class DownloadState {
   List<GalleryTask> get galleryTasks => galleryTaskMap.values.toList();
   final downloadSpeeds = <int, String>{};
 
+  final errInfoMap = <int, String>{};
+
   late Executor executor;
 
   QueueTask queueTask = QueueTask();
@@ -33,6 +35,8 @@ class DownloadState {
 
   final downloadMap = <int, List<GalleryImage>>{};
   final cancelTokenMap = <int, CancelToken>{};
+  final showKeyMap = <int, String>{};
+  final showKeyCompleteMap = <int, Completer>{};
 
   final Map<int, Timer?> chkTimers = {};
   final Map<int, int> preComplete = {};

@@ -1,11 +1,11 @@
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/extension.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/pages/gallery/controller/taginfo_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/pages/gallery/controller/taginfo_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -17,8 +17,10 @@ const CupertinoDynamicColor _kClearButtonColor =
 );
 
 class AddTagPage extends StatefulWidget {
+  const AddTagPage({super.key});
+
   @override
-  _AddTagPageState createState() => _AddTagPageState();
+  State<AddTagPage> createState() => _AddTagPageState();
 }
 
 class _AddTagPageState extends State<AddTagPage> {
@@ -111,7 +113,7 @@ class _AddTagPageState extends State<AddTagPage> {
                     // 滑动收起键盘
                     FocusScope.of(context).requestFocus(FocusNode());
                   },
-                  child: CustomScrollView(
+                  child: const CustomScrollView(
                     slivers: [
                       QryTagSliverList(),
                     ],
@@ -125,7 +127,9 @@ class _AddTagPageState extends State<AddTagPage> {
 }
 
 class QryTagSliverList extends StatelessWidget {
-  final TagInfoController controller = Get.find(tag: pageCtrlTag);
+  const QryTagSliverList({super.key});
+
+  TagInfoController get controller => Get.find(tag: pageCtrlTag);
 
   @override
   Widget build(BuildContext context) {

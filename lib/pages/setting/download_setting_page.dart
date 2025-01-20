@@ -1,138 +1,144 @@
-import 'package:fehviewer/common/controller/download_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/component/setting_base.dart';
+import 'package:eros_fe/common/controller/download_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/setting/setting_items/selector_Item.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_storage/shared_storage.dart' as ss;
-
-import '../../fehviewer.dart';
-import 'setting_items/selector_Item.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 class DownloadSettingPage extends StatelessWidget {
+  const DownloadSettingPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final Widget cps = Obx(() {
-      return CupertinoPageScaffold(
-          backgroundColor: !ehTheme.isDarkMode
-              ? CupertinoColors.secondarySystemBackground
-              : null,
-          navigationBar: CupertinoNavigationBar(
-            transitionBetweenRoutes: true,
-            middle: Text(L10n.of(context).download),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: ListViewDownloadSetting(),
-          ));
-    });
-
-    return cps;
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(L10n.of(context).download),
+      ),
+      child: CustomScrollView(slivers: [
+        SliverSafeArea(sliver: DownloadSetting()),
+      ]),
+    );
   }
 }
 
-class ListViewDownloadSetting extends StatelessWidget {
-  final EhConfigService ehConfigService = Get.find();
+class DownloadSetting extends StatelessWidget {
+  DownloadSetting({super.key});
+
+  final EhSettingService ehSettingService = Get.find();
   final DownloadController downloadController = Get.find();
 
   void _handleAllowMediaScanChanged(bool newValue) {
-    ehConfigService.allowMediaScan = newValue;
+    ehSettingService.allowMediaScan = newValue;
     downloadController.allowMediaScan(newValue);
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _list = <Widget>[
-      // 下载路径
-      if (!GetPlatform.isIOS)
-        Obx(() {
-          ehConfigService.downloadLocatino;
-          return FutureBuilder<String>(
-              future: defDownloadPath,
-              builder: (context, snapshot) {
-                late String path;
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (ehConfigService.downloadLocatino.isEmpty) {
-                    path = snapshot.data ?? '';
-                  } else {
-                    path = ehConfigService.downloadLocatino;
-                  }
-                } else {
-                  path = '';
-                }
-
-                return SelectorSettingItem(
-                  title: L10n.of(context).download_location,
-                  desc: path,
-                  suffix: CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    minSize: 36,
-                    child: const Icon(CupertinoIcons.refresh),
-                    onPressed: () async => ehConfigService.downloadLocatino =
-                        await defDownloadPath,
-                  ),
-                  onTap: () async {
-                    if (GetPlatform.isAndroid) {
-                      // android 使用 SAF
-                      final uri = await ss.openDocumentTree();
-                      logger.d('uri $uri');
-                      if (uri != null) {
-                        ehConfigService.downloadLocatino = uri.toString();
-                      }
+    return MultiSliver(children: [
+      SliverCupertinoListSection.listInsetGrouped(children: [
+        // 下载路径
+        if (!GetPlatform.isIOS)
+          Obx(() {
+            ehSettingService.downloadLocatino;
+            return FutureBuilder<String>(
+                future: defDownloadPath,
+                builder: (context, snapshot) {
+                  late String path;
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (ehSettingService.downloadLocatino.isEmpty) {
+                      path = snapshot.data ?? '';
                     } else {
-                      final String? result =
-                          await FilePicker.platform.getDirectoryPath();
-                      logger.d('set $result');
-
-                      if (result != null) {
-                        ehConfigService.downloadLocatino = result;
-                      }
+                      path = ehSettingService.downloadLocatino;
                     }
-                  },
-                );
-              });
-        }),
-      if (GetPlatform.isAndroid || GetPlatform.isFuchsia)
-        TextSwitchItem(
-          L10n.of(context).allow_media_scan,
-          value: ehConfigService.allowMediaScan,
-          onChanged: _handleAllowMediaScanChanged,
+                  } else {
+                    path = '';
+                  }
+
+                  return EhCupertinoListTile(
+                    padding: const EdgeInsetsDirectional.only(
+                        start: 20.0, end: 14.0, top: 6.0, bottom: 6.0),
+                    title: Text(L10n.of(context).download_location),
+                    subtitle: Text(path, maxLines: 10),
+                    trailing: CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      minSize: 14,
+                      child: const Icon(CupertinoIcons.refresh),
+                      onPressed: () async => ehSettingService.downloadLocatino =
+                          await defDownloadPath,
+                    ),
+                    onTap: () async {
+                      if (GetPlatform.isAndroid) {
+                        // android 使用 SAF
+                        final uri = await ss.openDocumentTree();
+                        logger.d('uri $uri');
+                        if (uri != null) {
+                          ehSettingService.downloadLocatino = uri.toString();
+                        }
+                      } else {
+                        final String? result =
+                            await FilePicker.platform.getDirectoryPath();
+                        logger.d('set $result');
+
+                        if (result != null) {
+                          ehSettingService.downloadLocatino = result;
+                        }
+                      }
+                    },
+                  );
+                });
+          }),
+
+        // allow_media_scan
+        if (GetPlatform.isAndroid || GetPlatform.isFuchsia)
+          EhCupertinoListTile(
+            title: Text(L10n.of(context).allow_media_scan),
+            trailing: Obx(() {
+              return CupertinoSwitch(
+                value: ehSettingService.allowMediaScan,
+                onChanged: _handleAllowMediaScanChanged,
+              );
+            }),
+          ),
+
+        _buildPreloadImageItem(context),
+        _buildMultiDownloadItem(context),
+        _buildDownloadOrigImageItem(context),
+
+        //
+      ]),
+
+      // 数据处理
+      SliverCupertinoListSection.listInsetGrouped(children: [
+        // 恢复下载任务数据
+        EhCupertinoListTile(
+          title: Text(L10n.of(context).restore_tasks_data),
+          trailing: const CupertinoListTileChevron(),
+          onTap: () async {
+            final downloadController = Get.find<DownloadController>();
+            await downloadController.restoreGalleryTasks(init: true);
+          },
         ),
-      _buildPreloadImageItem(context),
-      _buildMultiDownloadItem(context),
-      _buildDownloadOrigImageItem(context),
-      // 恢复下载任务数据
-      SelectorSettingItem(
-        title: L10n.of(context).restore_tasks_data,
-        onTap: () async {
-          final downloadController = Get.find<DownloadController>();
-          await downloadController.restoreGalleryTasks(init: true);
-        },
-      ),
-      // 重建下载任务数据
-      SelectorSettingItem(
-        title: L10n.of(context).rebuild_tasks_data,
-        onTap: () async {
-          await Get.find<DownloadController>().rebuildGalleryTasks();
-        },
-        hideDivider: true,
-      ),
-    ];
-    return ListView.builder(
-      itemCount: _list.length,
-      itemBuilder: (BuildContext context, int index) {
-        return _list[index];
-      },
-    );
+        // 重建下载任务数据
+        EhCupertinoListTile(
+          title: Text(L10n.of(context).rebuild_tasks_data),
+          trailing: const CupertinoListTileChevron(),
+          onTap: () async {
+            await Get.find<DownloadController>().rebuildGalleryTasks();
+          },
+        ),
+      ]),
+    ]);
   }
 }
 
 /// 下载原图
-Widget _buildDownloadOrigImageItem(BuildContext context,
-    {bool hideDivider = false}) {
-  final String _title = L10n.of(context).download_ori_image;
-  final EhConfigService ehConfigService = Get.find();
+Widget _buildDownloadOrigImageItem(BuildContext context) {
+  final String title = L10n.of(context).download_ori_image;
+  final EhSettingService ehSettingService = Get.find();
 
   final Map<DownloadOrigImageType, String> modeMap =
       <DownloadOrigImageType, String>{
@@ -141,21 +147,19 @@ Widget _buildDownloadOrigImageItem(BuildContext context,
     DownloadOrigImageType.always: L10n.of(context).always,
   };
   return Obx(() {
-    return SelectorItem<DownloadOrigImageType>(
-      title: _title,
-      hideDivider: hideDivider,
+    return SelectorCupertinoListTile<DownloadOrigImageType>(
+      title: title,
       actionMap: modeMap,
-      initVal: ehConfigService.downloadOrigType,
-      onValueChanged: (val) => ehConfigService.downloadOrigType = val,
+      initVal: ehSettingService.downloadOrigType,
+      onValueChanged: (val) => ehSettingService.downloadOrigType = val,
     );
   });
 }
 
 /// 预载图片数量
-Widget _buildPreloadImageItem(BuildContext context,
-    {bool hideDivider = false}) {
-  final String _title = L10n.of(context).preload_image;
-  final EhConfigService ehConfigService = Get.find();
+Widget _buildPreloadImageItem(BuildContext context) {
+  final String title = L10n.of(context).preload_image;
+  final EhSettingService ehSettingService = Get.find();
 
   List<Widget> _getModeList(BuildContext context) {
     return List<Widget>.from(EHConst.preloadImage.map((int element) {
@@ -185,22 +189,23 @@ Widget _buildPreloadImageItem(BuildContext context,
         });
   }
 
-  return Obx(() => SelectorSettingItem(
-        title: _title,
-        selector: ehConfigService.preloadImage.toString(),
+  return Obx(() => EhCupertinoListTile(
+        title: Text(title),
+        trailing: const CupertinoListTileChevron(),
+        additionalInfo: Text(ehSettingService.preloadImage.toString()),
         onTap: () async {
-          final int? _result = await _showActionSheet(context);
-          if (_result != null) {
-            ehConfigService.preloadImage(_result);
+          final int? result = await _showActionSheet(context);
+          if (result != null) {
+            ehSettingService.preloadImage(result);
           }
         },
       ));
 }
 
 /// 同时下载图片数量
-Widget _buildMultiDownloadItem(BuildContext context, {bool hideLine = false}) {
-  final String _title = L10n.of(context).multi_download;
-  final EhConfigService ehConfigService = Get.find();
+Widget _buildMultiDownloadItem(BuildContext context) {
+  final String title = L10n.of(context).multi_download;
+  final EhSettingService ehSettingService = Get.find();
 
   List<Widget> _getModeList(BuildContext context) {
     return List<Widget>.from(EHConst.multiDownload.map((int element) {
@@ -230,15 +235,15 @@ Widget _buildMultiDownloadItem(BuildContext context, {bool hideLine = false}) {
         });
   }
 
-  return Obx(() => SelectorSettingItem(
-        title: _title,
-        hideDivider: hideLine,
-        selector: ehConfigService.multiDownload.toString(),
+  return Obx(() => EhCupertinoListTile(
+        title: Text(title),
+        trailing: const CupertinoListTileChevron(),
+        additionalInfo: Text(ehSettingService.multiDownload.toString()),
         onTap: () async {
-          final int? _result = await _showActionSheet(context);
-          if (_result != null) {
-            if (ehConfigService.multiDownload != _result) {
-              ehConfigService.multiDownload = _result;
+          final int? result = await _showActionSheet(context);
+          if (result != null) {
+            if (ehSettingService.multiDownload != result) {
+              ehSettingService.multiDownload = result;
               Get.find<DownloadController>().resetConcurrency();
             }
           }

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:fehviewer/common/controller/tag_controller.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/network/request.dart';
+import 'package:eros_fe/common/controller/tag_controller.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/network/request.dart';
 import 'package:get/get.dart';
 
 import '../../utils/logger.dart';
@@ -38,7 +38,7 @@ class DefaultFetchListClient extends FetchListClient {
 
   @override
   Future<GalleryList?> fetch() async {
-    logger.v('DefaultFetchListClient fetchParams ${fetchParams.toString()}');
+    logger.t('DefaultFetchListClient fetchParams ${fetchParams.toString()}');
     return await getGallery(
       pageType: fetchParams.pageType,
       gid: fetchParams.gid,
@@ -65,7 +65,7 @@ class SearchFetchListClient extends FetchListClient {
 
   @override
   Future<GalleryList?> fetch() async {
-    // logger.d('SearchFetchListClient fetchParams ${fetchParams.toString()}');
+    logger.t('SearchFetchListClient fetchParams ${fetchParams.toString()}');
 
     final result = await getGallery(
       pageType: fetchParams.pageType,
@@ -100,24 +100,24 @@ class SearchFetchListClient extends FetchListClient {
   }
 }
 
-class WatchedFetchListClient extends FetchListClient {
-  WatchedFetchListClient({
-    required FetchParams fetchParams,
-  }) : super(fetchParams: fetchParams);
-
-  @override
-  Future<GalleryList?> fetch() async {
-    return await getGallery(
-      pageType: fetchParams.pageType,
-      gid: fetchParams.gid,
-      search: fetchParams.searchText,
-      cats: fetchParams.cats,
-      cancelToken: fetchParams.cancelToken,
-      refresh: fetchParams.refresh,
-      galleryListType: GalleryListType.watched,
-    );
-  }
-}
+// class WatchedFetchListClient extends FetchListClient {
+//   WatchedFetchListClient({
+//     required FetchParams fetchParams,
+//   }) : super(fetchParams: fetchParams);
+//
+//   @override
+//   Future<GalleryList?> fetch() async {
+//     return await getGallery(
+//       pageType: fetchParams.pageType,
+//       gid: fetchParams.gid,
+//       search: fetchParams.searchText,
+//       cats: fetchParams.cats,
+//       cancelToken: fetchParams.cancelToken,
+//       refresh: fetchParams.refresh,
+//       galleryListType: GalleryListType.watched,
+//     );
+//   }
+// }
 
 class FavoriteFetchListClient extends FetchListClient {
   FavoriteFetchListClient({
@@ -167,7 +167,7 @@ class ToplistFetchListClient extends FetchListClient {
         ?.where((element) => tagController.needHide(element.simpleTags ?? []))
         .map((e) => e.gid);
     if (gidList != null && gidList.isNotEmpty) {
-      logger.v('${fetchParams.galleryListType} remove gallery $gidList');
+      logger.t('${fetchParams.galleryListType} remove gallery $gidList');
       result?.gallerys?.removeWhere((element) => gidList.contains(element.gid));
     }
 
@@ -175,19 +175,19 @@ class ToplistFetchListClient extends FetchListClient {
   }
 }
 
-class PopularFetchListClient extends FetchListClient {
-  PopularFetchListClient({
-    required FetchParams fetchParams,
-  }) : super(fetchParams: fetchParams);
-
-  @override
-  Future<GalleryList?> fetch() async {
-    return await getGallery(
-      galleryListType: GalleryListType.popular,
-      refresh: fetchParams.refresh,
-    );
-  }
-}
+// class PopularFetchListClient extends FetchListClient {
+//   PopularFetchListClient({
+//     required FetchParams fetchParams,
+//   }) : super(fetchParams: fetchParams);
+//
+//   @override
+//   Future<GalleryList?> fetch() async {
+//     return await getGallery(
+//       galleryListType: GalleryListType.popular,
+//       refresh: fetchParams.refresh,
+//     );
+//   }
+// }
 
 class FetchParams {
   FetchParams({

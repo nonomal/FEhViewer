@@ -1,13 +1,13 @@
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:fehviewer/common/controller/tag_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/app_dio/pdio.dart';
-import 'package:fehviewer/pages/tab/controller/tabhome_controller.dart';
-import 'package:fehviewer/pages/tab/fetch_list.dart';
-import 'package:fehviewer/utils/app_cupertino_localizations_delegate.dart';
+import 'package:eros_fe/common/controller/tag_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/app_dio/pdio.dart';
+import 'package:eros_fe/pages/tab/controller/tabhome_controller.dart';
+import 'package:eros_fe/pages/tab/fetch_list.dart';
+import 'package:eros_fe/utils/app_cupertino_localizations_delegate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -106,16 +106,18 @@ abstract class TabViewController extends GetxController {
       pageState != PageState.LoadingMore &&
       pageState != PageState.LoadingPrev;
 
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
 
   @override
   void onReady() {
     super.onReady();
+    logger.t('onReady');
     firstLoad();
   }
 
   // 请求一批画廊数据
   Future<GalleryList?> fetchData({bool refresh = false}) async {
+    // logger.d('super fetchData ....');
     cancelToken = CancelToken();
     return null;
   }
@@ -171,7 +173,7 @@ abstract class TabViewController extends GetxController {
 
       final _listItem = result.gallerys;
 
-      logger.v('_listItem ${_listItem?.length}');
+      logger.t('_listItem ${_listItem?.length}');
 
       setResultPage(result);
       change(_listItem, status: RxStatus.success());
@@ -193,7 +195,7 @@ abstract class TabViewController extends GetxController {
         refresh: true,
       );
 
-      logger.v('reloadData length ${result?.gallerys?.length}');
+      logger.t('reloadData length ${result?.gallerys?.length}');
 
       if (result == null) {
         return;
@@ -203,7 +205,7 @@ abstract class TabViewController extends GetxController {
 
       setResultPage(result);
 
-      logger.v('reloadData next $next, prev $prev');
+      logger.t('reloadData next $next, prev $prev');
 
       change(resultList, status: RxStatus.success());
       afterJump = false;
@@ -235,11 +237,11 @@ abstract class TabViewController extends GetxController {
     }
 
     if (lastNext == next) {
-      logger.v('lastNext == next  $next');
+      logger.t('lastNext == next  $next');
       return;
     }
 
-    logger.v('loadDataMore .....');
+    logger.t('loadDataMore .....');
     pageState = PageState.LoadingMore;
 
     logger.d('load page next: $next');
@@ -267,7 +269,7 @@ abstract class TabViewController extends GetxController {
 
       final insertIndex = state?.length ?? 0;
 
-      logger.v('insertIndex $insertIndex');
+      logger.t('insertIndex $insertIndex');
 
       change([...?state, ...resultList], status: RxStatus.success());
     } catch (e, stack) {
@@ -294,14 +296,14 @@ abstract class TabViewController extends GetxController {
     }
 
     if (lastPrev == prev) {
-      logger.v('lastPrev == prev  $prev');
+      logger.t('lastPrev == prev  $prev');
       return;
     }
 
-    logger.v('loadPrevious .....');
+    logger.t('loadPrevious .....');
     pageState = PageState.LoadingPrev;
 
-    logger.v('load page prev: $prevGid');
+    logger.t('load page prev: $prevGid');
 
     lastPrev = prevGid;
 
@@ -360,7 +362,7 @@ abstract class TabViewController extends GetxController {
 
       final _listItem = result.gallerys;
 
-      logger.v('loadFrom _listItem ${_listItem?.length}');
+      logger.t('loadFrom _listItem ${_listItem?.length}');
 
       setResultPage(result);
       change(_listItem, status: RxStatus.success());
@@ -384,10 +386,10 @@ abstract class TabViewController extends GetxController {
     change(state, status: RxStatus.success());
     logger.d('prevGid: $prevGid, prevPage $prevPage,  afterJump: $afterJump');
     if ((prevGid.isNotEmpty || prevPage >= 0) && afterJump) {
-      logger.v('loadPrevious');
+      logger.d('>>>>> loadPrevious');
       await loadPrevious();
     } else {
-      logger.v('reloadData');
+      logger.d('>>>>> reloadData');
       await reloadData();
     }
   }
@@ -414,12 +416,12 @@ abstract class TabViewController extends GetxController {
   }
 
   void scrollToTop(BuildContext context) {
-    PrimaryScrollController.of(context)?.animateTo(0.0,
+    PrimaryScrollController.of(context).animateTo(0.0,
         duration: const Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   void scrollToTopRefresh(BuildContext context) {
-    PrimaryScrollController.of(context)?.animateTo(
+    PrimaryScrollController.of(context).animateTo(
         -kDefaultRefreshTriggerPullDistance,
         duration: const Duration(milliseconds: 500),
         curve: Curves.ease);
@@ -487,7 +489,7 @@ abstract class TabViewController extends GetxController {
             try {
               await _jumpToPage(context);
             } catch (e, stack) {
-              logger.e('jump to page error', e, stack);
+              logger.e('jump to page error', error: e, stackTrace: stack);
               showToast(e.toString());
             }
           },
@@ -708,7 +710,7 @@ abstract class TabViewController extends GetxController {
             try {
               await _jumpToPageWithGidOrTime(pageType: PageType.prev);
             } catch (e, stack) {
-              logger.e('jump to Prev error', e, stack);
+              logger.e('jump to Prev error', error: e, stackTrace: stack);
               showToast('$e');
             }
           },
@@ -719,13 +721,13 @@ abstract class TabViewController extends GetxController {
           ),
           onPressed: () async {
             // 画廊跳转
-            logger.v('jump to Next');
+            logger.t('jump to Next');
             try {
               await _jumpToPageWithGidOrTime(
                 pageType: PageType.next,
               );
             } catch (e, stack) {
-              logger.e('jump to Next error', e, stack);
+              logger.e('jump to Next error', error: e, stackTrace: stack);
               showToast(e.toString());
             }
           },
@@ -755,7 +757,7 @@ abstract class TabViewController extends GetxController {
     final String jumpOrSeek = jumpOrSeekTextEditController.text.trim();
     final String _gid = gidTextEditController.text.trim();
 
-    logger.v('jumpOrSeek is $jumpOrSeek _gid is $_gid');
+    logger.t('jumpOrSeek is $jumpOrSeek _gid is $_gid');
 
     if (jumpOrSeek.isEmpty && _gid.isEmpty) {
       showToast(L10n.of(Get.context!).input_empty);
@@ -779,7 +781,7 @@ abstract class TabViewController extends GetxController {
       showToast(L10n.of(Get.context!).input_error);
     }
 
-    logger.v('jump is $jump, seek is $seek, gid is $_gid');
+    logger.t('jump is $jump, seek is $seek, gid is $_gid');
 
     FocusScope.of(Get.context!).requestFocus(FocusNode());
 

@@ -1,24 +1,69 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/network/api.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/network/api.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:uuid/uuid.dart';
 
-import '../fehviewer.dart';
+import '../index.dart';
 
 const _uuid = Uuid();
 String generateUuidv4() {
   return _uuid.v4();
+}
+
+Future<Iterable<String>> readLastNLines(String filePath, int n) async {
+  final file = File(filePath);
+  final length = await file.length();
+  const blockSize = 1024; // Adjust the block size based on your needs
+
+  RandomAccessFile raf = await file.open(mode: FileMode.read);
+  int position = length - blockSize;
+  int newlineCount = 0;
+  List<int> lines = [];
+
+  while (position >= 0 && newlineCount < n) {
+    final blockSizeToRead =
+        position + blockSize > length ? length - position : blockSize;
+    await raf.setPosition(position);
+    List<int> block = await raf.read(blockSizeToRead);
+
+    for (int i = block.length - 1; i >= 0; i--) {
+      int byte = block[i];
+      if (byte == 10) {
+        // Check for newline character (ASCII 10)
+        newlineCount++;
+        lines.add(byte);
+      } else if (byte != 13) {
+        // Exclude carriage return (ASCII 13)
+        lines.add(byte);
+      }
+    }
+
+    position -= blockSize;
+  }
+
+  // Reverse the list to get the lines in correct order
+  lines = lines.reversed.toList();
+
+  // Convert the list of bytes to a String
+  final lastNLines = utf8.decode(lines);
+
+  // print(lastNLines);
+
+  await raf.close();
+
+  return lastNLines.split('\n');
 }
 
 /// 为 Dart 字符串优化后 FNV-1a 64bit 哈希算法
@@ -35,6 +80,48 @@ int fastHash(String string) {
   }
 
   return hash;
+}
+
+int downloadStatusToInt(DownloadTaskStatus status) {
+  switch (status) {
+    case DownloadTaskStatus.undefined:
+      return 0;
+    case DownloadTaskStatus.enqueued:
+      return 1;
+    case DownloadTaskStatus.running:
+      return 2;
+    case DownloadTaskStatus.complete:
+      return 3;
+    case DownloadTaskStatus.failed:
+      return 4;
+    case DownloadTaskStatus.canceled:
+      return 5;
+    case DownloadTaskStatus.paused:
+      return 6;
+    default:
+      return 0;
+  }
+}
+
+DownloadTaskStatus intToDownloadStatus(int status) {
+  switch (status) {
+    case 0:
+      return DownloadTaskStatus.undefined;
+    case 1:
+      return DownloadTaskStatus.enqueued;
+    case 2:
+      return DownloadTaskStatus.running;
+    case 3:
+      return DownloadTaskStatus.complete;
+    case 4:
+      return DownloadTaskStatus.failed;
+    case 5:
+      return DownloadTaskStatus.canceled;
+    case 6:
+      return DownloadTaskStatus.paused;
+    default:
+      return DownloadTaskStatus.undefined;
+  }
 }
 
 // 请求完全读写权限
@@ -84,6 +171,8 @@ Future<bool> requestPhotosPermission({
     final PermissionStatus statusPhotosAdd =
         await Permission.photosAddOnly.status;
 
+    logger.d('statusPhotos $statusPhotos, statusPhotosAdd $statusPhotosAdd');
+
     if (addOnly) {
       // 永久拒绝 直接跳转到设置
       if (statusPhotosAdd.isPermanentlyDenied && context != null) {
@@ -94,10 +183,10 @@ Future<bool> requestPhotosPermission({
       // 拒绝 申请权限
       if (statusPhotosAdd.isDenied) {
         logger.d('photosAddOnly isDenied');
-        if (await Permission.photosAddOnly.request().isGranted ||
-            await Permission.photosAddOnly.request().isLimited) {
-          return await Permission.photosAddOnly.status.isGranted ||
-              await Permission.photosAddOnly.status.isLimited;
+        if (await Permission.photosAddOnly.request().isLimited ||
+            await Permission.photosAddOnly.request().isGranted) {
+          return await Permission.photosAddOnly.status.isLimited ||
+              await Permission.photosAddOnly.status.isGranted;
         } else {
           throw EhError(error: 'Unable to download, please authorize first~');
         }
@@ -124,26 +213,40 @@ Future<bool> requestPhotosPermission({
 
   // android
   if (GetPlatform.isAndroid) {
-    final PermissionStatus status = await Permission.storage.status;
-    logger.v(status);
+    final PermissionStatus statusStorage = await Permission.storage.status;
+    logger.d('statusStorage $statusStorage');
+    final PermissionStatus statusPhotos = await Permission.photos.status;
+    logger.d('statusPhotos $statusPhotos');
 
-    // 永久拒绝 直接跳转到设置
-    if (status.isPermanentlyDenied) {
-      if (await Permission.storage.request().isGranted) {
-        return await Permission.storage.status.isGranted;
-      } else if (context != null) {
-        await _jumpToAppSettings(context);
-        return false;
-      } else {
-        throw EhError(
-            error: 'Permission is permanently denied, open App Settings');
+    final _androidInfo = await deviceInfo.androidInfo;
+
+    // SDK 33 以上, 申请照片权限
+    if (_androidInfo.version.sdkInt >= 33) {
+      // 非永久拒绝 申请权限
+      if (!statusPhotos.isPermanentlyDenied) {
+        if (await Permission.photos.request().isGranted) {
+          return await Permission.photos.status.isGranted;
+        } else {
+          throw EhError(error: 'Photos Permission is denied');
+        }
       }
     } else {
-      if (await Permission.storage.request().isGranted) {
-        return await Permission.storage.status.isGranted;
-      } else {
-        throw EhError(error: 'Unable to download, please authorize first~');
+      // 存储权限申请
+      if (!statusStorage.isPermanentlyDenied) {
+        if (await Permission.storage.request().isGranted) {
+          return await Permission.storage.status.isGranted;
+        } else {
+          throw EhError(error: 'Storage Permission is denied');
+        }
       }
+    }
+
+    if (context != null) {
+      await _jumpToAppSettings(context);
+      return false;
+    } else {
+      throw EhError(
+          error: 'Permission is permanently denied, open App Settings');
     }
   }
 
@@ -249,22 +352,22 @@ double? initScale({
   final double n2 = size.height / size.width;
 
   final FittedSizes fittedSizes = applyBoxFit(BoxFit.contain, imageSize, size);
-  logger.v(
+  logger.t(
       'source: ${fittedSizes.source}  destination:${fittedSizes.destination}');
 
   // logger.d('n2/n1 ${n2 / n1}');
   if (n2 / n1 > 1 / initialScale) {
-    logger.v('H');
+    logger.t('H');
     return initialScale;
   }
 
   // logger.d('n1/n2 ${n1 / n2}');
   if (n1 / n2 > 1 / initialScale) {
-    logger.v('fitHeight');
+    logger.t('fitHeight');
     return 1.0;
   }
 
-  logger.v('other ${size.height / fittedSizes.destination.height}');
+  logger.t('other ${size.height / fittedSizes.destination.height}');
 
   return fittedSizes.destination.height / size.height;
 }
@@ -329,11 +432,11 @@ Future<void> onOpenUrl({String? url}) async {
 
 Future<bool> _launchEhUrl(String? url) async {
   final String? _openUrl = Uri.encodeFull(url ?? '');
-  final RegExp regExp =
-      RegExp(r'https?://e[-x]hentai.org/g/[0-9]+/[0-9a-z]+/?');
+  final RegExp regExp = RegExp(
+      r'https?://e[-x]hentai.org/(g/[0-9]+/[0-9a-z]+|s/[0-9a-z]+/\d+-\d+)/?');
   if (regExp.hasMatch(_openUrl!)) {
     final String? _realUrl = regExp.firstMatch(_openUrl)?.group(0);
-    logger.v('in $_realUrl');
+    logger.t('in $_realUrl');
     NavigatorUtil.goGalleryPage(
       url: _realUrl,
     );
@@ -401,7 +504,7 @@ class EHUtils {
     return result;
   }
 
-  static String getLangeage(String value) {
+  static String getLanguage(String value) {
     for (final String key in EHConst.iso936.keys) {
       if (key.toUpperCase().trim() == value.toUpperCase().trim()) {
         return EHConst.iso936[key] ?? EHConst.iso936.values.first;

@@ -1,15 +1,15 @@
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/pages/gallery/comm.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_state.dart';
-import 'package:fehviewer/pages/gallery/view/const.dart';
-import 'package:fehviewer/pages/gallery/view/gallery_widget.dart';
-import 'package:fehviewer/pages/gallery/view/sliver/gallery_page_sliver.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/pages/gallery/comm.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_state.dart';
+import 'package:eros_fe/pages/gallery/view/const.dart';
+import 'package:eros_fe/pages/gallery/view/gallery_widget.dart';
+import 'package:eros_fe/pages/gallery/view/sliver/gallery_page_sliver.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:get/get.dart';
@@ -21,7 +21,7 @@ import 'header_sliver.dart';
 import 'slivers.dart';
 
 class GalleryPage extends StatefulWidget {
-  const GalleryPage({Key? key}) : super(key: key);
+  const GalleryPage({super.key});
 
   @override
   State<GalleryPage> createState() => _GalleryPageState();
@@ -36,7 +36,13 @@ class _GalleryPageState extends State<GalleryPage> {
   @override
   void initState() {
     super.initState();
-    _controller = Get.put(GalleryPageController(), tag: _tag);
+    // _controller = Get.put(GalleryPageController(), tag: _tag);
+    Get.lazyPut<GalleryPageController>(
+      () => GalleryPageController(),
+      tag: _tag,
+      fenix: true,
+    );
+    _controller = Get.find(tag: _tag);
     initPageController(tag: _tag);
   }
 
@@ -44,8 +50,7 @@ class _GalleryPageState extends State<GalleryPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _controller.scrollController =
-        PrimaryScrollController.of(context) ?? ScrollController();
+    _controller.scrollController = PrimaryScrollController.of(context);
     _controller.scrollController
         ?.addListener(_controller.scrollControllerLister);
   }
@@ -70,7 +75,7 @@ class _GalleryPageState extends State<GalleryPage> {
         onLoad: () async {
           if (pageState.images.isNotEmpty) {
             Get.toNamed(
-              EHRoutes.galleryAllPreviews,
+              EHRoutes.galleryAllThumbnails,
               id: isLayoutLarge ? 2 : null,
             );
           }
@@ -89,9 +94,9 @@ class _GalleryPageState extends State<GalleryPage> {
 
 class GalleryNavigationBar extends StatelessWidget {
   const GalleryNavigationBar({
-    Key? key,
+    super.key,
     required this.controller,
-  }) : super(key: key);
+  });
   final GalleryPageController controller;
 
   GalleryPageState get pageState => controller.gState;
@@ -126,6 +131,7 @@ class GalleryNavigationBar extends StatelessWidget {
           Widget coverOpacity = AnimatedOpacity(
             opacity: pageState.hideNavigationBtn ? 0.0 : 1.0,
             duration: 300.milliseconds,
+            curve: Curves.ease,
             child: GetBuilder<GalleryPageController>(
               id: GetIds.PAGE_VIEW_HEADER,
               tag: pageCtrlTag,
@@ -136,7 +142,6 @@ class GalleryNavigationBar extends StatelessWidget {
                 );
               },
             ),
-            curve: Curves.ease,
           );
 
           return coverOpacity;
@@ -181,16 +186,16 @@ class GalleryNavigationBar extends StatelessWidget {
 
             CupertinoButton(
               padding: const EdgeInsets.all(0),
-              minSize: 40,
+              minSize: 38,
               child: const MouseRegionClick(
-                child: Icon(CupertinoIcons.tags, size: 24),
+                child: Icon(CupertinoIcons.tag_circle, size: 28),
               ),
               onPressed: () {
                 controller.addTag();
               },
             ),
             CupertinoButton(
-              padding: const EdgeInsets.all(0),
+              padding: const EdgeInsets.only(bottom: 4),
               minSize: 38,
               child: const MouseRegionClick(
                 child: Icon(CupertinoIcons.share, size: 26),
@@ -263,9 +268,11 @@ class GalleryHeadTile extends StatelessWidget {
 }
 
 class GalleryBody extends StatelessWidget {
-  const GalleryBody({Key? key, required this.controller}) : super(key: key);
+  const GalleryBody({super.key, required this.controller});
 
   final GalleryPageController controller;
+
+  EhSettingService get _ehSettingService => Get.find();
 
   GalleryPageState get pageState => controller.gState;
 
@@ -276,14 +283,18 @@ class GalleryBody extends StatelessWidget {
         return GallerySliverSafeArea(
           child: MultiSliver(children: [
             GalleryActions(controller: controller, provider: state),
-            TagTile(provider: state),
+            if (_ehSettingService.showGalleryTags) TagTile(provider: state),
             ChapterTile(controller: controller, provider: state),
-            CommentTile(controller: controller, provider: state),
-            ThumbTile(
-              controller: controller,
-              provider: state,
-              horizontal: false,
-            ),
+            if (_ehSettingService.showComments)
+              CommentTile(controller: controller, provider: state),
+            if (!_ehSettingService.hideGalleryThumbnails)
+              ThumbTile(
+                controller: controller,
+                provider: state,
+                horizontal: _ehSettingService.horizontalThumbnails,
+              )
+            else
+              const MorePreviewButton(hasMorePreview: true),
           ]),
         );
       },
@@ -294,8 +305,7 @@ class GalleryBody extends StatelessWidget {
 }
 
 class TagTile extends StatelessWidget {
-  const TagTile({Key? key, required this.provider, this.pageController})
-      : super(key: key);
+  const TagTile({super.key, required this.provider, this.pageController});
   final GalleryProvider provider;
   final GalleryPageController? pageController;
 
@@ -325,10 +335,10 @@ class TagTile extends StatelessWidget {
 
 class ChapterTile extends StatelessWidget {
   const ChapterTile({
-    Key? key,
+    super.key,
     required this.provider,
     required this.controller,
-  }) : super(key: key);
+  });
 
   final GalleryProvider provider;
   final GalleryPageController controller;
@@ -353,10 +363,10 @@ class ChapterTile extends StatelessWidget {
 
 class CommentTile extends StatelessWidget {
   const CommentTile({
-    Key? key,
+    super.key,
     required this.provider,
     required this.controller,
-  }) : super(key: key);
+  });
   final GalleryProvider provider;
   final GalleryPageController controller;
 
@@ -391,6 +401,7 @@ class CommentTile extends StatelessWidget {
               key: ValueKey(
                   controller.gState.comments.map((e) => e.id).join('')),
               comments: controller.gState.comments,
+              uploader: controller.gState.galleryProvider?.uploader,
             );
           }),
         ),
@@ -401,11 +412,11 @@ class CommentTile extends StatelessWidget {
 
 class ThumbTile extends StatelessWidget {
   const ThumbTile({
-    Key? key,
+    super.key,
     required this.provider,
     required this.controller,
     this.horizontal = false,
-  }) : super(key: key);
+  });
   final GalleryProvider provider;
   final GalleryPageController controller;
   final bool horizontal;
@@ -415,23 +426,30 @@ class ThumbTile extends StatelessWidget {
     final pageState = controller.gState;
 
     if (horizontal) {
-      return MultiSliver(children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {},
-          child: Row(
-            children: [
-              MiniTitle(title: 'Thumbs'),
-              const Spacer(),
-            ],
+      return MultiSliver(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Get.toNamed(
+                EHRoutes.galleryAllThumbnails,
+                id: isLayoutLarge ? 2 : null,
+              );
+            },
+            child: Row(
+              children: [
+                MiniTitle(title: L10n.of(context).thumbnails),
+                const Spacer(),
+              ],
+            ),
           ),
-        ),
-        ThumbHorizontalList(
-          images: pageState.firstPageImage,
-          gid: provider.gid ?? '',
-          referer: controller.gState.url,
-        )
-      ]);
+          ThumbHorizontalList(
+            images: pageState.firstPageImage,
+            gid: provider.gid ?? '',
+            referer: controller.gState.url,
+          ),
+        ],
+      );
     } else {
       return MultiSliver(children: [
         SliverPadding(

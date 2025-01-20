@@ -44,3 +44,17 @@ enum ProxyType {
   socks4,
   direct,
 }
+
+enum BlockType {
+  title,
+  uploader,
+  commentator,
+  comment,
+}
+
+enum PageViewType {
+  photoView,
+  preloadPhotoView,
+  preloadPageView,
+  extendedImageGesturePageView,
+}

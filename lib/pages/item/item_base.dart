@@ -1,6 +1,5 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/utils/utility.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:keframe/keframe.dart';
@@ -17,7 +16,7 @@ class TagListViewBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EhConfigService _ehConfigService = Get.find();
+    final EhSettingService _ehSettingService = Get.find();
     return simpleTags != null && simpleTags!.isNotEmpty
         ? Obx(() => SizedBox(
               height: tagBoxHeight,
@@ -25,7 +24,7 @@ class TagListViewBox extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 children:
                     List<Widget>.from(simpleTags!.map((SimpleTag _simpleTag) {
-                  final String? _text = _ehConfigService.isTagTranslat
+                  final String? _text = _ehSettingService.isTagTranslate
                       ? _simpleTag.translat
                       : _simpleTag.text;
                   return FrameSeparateWidget(
@@ -34,7 +33,7 @@ class TagListViewBox extends StatelessWidget {
                     child: TagItem(
                       text: _text,
                       color: ColorsUtil.getTagColor(_simpleTag.color),
-                      backgrondColor:
+                      backgroundColor:
                           ColorsUtil.getTagColor(_simpleTag.backgrondColor),
                     ),
                   ).paddingOnly(right: 4.0);
@@ -60,58 +59,55 @@ class TagWaterfallFlowViewBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ScrollController controller = ScrollController();
-    final EhConfigService _ehConfigService = Get.find();
+    final EhSettingService _ehSettingService = Get.find();
 
     return Obx(() {
       List<SimpleTag>? _simpleTags =
-          getLimitSimpleTags(simpleTags, _ehConfigService.listViewTagLimit);
+          getLimitSimpleTags(simpleTags, _ehSettingService.listViewTagLimit);
 
       if (_simpleTags == null || _simpleTags.isEmpty) {
         return const SizedBox.shrink();
       }
 
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: SizedBox(
-          height: crossAxisCount * 22 - 4,
-          child: WaterfallFlow.builder(
-            shrinkWrap: true,
-            controller: controller,
-            primary: false,
-            scrollDirection: Axis.horizontal,
-            gridDelegate: SliverWaterfallFlowDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 4.0,
-              mainAxisSpacing: 4.0,
-            ),
-            itemCount: _simpleTags.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Obx(
-                () {
-                  final _simpleTag = _simpleTags[index];
-                  final String? _text = _ehConfigService.isTagTranslat
-                      ? _simpleTag.translat
-                      : _simpleTag.text;
-                  Widget _item = TagItem(
-                    text: _text,
-                    color: ColorsUtil.getTagColor(_simpleTag.color),
-                    backgrondColor:
-                        ColorsUtil.getTagColor(_simpleTag.backgrondColor),
-                  );
-
-                  if (splitFrame) {
-                    _item = FrameSeparateWidget(
-                      placeHolder: const TagItem(text: '..'),
-                      index: -1,
-                      child: _item,
-                    );
-                  }
-
-                  return _item;
-                },
-              );
-            },
+      return Container(
+        height: crossAxisCount * 22 - 4,
+        child: WaterfallFlow.builder(
+          shrinkWrap: true,
+          controller: controller,
+          primary: false,
+          scrollDirection: Axis.horizontal,
+          gridDelegate: SliverWaterfallFlowDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 4.0,
+            mainAxisSpacing: 4.0,
           ),
+          itemCount: _simpleTags.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Obx(
+              () {
+                final _simpleTag = _simpleTags[index];
+                final String? _text = _ehSettingService.isTagTranslate
+                    ? _simpleTag.translat
+                    : _simpleTag.text;
+                Widget _item = TagItem(
+                  text: _text,
+                  color: ColorsUtil.getTagColor(_simpleTag.color),
+                  backgroundColor:
+                      ColorsUtil.getTagColor(_simpleTag.backgrondColor),
+                );
+
+                if (splitFrame) {
+                  _item = FrameSeparateWidget(
+                    placeHolder: const TagItem(text: '..'),
+                    index: -1,
+                    child: _item,
+                  );
+                }
+
+                return _item;
+              },
+            );
+          },
         ),
       );
     });

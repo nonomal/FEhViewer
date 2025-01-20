@@ -1,12 +1,12 @@
-import 'package:fehviewer/common/controller/tag_controller.dart';
-import 'package:fehviewer/common/controller/tag_trans_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/locale_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/pages/setting/mytags/eh_usertag_edit_dialog.dart';
-import 'package:fehviewer/store/db/entity/tag_translat.dart';
+import 'package:eros_fe/common/controller/tag_controller.dart';
+import 'package:eros_fe/common/controller/tag_trans_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/locale_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/pages/setting/mytags/eh_usertag_edit_dialog.dart';
+import 'package:eros_fe/store/db/entity/tag_translat.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -48,7 +48,7 @@ class EhMyTagsController extends GetxController
 
   RxList<EhUsertag> searchNewTags = <EhUsertag>[].obs;
 
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
   final LocaleService localeService = Get.find();
 
   String get apikey => ehMyTags.apikey ?? '';
@@ -61,7 +61,7 @@ class EhMyTagsController extends GetxController
   set isSearchUserTags(bool val) => _isSearchUser.value = val;
 
   bool get isTagTranslat =>
-      ehConfigService.isTagTranslat && localeService.isLanguageCodeZh;
+      ehSettingService.isTagTranslate && localeService.isLanguageCodeZh;
 
   final _inputSearchText = ''.obs;
   String get inputSearchText => _inputSearchText.value;
@@ -72,61 +72,66 @@ class EhMyTagsController extends GetxController
     super.onInit();
     firstLoad();
 
-    debounce(_inputSearchText, (String val) async {
-      logger.v('debounce _inputSearchText $val');
-      if (val.trim().isEmpty) {
-        // searchTags.clear();
-        searchNewTags.clear();
-      }
+    debounce(_inputSearchText, reSearch);
+  }
 
-      // 筛选tag
-      final rult = (ehMyTags.usertags ?? <EhUsertag>[]).where((element) =>
-          element.title.contains(val) ||
-          (element.translate?.contains(val) ?? false));
-      searchTags.clear();
-      if (rult.isNotEmpty) {
-        searchTags.addAll(rult);
-      }
-
-      // 新tag
-      // 通过eh的api搜索
-      List<TagTranslat> tagTranslateList =
-          await Api.tagSuggest(text: val.trim());
-
-      // 中文从翻译库匹配
-      if (localeService.isLanguageCodeZh && ehConfigService.isTagTranslat) {
-        List<TagTranslat> qryTagsList = await Get.find<TagTransController>()
-            .getTagTranslatesLike(text: val.trim(), limit: 200);
-
-        for (final tr in qryTagsList) {
-          if (tagTranslateList
-              .any((element) => element.fullTagText == tr.fullTagText)) {
-            continue;
-          }
-          tagTranslateList.add(tr);
-        }
-      }
-
+  Future<void> reSearch(String text) async {
+    logger.t('debounce _inputSearchText $text');
+    if (text.trim().isEmpty) {
       searchNewTags.clear();
-      for (final tr in tagTranslateList) {
-        final title = '${tr.namespace}:${tr.key}';
-        if (ehMyTags.usertags?.any((element) => element.title == title) ??
-            false) {
+    }
+
+    // 筛选tag
+    final rult = (ehMyTags.usertags ?? <EhUsertag>[]).where((element) =>
+        element.title.contains(text) ||
+        (element.translate?.contains(text) ?? false));
+    searchTags.clear();
+    if (rult.isNotEmpty) {
+      searchTags.addAll(rult);
+    }
+
+    // 新tag
+    // 通过eh的api搜索
+    List<TagTranslat> tagTranslateList =
+        await Api.tagSuggest(text: text.trim());
+
+    // 中文从翻译库匹配
+    if (localeService.isLanguageCodeZh && ehSettingService.isTagTranslate) {
+      List<TagTranslat> qryTagsList = await Get.find<TagTransController>()
+          .getTagTranslatesLike(text: text.trim(), limit: 200);
+
+      for (final tr in qryTagsList) {
+        if (tagTranslateList
+            .any((element) => element.fullTagText == tr.fullTagText)) {
           continue;
         }
-        final translate = await trController.getTranTagWithNameSpase(title);
-        searchNewTags.add(
-          EhUsertag(
-            title: '${tr.namespace}:${tr.key}',
-            defaultColor: true,
-            watch: false,
-            hide: false,
-            tagWeight: '10',
-            translate: translate,
-          ),
-        );
+        tagTranslateList.add(tr);
       }
-    });
+    }
+
+    // searchNewTags.clear();
+
+    final _newTags = <EhUsertag>[];
+    for (final tr in tagTranslateList) {
+      final title = '${tr.namespace}:${tr.key}';
+      if (ehMyTags.usertags?.any((element) => element.title == title) ??
+          false) {
+        continue;
+      }
+      final translate = await trController.getTranTagWithNameSpase(title);
+      _newTags.add(
+        EhUsertag(
+          title: '${tr.namespace}:${tr.key}',
+          defaultColor: true,
+          watch: false,
+          hide: false,
+          tagWeight: '10',
+          translate: translate,
+        ),
+      );
+    }
+
+    searchNewTags(_newTags);
   }
 
   Future<String?> getTextTranslate(String text) async {
@@ -184,6 +189,9 @@ class EhMyTagsController extends GetxController
   Future<void> reloadData() async {
     final sets = await loadData(refresh: true);
     change(sets?.tagsets, status: RxStatus.success());
+    if (isSearchUserTags) {
+      reSearch(inputSearchText);
+    }
   }
 
   Map<String, EhMytagSet> get tagsetMap {
@@ -214,7 +222,7 @@ class EhMyTagsController extends GetxController
     isStackLoading = false;
   }
 
-  Future<void> renameTagset({required String newName}) async {
+  Future<void> renameTagSet({required String newName}) async {
     final rult = await actionRenameTagSet(
       tagsetname: newName,
       tagset: currSelected,
@@ -226,14 +234,28 @@ class EhMyTagsController extends GetxController
     }
   }
 
-  void deleteUsertag(int index) {
-    logger.d('deleteUsertag $index');
+  void deleteUserTag(String title) {
+    logger.d('delete Usertag $title');
     final temp = ehMyTags.clone();
-    final _id = ehMyTags.usertags?[index].tagid;
+    final tag = temp.usertags
+        ?.firstWhere((element) => element.title.trim() == title.trim());
+    if (tag == null) {
+      return;
+    }
+
+    final _id = tag.tagid;
+    final index = temp.usertags?.indexOf(tag);
+    if (index == null || index < 0) {
+      return;
+    }
     temp.usertags?.removeAt(index);
     ehMyTags = temp;
     if (_id != null) {
       actionDeleteUserTag(usertags: [_id]);
+    }
+
+    if (isSearchUserTags) {
+      reSearch(inputSearchText);
     }
   }
 
@@ -248,7 +270,7 @@ class EhMyTagsController extends GetxController
         barrierDismissible: true,
         builder: (context) {
           return CupertinoAlertDialog(
-            title: const Text('Tagset'),
+            title: const Text('Tag Set'),
             content: Container(
               child: obx(
                 (state) {
@@ -360,14 +382,14 @@ class TagSetListItem extends StatefulWidget {
     Key? key,
     required VoidCallback onTap,
     required this.text,
-    this.tagset,
+    this.tagSet,
     this.totNum,
   })  : _onTap = onTap,
         super(key: key);
 
   final VoidCallback _onTap;
   final String text;
-  final String? tagset;
+  final String? tagSet;
   final int? totNum;
 
   @override
@@ -379,50 +401,50 @@ class _TagSetListItemState extends State<TagSetListItem> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.all(Radius.circular(8)),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        child: Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
           color: _color,
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                FontAwesomeIcons.tags,
-                size: 18,
-              ).paddingOnly(left: 8, right: 12, bottom: 2),
-              Text(
-                widget.text,
-                style: const TextStyle(
-                  fontSize: 18,
-                ),
-              ),
-              const Spacer(),
-              // Text(
-              //   '${widget.totNum ?? 0}',
-              //   style: const TextStyle(
-              //     fontSize: 14,
-              //   ),
-              // ).paddingOnly(right: 4),
-            ],
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
         ),
-        onTap: widget._onTap,
-        onTapDown: (_) {
-          setState(() {
-            _color = CupertinoDynamicColor.resolve(
-                CupertinoColors.systemGrey3, context);
-          });
-        },
-        onTapCancel: () {
-          setState(() {
-            _color = null;
-          });
-        },
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              FontAwesomeIcons.tags,
+              size: 18,
+            ).paddingOnly(left: 8, right: 12, bottom: 2),
+            Text(
+              widget.text,
+              style: const TextStyle(
+                fontSize: 18,
+              ),
+            ),
+            const Spacer(),
+            // Text(
+            //   '${widget.totNum ?? 0}',
+            //   style: const TextStyle(
+            //     fontSize: 14,
+            //   ),
+            // ).paddingOnly(right: 4),
+          ],
+        ),
       ),
+      onTap: widget._onTap,
+      onTapDown: (_) {
+        setState(() {
+          _color = CupertinoDynamicColor.resolve(
+              CupertinoColors.systemGrey3, context);
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _color = null;
+        });
+      },
     );
   }
 }

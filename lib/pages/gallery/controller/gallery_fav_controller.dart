@@ -1,15 +1,16 @@
-import 'package:fehviewer/common/controller/cache_controller.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/pages/controller/fav_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_controller.dart';
-import 'package:fehviewer/pages/item/controller/galleryitem_controller.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/toast.dart';
-import 'package:fehviewer/utils/vibrate.dart';
+import 'package:eros_fe/common/controller/cache_controller.dart';
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/pages/controller/fav_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_controller.dart';
+import 'package:eros_fe/pages/item/controller/galleryitem_controller.dart';
+import 'package:eros_fe/utils/logger.dart';
+import 'package:eros_fe/utils/toast.dart';
+import 'package:eros_fe/utils/vibrate.dart';
 import 'package:get/get.dart';
 
 import 'gallery_page_state.dart';
@@ -22,7 +23,7 @@ class GalleryFavController extends GetxController {
   set isLoading(bool value) => _isLoading.value = value;
   String favnote = '';
 
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
 
   late GalleryPageController _pageController;
   GalleryPageState get _pageState => _pageController.gState;
@@ -76,9 +77,9 @@ class GalleryFavController extends GetxController {
   void setFav(String favcat, String favtitle) {
     _favTitle.value = favtitle;
     _favcat.value = favcat;
-    logger.d('setFav $favcat $favtitle');
+    // logger.d('setFav $favcat $favtitle');
     if (favcat.isNotEmpty) {
-      _ehConfigService.lastFavcat = favcat;
+      _ehSettingService.lastFavcat = favcat;
     }
 
     try {
@@ -86,7 +87,8 @@ class GalleryFavController extends GetxController {
         _itemController.setFavTitleAndFavcat(
             favTitle: favTitle, favcat: favcat);
       }
-      _pageState.galleryProvider?.copyWith(favcat: favcat, favTitle: favtitle);
+      _pageState.galleryProvider
+          ?.copyWith(favcat: favcat.oN, favTitle: favtitle.oN);
     } catch (_) {}
   }
 
@@ -114,7 +116,7 @@ class GalleryFavController extends GetxController {
       _favTitle.value = _favTitleFromProfile;
       _favcat.value = _lastFavcat;
       _pageState.galleryProvider
-          ?.copyWith(favcat: favcat, favTitle: _favTitleFromProfile);
+          ?.copyWith(favcat: favcat.oN, favTitle: _favTitleFromProfile.oN);
       if (isRegItemController) {
         _itemController.setFavTitleAndFavcat(
             favTitle: favTitle, favcat: favcat);
@@ -131,11 +133,11 @@ class GalleryFavController extends GetxController {
       delFav();
     } else {
       logger.d(' add fav');
-      final String _lastFavcat = _ehConfigService.lastFavcat;
+      final String _lastFavcat = _ehSettingService.lastFavcat;
       logger.d('上次收藏夹 $_lastFavcat');
 
       // 添加到上次收藏夹
-      if ((_ehConfigService.isFavLongTap.value) && _lastFavcat.isNotEmpty) {
+      if ((_ehSettingService.isFavLongTap.value) && _lastFavcat.isNotEmpty) {
         logger.d('添加到上次收藏夹 $_lastFavcat');
         _addToLastFavcat(_lastFavcat);
       } else {
@@ -164,8 +166,8 @@ class GalleryFavController extends GetxController {
         _favTitle.value = _favTitleFromRult;
         _favcat.value = _favcatFromRult;
 
-        _pageState.galleryProvider = _pageState.galleryProvider
-            ?.copyWith(favcat: _favcatFromRult, favTitle: _favTitleFromRult);
+        _pageState.galleryProvider = _pageState.galleryProvider?.copyWith(
+            favcat: _favcatFromRult.oN, favTitle: _favTitleFromRult.oN);
         logger
             .d('after _showAddFavDialog ${_pageState.galleryProvider?.favcat}');
         setFav(favcat, favTitle);
@@ -191,7 +193,7 @@ class GalleryFavController extends GetxController {
       _favTitle.value = '';
       _favcat.value = '';
       _pageState.galleryProvider =
-          _pageState.galleryProvider?.copyWith(favcat: '', favTitle: '');
+          _pageState.galleryProvider?.copyWith(favcat: ''.oN, favTitle: ''.oN);
       setFav(favcat, favTitle);
     } catch (e, stack) {
       showToast('$e\n$stack');

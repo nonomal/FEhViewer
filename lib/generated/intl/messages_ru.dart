@@ -47,7 +47,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "KEEP_IT_SAFE":
             MessageLookupByLibrary.simpleMessage("Никому не показывайте"),
-        "QR_code_check": MessageLookupByLibrary.simpleMessage("QR code Check"),
+        "QR_code_block": MessageLookupByLibrary.simpleMessage(
+            "Block images containing QR codes"),
         "about": MessageLookupByLibrary.simpleMessage("О приложении"),
         "add_quick_search":
             MessageLookupByLibrary.simpleMessage("Добавить в БП"),
@@ -56,17 +57,19 @@ class MessageLookup extends MessageLookupByLibrary {
         "add_tags": MessageLookupByLibrary.simpleMessage("Добавить теги"),
         "add_to_favorites":
             MessageLookupByLibrary.simpleMessage("Добавить в избранное"),
+        "add_to_phash_block_list": MessageLookupByLibrary.simpleMessage(
+            "Add to Perceptual Hash Block List"),
         "advanced": MessageLookupByLibrary.simpleMessage("Дополнительно"),
         "aggregate": MessageLookupByLibrary.simpleMessage("Объединить"),
         "aggregate_groups":
             MessageLookupByLibrary.simpleMessage("Объединить группы"),
         "all_Favorites": MessageLookupByLibrary.simpleMessage("Все"),
         "all_comment": MessageLookupByLibrary.simpleMessage("Все комментарии"),
-        "all_preview": MessageLookupByLibrary.simpleMessage("Все превью"),
+        "all_thumbnails": MessageLookupByLibrary.simpleMessage("Все превью"),
         "allow_media_scan": MessageLookupByLibrary.simpleMessage(
             "Разрешить видеть папку извне"),
         "always": MessageLookupByLibrary.simpleMessage("Постоянно"),
-        "app_title": MessageLookupByLibrary.simpleMessage("FEhViewer"),
+        "app_title": MessageLookupByLibrary.simpleMessage("Eros-FE"),
         "ask_me": MessageLookupByLibrary.simpleMessage("Спрашивать всегда"),
         "auth_biometricHint":
             MessageLookupByLibrary.simpleMessage("Подтвердите личность"),
@@ -80,6 +83,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "automatic": MessageLookupByLibrary.simpleMessage("Automatic"),
         "avatar": MessageLookupByLibrary.simpleMessage("Аватар"),
         "back": MessageLookupByLibrary.simpleMessage("Назад"),
+        "block_rule": MessageLookupByLibrary.simpleMessage("Block Rule"),
+        "block_rules": MessageLookupByLibrary.simpleMessage("Block Rules"),
+        "blockers": MessageLookupByLibrary.simpleMessage("Blockers"),
         "blurring_cover_background":
             MessageLookupByLibrary.simpleMessage("Размытие фона обложки"),
         "cancel": MessageLookupByLibrary.simpleMessage("Отмена"),
@@ -100,6 +106,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "color_picker_primary":
             MessageLookupByLibrary.simpleMessage("основной"),
         "color_picker_wheel": MessageLookupByLibrary.simpleMessage("wheel"),
+        "comment": MessageLookupByLibrary.simpleMessage("Comment"),
+        "commentator": MessageLookupByLibrary.simpleMessage("Commentator"),
         "copied_to_clipboard":
             MessageLookupByLibrary.simpleMessage("Скопировано в буфер обмена"),
         "copy": MessageLookupByLibrary.simpleMessage("Копировать"),
@@ -116,8 +124,6 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Date or Offset"),
         "default_avatar_style":
             MessageLookupByLibrary.simpleMessage("Стиль аватара по умолчанию"),
-        "default_favorites":
-            MessageLookupByLibrary.simpleMessage("Избранное по умолчанию"),
         "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
         "delete_task":
             MessageLookupByLibrary.simpleMessage("Менеджер загрузок"),
@@ -145,15 +151,20 @@ class MessageLookup extends MessageLookupByLibrary {
         "downloaded": MessageLookupByLibrary.simpleMessage("Скачано"),
         "downloading": MessageLookupByLibrary.simpleMessage("Скачивание"),
         "edit": MessageLookupByLibrary.simpleMessage("Редактировать"),
+        "edit_block_rule":
+            MessageLookupByLibrary.simpleMessage("Edit Block Rule"),
         "edit_comment":
             MessageLookupByLibrary.simpleMessage("Изменить комментарий"),
         "eh": MessageLookupByLibrary.simpleMessage("E·H"),
         "ehentai_my_tags": MessageLookupByLibrary.simpleMessage("Мои теги"),
         "ehentai_settings":
             MessageLookupByLibrary.simpleMessage("EHentai настройки"),
+        "enable": MessageLookupByLibrary.simpleMessage("Enable"),
         "enter_date_or_offset_or_gid":
             MessageLookupByLibrary.simpleMessage("Enter date or offset or gid"),
         "expand": MessageLookupByLibrary.simpleMessage("Показать"),
+        "experimental_feature":
+            MessageLookupByLibrary.simpleMessage("Experimental feature"),
         "export": MessageLookupByLibrary.simpleMessage("Экспортировать"),
         "export_app_data":
             MessageLookupByLibrary.simpleMessage("Export App Data"),
@@ -166,6 +177,11 @@ class MessageLookup extends MessageLookupByLibrary {
             "По дате добавления в избранное"),
         "favorites_order_Use_posted":
             MessageLookupByLibrary.simpleMessage("По дате обновления галереи"),
+        "filter_comments_by_score":
+            MessageLookupByLibrary.simpleMessage("Filter Comments By Score"),
+        "filter_comments_by_score_summary":
+            MessageLookupByLibrary.simpleMessage(
+                "Comments below/equal to this score will be hidden"),
         "fixed_height_of_list_items": MessageLookupByLibrary.simpleMessage(
             "Фиксированная высота элементов списка"),
         "follow_system": MessageLookupByLibrary.simpleMessage("Как в системе"),
@@ -180,14 +196,21 @@ class MessageLookup extends MessageLookupByLibrary {
         "groupName": MessageLookupByLibrary.simpleMessage("Название категории"),
         "groupType": MessageLookupByLibrary.simpleMessage("Тип категории"),
         "hide": MessageLookupByLibrary.simpleMessage("Скрыть"),
+        "hide_gallery_thumbnails":
+            MessageLookupByLibrary.simpleMessage("Hide Gallery Thumbnails"),
+        "hide_thumbnails":
+            MessageLookupByLibrary.simpleMessage("Hide Thumbnails"),
         "hide_top_bar_on_scroll":
             MessageLookupByLibrary.simpleMessage("Hide top bar on scroll"),
+        "high_resolution_images_limited": MessageLookupByLibrary.simpleMessage(
+            "High Resolution Images Limited"),
+        "horizontal_thumbnails":
+            MessageLookupByLibrary.simpleMessage("Horizontal Thumbnails"),
         "host": MessageLookupByLibrary.simpleMessage("Узел"),
         "hours": MessageLookupByLibrary.simpleMessage("час(ов)"),
+        "image_block": MessageLookupByLibrary.simpleMessage("Image Block"),
         "image_download_type":
             MessageLookupByLibrary.simpleMessage("Тип загрузки"),
-        "image_hide":
-            MessageLookupByLibrary.simpleMessage("Скрыть изображение"),
         "image_limits":
             MessageLookupByLibrary.simpleMessage("Ограничения изображения"),
         "import_app_data":
@@ -198,6 +221,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Буфер обмена пуст"),
         "input_error": MessageLookupByLibrary.simpleMessage("Ошибка ввода"),
         "instantly": MessageLookupByLibrary.simpleMessage("Сразу"),
+        "japanese_title_in_gallery":
+            MessageLookupByLibrary.simpleMessage("Japanese Title in Gallery"),
+        "japanese_title_in_gallery_summary":
+            MessageLookupByLibrary.simpleMessage(
+                "Only effective in gallery page"),
         "jump_next": MessageLookupByLibrary.simpleMessage("Next"),
         "jump_or_seek": MessageLookupByLibrary.simpleMessage("Jump or Seek"),
         "jump_prev": MessageLookupByLibrary.simpleMessage("Prev"),
@@ -234,31 +262,34 @@ class MessageLookup extends MessageLookupByLibrary {
         "login": MessageLookupByLibrary.simpleMessage("Войти"),
         "login_web":
             MessageLookupByLibrary.simpleMessage("Войти через браузер"),
-        "mange_hidden_images": MessageLookupByLibrary.simpleMessage(
-            "Управление скрытыми изображениями"),
-        "manually_sel_favorites": MessageLookupByLibrary.simpleMessage(
-            "Вручную выбирать группу избранного"),
         "max_history": MessageLookupByLibrary.simpleMessage("Maximum history"),
         "min": MessageLookupByLibrary.simpleMessage("минут"),
         "model": m1,
-        "morePreviews": MessageLookupByLibrary.simpleMessage("Показать ещё"),
+        "more_thumbnails": MessageLookupByLibrary.simpleMessage("Показать ещё"),
         "multi_download":
             MessageLookupByLibrary.simpleMessage("Многопоточная загрузка"),
         "mytags_on_website":
             MessageLookupByLibrary.simpleMessage("Мои теги на сайте"),
+        "native_http_client_adapter":
+            MessageLookupByLibrary.simpleMessage("Native HTTP Client Adapter"),
         "never": MessageLookupByLibrary.simpleMessage("Никогда"),
         "newGroup": MessageLookupByLibrary.simpleMessage("Новая категория"),
         "newText": MessageLookupByLibrary.simpleMessage("Новый тег"),
         "new_comment":
             MessageLookupByLibrary.simpleMessage("Новый комментарий"),
         "no": MessageLookupByLibrary.simpleMessage("Нет"),
-        "noMorePreviews": MessageLookupByLibrary.simpleMessage("Конец списка"),
         "no_limit": MessageLookupByLibrary.simpleMessage("Без лимита"),
+        "no_more_thumbnails":
+            MessageLookupByLibrary.simpleMessage("Конец списка"),
         "notFav": MessageLookupByLibrary.simpleMessage("Добавить в избранное"),
         "not_login": MessageLookupByLibrary.simpleMessage("Not Login"),
         "off": MessageLookupByLibrary.simpleMessage("Выключены"),
         "ok": MessageLookupByLibrary.simpleMessage("ОК"),
         "on": MessageLookupByLibrary.simpleMessage("Включены"),
+        "one_step_favorite":
+            MessageLookupByLibrary.simpleMessage("One Step Favorite"),
+        "one_step_favorite_desc": MessageLookupByLibrary.simpleMessage(
+            "Quickly add gallery to favorite, short press to save to the last selected favorite, long press to display the favorite dialog."),
         "open_supported_links": MessageLookupByLibrary.simpleMessage(
             "Открывать поддерживаемые ссылки"),
         "open_supported_links_summary": MessageLookupByLibrary.simpleMessage(
@@ -283,10 +314,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "page_range": MessageLookupByLibrary.simpleMessage("Диапазон страниц"),
         "page_range_error":
             MessageLookupByLibrary.simpleMessage("Ошибка в диапазоне страниц"),
+        "page_view_type":
+            MessageLookupByLibrary.simpleMessage("Page View Type"),
         "passwd": MessageLookupByLibrary.simpleMessage("Пароль"),
         "paused": MessageLookupByLibrary.simpleMessage("На паузе"),
-        "phash_check":
-            MessageLookupByLibrary.simpleMessage("Perceptual Hash Check"),
+        "phash_block_list":
+            MessageLookupByLibrary.simpleMessage("Perceptual Hash Block List"),
+        "phash_check": MessageLookupByLibrary.simpleMessage(
+            "Perceptual Hash Check (Block similar images)"),
         "pls_i_passwd":
             MessageLookupByLibrary.simpleMessage("Пожалуйста, введите пароль"),
         "pls_i_username":
@@ -294,7 +329,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "port": MessageLookupByLibrary.simpleMessage("Порт"),
         "preload_image": MessageLookupByLibrary.simpleMessage(
             "Предварительная загрузка изображений"),
-        "previews": MessageLookupByLibrary.simpleMessage("Превью"),
         "processing": MessageLookupByLibrary.simpleMessage("В процессе"),
         "proxy": MessageLookupByLibrary.simpleMessage("Прокси"),
         "proxy_type": MessageLookupByLibrary.simpleMessage("Тип прокси"),
@@ -316,6 +350,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "redirect_thumb_link_summary": MessageLookupByLibrary.simpleMessage(
             "Перенаправление адреса миниатюры на ehgt.org"),
         "redownload": MessageLookupByLibrary.simpleMessage("Скачать заново"),
+        "refresh_igneous":
+            MessageLookupByLibrary.simpleMessage("Refresh Igneous"),
+        "regex": MessageLookupByLibrary.simpleMessage("Regex"),
+        "regex_format_error":
+            MessageLookupByLibrary.simpleMessage("Regex format error"),
         "reload_image":
             MessageLookupByLibrary.simpleMessage("Загрузить заново"),
         "remove_from_favorites":
@@ -383,12 +422,19 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Поделиться изображением"),
         "show_comment_avatar": MessageLookupByLibrary.simpleMessage(
             "Показать аватар комментатора"),
+        "show_comments": MessageLookupByLibrary.simpleMessage("Show Comments"),
         "show_filter": MessageLookupByLibrary.simpleMessage("Показать фильтр"),
+        "show_gallery_tags":
+            MessageLookupByLibrary.simpleMessage("Show Gallery Tags"),
         "show_jpn_title": MessageLookupByLibrary.simpleMessage(
             "Показывать названия на японском"),
+        "show_only_uploader_comment":
+            MessageLookupByLibrary.simpleMessage("Show Only Uploader Comment"),
         "show_page_interval": MessageLookupByLibrary.simpleMessage(
             "Показывать интервал между страницами"),
         "skip": MessageLookupByLibrary.simpleMessage("Пропустить"),
+        "slide_out_page":
+            MessageLookupByLibrary.simpleMessage("Slide Out Page"),
         "sync_group":
             MessageLookupByLibrary.simpleMessage("Синхронизация группы"),
         "sync_history":
@@ -437,6 +483,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "tap_to_turn_page_anima": MessageLookupByLibrary.simpleMessage(
             "Анимированные переходы страниц"),
         "theme": MessageLookupByLibrary.simpleMessage("Тема"),
+        "thumbnails": MessageLookupByLibrary.simpleMessage("Превью"),
+        "title": MessageLookupByLibrary.simpleMessage("Title"),
         "tolist_alltime": MessageLookupByLibrary.simpleMessage("За всё время"),
         "tolist_past_month": MessageLookupByLibrary.simpleMessage("За месяц"),
         "tolist_past_year": MessageLookupByLibrary.simpleMessage("За год"),
@@ -571,16 +619,19 @@ class MessageLookup extends MessageLookupByLibrary {
             "Отображение названия галереи"),
         "uc_name_display_desc": MessageLookupByLibrary.simpleMessage(
             "Многие галереи имеют как английское/латинизированное название, так и название, написанное японским шрифтом. Какое название галереи вы хотели бы видеть по умолчанию?"),
-        "uc_oi_0": MessageLookupByLibrary.simpleMessage("Неа"),
-        "uc_oi_1": MessageLookupByLibrary.simpleMessage("Yup, I can take it"),
+        "uc_oi_0":
+            MessageLookupByLibrary.simpleMessage("Prefer resampled images"),
+        "uc_oi_1":
+            MessageLookupByLibrary.simpleMessage("Prefer original images"),
         "uc_ori_image":
             MessageLookupByLibrary.simpleMessage("Исходные изображения"),
         "uc_ori_image_desc": MessageLookupByLibrary.simpleMessage(
-            "Использовать исходные изображения вместо сжатых, где это применимо?"),
+            "Use original images instead of the resampled versions? Resampled images will still be used if you select a horizonal resolution different than \"Auto\" above and the image in question is wider, or if the original image is larger than 10 MiB (or 4 MiB for galleries older than one year)."),
         "uc_parody": MessageLookupByLibrary.simpleMessage("parody"),
         "uc_pixels": MessageLookupByLibrary.simpleMessage("pixels"),
-        "uc_pn_0": MessageLookupByLibrary.simpleMessage("Нет"),
-        "uc_pn_1": MessageLookupByLibrary.simpleMessage("Да"),
+        "uc_pn_0": MessageLookupByLibrary.simpleMessage("None"),
+        "uc_pn_1": MessageLookupByLibrary.simpleMessage("Page Number Only"),
+        "uc_pn_2": MessageLookupByLibrary.simpleMessage("Page Number + Name"),
         "uc_profile": MessageLookupByLibrary.simpleMessage("Профиль"),
         "uc_qb_0": MessageLookupByLibrary.simpleMessage("Неа"),
         "uc_qb_1": MessageLookupByLibrary.simpleMessage("Ага"),
@@ -591,7 +642,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "uc_rename": MessageLookupByLibrary.simpleMessage("Переименовать"),
         "uc_res_res": MessageLookupByLibrary.simpleMessage("Сжатие"),
         "uc_res_res_desc": MessageLookupByLibrary.simpleMessage(
-            "Обычно изображения сжимаются до 1280 пикселей по горизонтали для просмотра в режиме онлайн. В качестве альтернативы вы можете выбрать одно из следующих разрешений. Чтобы избежать нагрузки на сервера, разрешение выше 1280x доступно лишь для донатеров, владельцев hath perk и людей с UID ниже 3 000 000"),
+            "Images are normally resampled to 1280 pixels of horizontal resolution for online viewing. You can select one of the following alternative resolutions."),
         "uc_sc_0":
             MessageLookupByLibrary.simpleMessage("При наведении или нажатии"),
         "uc_sc_1": MessageLookupByLibrary.simpleMessage("Всегда"),
@@ -603,7 +654,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "uc_set_as_def": MessageLookupByLibrary.simpleMessage(
             "Установить как профиль по умолчанию"),
         "uc_show_page_num":
-            MessageLookupByLibrary.simpleMessage("Показывать номера страниц"),
+            MessageLookupByLibrary.simpleMessage("Thumbnail Labeling"),
         "uc_tag": MessageLookupByLibrary.simpleMessage("Теги галереи"),
         "uc_tag_ft":
             MessageLookupByLibrary.simpleMessage("Порог фильтрации тегов"),
@@ -632,8 +683,9 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Название по умолчанию"),
         "uc_tl_1": MessageLookupByLibrary.simpleMessage(
             "Название на японском (если доступно)"),
-        "uc_ts_0": MessageLookupByLibrary.simpleMessage("Нормальный"),
-        "uc_ts_1": MessageLookupByLibrary.simpleMessage("Большой"),
+        "uc_ts_0": MessageLookupByLibrary.simpleMessage("Auto"),
+        "uc_ts_1": MessageLookupByLibrary.simpleMessage("Normal"),
+        "uc_ts_2": MessageLookupByLibrary.simpleMessage("Small"),
         "uc_uh_0": MessageLookupByLibrary.simpleMessage(
             "Любой клиент (Рекомендуется)"),
         "uc_uh_0_s": MessageLookupByLibrary.simpleMessage("Любой клиент"),

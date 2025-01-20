@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:eros_fe/common/controller/webdav_controller.dart';
+import 'package:eros_fe/common/service/layout_service.dart';
+import 'package:eros_fe/common/service/locale_service.dart';
+import 'package:eros_fe/index.dart';
 import 'package:executor/executor.dart';
-import 'package:fehviewer/common/controller/webdav_controller.dart';
-import 'package:fehviewer/common/service/layout_service.dart';
-import 'package:fehviewer/common/service/locale_service.dart';
-import 'package:fehviewer/fehviewer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
@@ -25,7 +25,7 @@ class CustomTabbarController extends DefaultTabViewController {
 
   CustomTabConfig? get customTabConfig => Global.profile.customTabConfig;
   set customTabConfig(CustomTabConfig? val) =>
-      Global.profile = Global.profile.copyWith(customTabConfig: val);
+      Global.profile = Global.profile.copyWith(customTabConfig: val.oN);
 
   final RxList<CustomProfile> profiles = <CustomProfile>[].obs;
   Map<String, CustomProfile> get profileMap {
@@ -68,7 +68,7 @@ class CustomTabbarController extends DefaultTabViewController {
   void onInit() {
     super.onInit();
 
-    logger.v('CustomProfile onInit');
+    logger.t('CustomProfile onInit');
 
     heroTag = EHRoutes.gallery;
 
@@ -95,14 +95,14 @@ class CustomTabbarController extends DefaultTabViewController {
         ];
 
     ever<List<CustomProfile>>(profiles, (value) {
-      customTabConfig = customTabConfig?.copyWith(profiles: value) ??
+      customTabConfig = customTabConfig?.copyWith(profiles: value.oN) ??
           CustomTabConfig(profiles: value);
       Global.saveProfile();
     });
 
     index = customTabConfig?.lastIndex ?? 0;
     ever<int>(_index, (value) {
-      customTabConfig = customTabConfig?.copyWith(lastIndex: value) ??
+      customTabConfig = customTabConfig?.copyWith(lastIndex: value.oN) ??
           CustomTabConfig(lastIndex: value);
       Global.saveProfile();
     });
@@ -179,18 +179,29 @@ class CustomTabbarController extends DefaultTabViewController {
     Get.replace<CustomProfile>(
         profileMap[uuid] ?? CustomProfile(name: '', uuid: generateUuidv4()));
 
+    // arguments 方式不能跨栈传递，改回依赖注入
+
+    late final dynamic _result;
+
     if (isLayoutLarge && topRoute == EHRoutes.customProfileSetting) {
-      await Get.offNamed(
+      _result = await Get.offNamed(
         EHRoutes.customProfileSetting,
         id: isLayoutLarge ? 2 : null,
         preventDuplicates: false,
+        // arguments: profileMap[uuid],
       );
     } else {
-      await Get.toNamed(
+      _result = await Get.toNamed(
         EHRoutes.customProfileSetting,
         id: isLayoutLarge ? 2 : null,
         preventDuplicates: false,
+        // arguments: profileMap[uuid],
       );
+    }
+
+    if (_result != null && _result is CustomProfile) {
+      addProfile(_result);
+      syncProfiles();
     }
   }
 
@@ -226,7 +237,8 @@ class CustomTabbarController extends DefaultTabViewController {
     final nowTime = DateTime.now().millisecondsSinceEpoch;
     final _index = delProfiles.indexOf((e) => e.name == profile.name);
     if (_index > -1) {
-      delProfiles[_index] = delProfiles[_index].copyWith(lastEditTime: nowTime);
+      delProfiles[_index] =
+          delProfiles[_index].copyWith(lastEditTime: nowTime.oN);
     } else {
       delProfiles.add(profile);
     }
@@ -261,7 +273,7 @@ class CustomTabbarController extends DefaultTabViewController {
   }
 
   void addProfile(CustomProfile profile) {
-    logger.v(' ${jsonEncode(profile)}');
+    logger.t(' ${jsonEncode(profile)}');
 
     final oriIndexOfSameUuid =
         profiles.indexWhere((element) => element.uuid == profile.uuid);
@@ -298,8 +310,8 @@ class CustomTabbarController extends DefaultTabViewController {
       return;
     }
     final listLocal = List<CustomProfile>.from(profiles);
-    logger.v('listLocal ${listLocal.length} \n${listLocal.map((e) => e.uuid)}');
-    logger.v('${jsonEncode(listLocal)} ');
+    logger.t('listLocal ${listLocal.length} \n${listLocal.map((e) => e.uuid)}');
+    logger.t('${jsonEncode(listLocal)} ');
 
     // 下载远程文件名列表 包含： 分组名 uuid 时间戳
     final listRemote = await webdavController.getRemoteGroupList();
@@ -309,7 +321,7 @@ class CustomTabbarController extends DefaultTabViewController {
       return;
     }
 
-    logger.v('listRemote size ${listRemote.length}');
+    logger.t('listRemote size ${listRemote.length}');
 
     // 比较远程和本地的差异
     // 合并列表
@@ -321,7 +333,7 @@ class CustomTabbarController extends DefaultTabViewController {
         )
         .toList()
         .toSet();
-    logger.v('diff ${diff.map((e) => e?.toJson())}');
+    logger.t('diff ${diff.map((e) => e?.toJson())}');
 
     // 本地分组中 编辑时间更靠后的
     final localNewer = listLocal.where(
@@ -335,7 +347,7 @@ class CustomTabbarController extends DefaultTabViewController {
         return (eLocal.lastEditTime ?? 0) > (_eRemote.lastEditTime ?? 0);
       },
     );
-    logger.v('localNewer count ${localNewer.length}');
+    logger.t('localNewer count ${localNewer.length}');
 
     // 远程 编辑时间更靠后的
     final remoteNewer = listRemote.where(
@@ -359,7 +371,7 @@ class CustomTabbarController extends DefaultTabViewController {
         return (eRemote.lastEditTime ?? 0) > (_eLocal.lastEditTime ?? 0);
       },
     );
-    logger.v('remoteNewer ${remoteNewer.map((e) => e.name).toList()}');
+    logger.t('remoteNewer ${remoteNewer.map((e) => e.name).toList()}');
 
     await _downloadProfiles(remoteNewer.toSet().toList());
 

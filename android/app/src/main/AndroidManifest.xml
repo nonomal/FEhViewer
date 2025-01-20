@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.honjow.fehviewer">
+          xmlns:tools="http://schemas.android.com/tools">
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
          In most cases you can leave this as-is, but you if you want to provide
@@ -8,7 +7,7 @@
          FlutterApplication and put your custom class here. -->
     <application
             android:name="${applicationName}"
-            android:label="FEhViewer"
+            android:label="Eros-FE"
             android:icon="@mipmap/ic_launcher"
             android:localeConfig="@xml/locales_config" tools:targetApi="r">
         <activity
@@ -49,6 +48,9 @@
         <meta-data
                 android:name="flutterEmbedding"
                 android:value="2"/>
+<!--        <meta-data-->
+<!--                android:name="io.flutter.embedding.android.EnableImpeller"-->
+<!--                android:value="true" />-->
 
         <provider
                 android:name="androidx.core.content.FileProvider"
@@ -94,8 +96,6 @@
 
     </application>
 
-    <!-- 访问电话状态 -->
-<!--    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:ignore="ManifestOrder"/>-->
     <!-- 允许全部网络访问 -->
     <uses-permission android:name="android.permission.INTERNET" tools:ignore="ManifestOrder"/>
     <!-- 获取网络信息状态 -->

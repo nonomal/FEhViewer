@@ -9,7 +9,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>FEhViewer</string>
+	<string>Eros-FE</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -17,7 +17,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>FEhViewer</string>
+	<string>Eros-FE</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -42,7 +42,7 @@
 	<key>FDMaximumConcurrentTasks</key>
 	<integer>5</integer>
 	<key>FLTEnableImpeller</key>
-	<false/>
+	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -55,17 +55,18 @@
 		<true/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>用于锁定和验证app</string>
+	<string>Unlock app with Face ID</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>用于保存图片 add photos</string>
+	<string>Save image to photo library</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>用于保存图片</string>
+	<string>Load image from photo library</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
@@ -92,7 +93,7 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<string>YES</string>
-<!--	<key>FLTEnableImpeller</key>-->
-<!--    <true/>-->
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
 </dict>
 </plist>

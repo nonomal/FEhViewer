@@ -1,16 +1,16 @@
-import 'package:fehviewer/common/controller/localfav_controller.dart';
-import 'package:fehviewer/common/controller/user_controller.dart';
-import 'package:fehviewer/common/global.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/favcat.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/pages/gallery/view/gallery_favcat.dart';
-import 'package:fehviewer/pages/item/controller/galleryitem_controller.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/toast.dart';
+import 'package:eros_fe/common/controller/localfav_controller.dart';
+import 'package:eros_fe/common/global.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/generated/l10n.dart';
+import 'package:eros_fe/models/favcat.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/pages/gallery/view/gallery_favcat.dart';
+import 'package:eros_fe/pages/item/controller/galleryitem_controller.dart';
+import 'package:eros_fe/utils/logger.dart';
+import 'package:eros_fe/utils/toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -18,8 +18,7 @@ import 'package:get/get.dart';
 import 'favorite_sel_controller.dart';
 
 class FavController extends GetxController {
-  final EhConfigService _ehConfigService = Get.find();
-  final UserController _userController = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
   final LocalFavController _localFavController = Get.find();
 
   // 收藏输入框控制器
@@ -33,7 +32,7 @@ class FavController extends GetxController {
     BuildContext context,
     List<Favcat> favList,
   ) async {
-    return _ehConfigService.isFavPicker.value
+    return _ehSettingService.isFavPicker.value
         ? await _showAddFavPicker(context, favList)
         : await _showAddFavList(context, favList);
   }
@@ -81,7 +80,7 @@ class FavController extends GetxController {
         return CupertinoAlertDialog(
           title: GestureDetector(
             onLongPress: () {
-              _ehConfigService.isFavPicker.value = false;
+              _ehSettingService.isFavPicker.value = false;
               showToast('切换样式');
             },
             child: Text(L10n.of(context).add_to_favorites),
@@ -124,7 +123,7 @@ class FavController extends GetxController {
                 // 返回数据
                 Get.back(
                     result: favList[_favIndex]
-                        .copyWith(note: _favnoteController.text));
+                        .copyWith(note: _favnoteController.text.oN));
               },
             ),
           ],
@@ -140,17 +139,18 @@ class FavController extends GetxController {
   ) async {
     final List<Widget> _favcatList = List<Widget>.from(favList
         .where((value) => value.favId != 'a')
-        .map((Favcat fav) => FavcatAddListItem(
+        .map((Favcat fav) => FavCatAddListItem(
               text: fav.favTitle,
               favcat: fav.favId,
               totNum: fav.totNum,
               onTap: () {
                 // 返回数据
-                Get.back(result: fav.copyWith(note: _favnoteController.text));
+                Get.back(
+                    result: fav.copyWith(note: _favnoteController.text.oN));
               },
             ))).toList();
 
-    logger.v(_favcatList.length);
+    logger.t(_favcatList.length);
 
     return showCupertinoDialog<Favcat?>(
       barrierDismissible: true,
@@ -159,7 +159,7 @@ class FavController extends GetxController {
         return CupertinoAlertDialog(
           title: GestureDetector(
             onLongPress: () {
-              _ehConfigService.isFavPicker.value = true;
+              _ehSettingService.isFavPicker.value = true;
               showToast('切换样式');
             },
             child: Text(L10n.of(context).add_to_favorites),
@@ -202,19 +202,19 @@ class FavController extends GetxController {
     String oriFavnote = '',
   }) async {
     logger.d('bbb add fav $gid $token');
-    final String? _lastFavcat = _ehConfigService.lastFavcat;
+    final String? _lastFavcat = _ehSettingService.lastFavcat;
 
     _favnoteController.text = oriFavnote;
 
     // 添加到上次收藏夹
-    if ((_ehConfigService.isFavLongTap.value) &&
+    if ((_ehSettingService.isFavLongTap.value) &&
         _lastFavcat != null &&
         _lastFavcat.isNotEmpty) {
-      logger.v('添加到上次收藏夹');
+      logger.t('添加到上次收藏夹');
       return addToLastFavcat(gid, token, _lastFavcat, oriFavcat: oriFavcat);
     } else {
       // 手选收藏夹
-      logger.v('手选收藏夹');
+      logger.t('手选收藏夹');
       return await selectToSave(gid, token, oriFavcat: oriFavcat);
     }
   }
@@ -251,11 +251,11 @@ class FavController extends GetxController {
       logger.e('$e\n$stack');
     }
 
-    logger.v('$result  ${result.runtimeType}');
+    logger.t('$result  ${result.runtimeType}');
 
     if (result != null) {
       startLoading?.call();
-      logger.v('add fav $result');
+      logger.t('add fav $result');
 
       final String _favcat = result.favId;
       final String _favnote = result.note ?? '';
@@ -314,10 +314,10 @@ class FavController extends GetxController {
   /// 删除收藏
   Future<void> delFav(String favcat, String gid, String token) async {
     if (favcat.isNotEmpty && favcat != 'l') {
-      logger.v('取消网络收藏');
+      logger.t('取消网络收藏');
       await galleryAddFavorite(gid, token);
     } else {
-      logger.v('取消本地收藏');
+      logger.t('取消本地收藏');
       _localFavController.removeFavByGid(gid);
     }
     _favoriteSelectorController.decrease(favcat);

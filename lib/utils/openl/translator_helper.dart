@@ -1,17 +1,20 @@
 import 'dart:async';
 
-import 'package:fehviewer/config/config.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/utils/openl/openl_translator.dart';
-import 'package:learning_language/learning_language.dart';
-import 'package:translator/translator.dart';
+import 'package:eros_fe/config/config.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/utils/openl/openl_translator.dart';
+import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
+import 'package:google_translator/translator.dart';
+
+// import 'package:learning_language/learning_language.dart';
 
 import 'language.dart';
 
 TranslatorHelper translatorHelper = TranslatorHelper();
 
 class TranslatorHelper {
-  final _languageIdentifier = LanguageIdentifier();
+  // final _languageIdentifier = LanguageIdentifier();
+  final languageIdentifier = LanguageIdentifier(confidenceThreshold: 0.5);
 
   GoogleTranslator googleTranslator = GoogleTranslator();
 
@@ -19,7 +22,7 @@ class TranslatorHelper {
     return FeConfig.openLapikey;
   }
 
-  Future<OpenlTranslation?> openLtranslate(
+  Future<OpenlTranslation?> openLTranslate(
     String sourceText, {
     String from = 'auto',
     String to = 'en',
@@ -39,74 +42,94 @@ class TranslatorHelper {
     );
   }
 
-  Future<String?> getfallbackService() async {
+  Future<String?> getFallbackService() async {
     final String? apikey = await getOpenLApikey();
     if (apikey == null || apikey.isEmpty) {
       return null;
     }
     final OpenLTranslator openLTranslator = OpenLTranslator(apikey: apikey);
-    return await openLTranslator.getfallbackService();
+    return await openLTranslator.getFallbackService();
   }
 
-  Future<String> translateText(
+  Future<String?> translateText(
     String sourceText, {
     String to = 'zh',
     String service = 'deepl',
   }) async {
     logger.d('translateText');
 
-    String sourceLanguage = await _languageIdentifier.identify(sourceText);
+    // 通过语言识别器识别语言
+    // String sourceLanguage = await _languageIdentifier.identify(sourceText);
+    String sourceLanguage =
+        await languageIdentifier.identifyLanguage(sourceText);
     logger.d('sourceLanguage: $sourceLanguage');
     if (sourceLanguage == 'und' || sourceLanguage.contains('-')) {
       sourceLanguage = 'auto';
     }
 
-    bool useGoogleTranslate = false;
-    String rultText = '';
-    if (OpenLLanguageList.contains(sourceLanguage)) {
-      OpenlTranslation? rult =
-          await openLtranslate(sourceText, from: sourceLanguage, to: to);
+    if (!OpenLLanguageList.contains(sourceLanguage)) {
+      return await translateTextByGoogle(
+            sourceText,
+            sourceLanguage: sourceLanguage,
+            to: to,
+          ) ??
+          '';
+    }
 
-      if (rult == null) {
-        useGoogleTranslate = true;
-      } else if (rult.status != true) {
-        final service = await getfallbackService();
-        if (service != null) {
-          logger.d('getfallbackService $service');
-          try {
-            rult = await openLtranslate(
-              sourceText,
-              from: sourceLanguage,
-              to: to,
-              service: service,
-            );
-          } catch (e, stack) {
-            logger.e('$e\n$stack');
-            useGoogleTranslate = true;
-          }
+    OpenlTranslation? result = await openLTranslate(
+      sourceText,
+      from: sourceLanguage,
+      to: to,
+      service: service,
+    );
+
+    if (result?.status ?? false) {
+      return result?.result ?? '';
+    } else {
+      final service = await getFallbackService();
+      if (service != null) {
+        logger.d('getFallbackService $service');
+        try {
+          final result = await openLTranslate(
+            sourceText,
+            from: sourceLanguage,
+            to: to,
+            service: service,
+          );
+          return result?.result ?? '';
+        } catch (e, stack) {
+          logger.e('$e\n$stack');
+
+          // 使用 google 翻译
+          return await translateTextByGoogle(
+                sourceText,
+                sourceLanguage: sourceLanguage,
+                to: to,
+              ) ??
+              '';
         }
       }
-      rultText = rult?.result ?? '';
-    } else {
-      useGoogleTranslate = true;
     }
+    return null;
+  }
 
-    if (useGoogleTranslate) {
-      logger.d('useGoogleTranslate');
-      try {
-        final googleTranslateRult = await googleTranslator.translate(
-          sourceText,
-          from: sourceLanguage,
-          to: to == 'zh' ? 'zh-cn' : to,
-        );
-        rultText = googleTranslateRult.text;
-      } catch (e, stack) {
-        logger.e('$e\n$stack');
-      }
+  Future<String?> translateTextByGoogle(
+    String sourceText, {
+    String? sourceLanguage,
+    String to = 'zh',
+  }) async {
+    logger.d('translateTextByGoogle');
+    try {
+      final googleTranslateResult = await googleTranslator.translate(
+        sourceText,
+        from: sourceLanguage ?? 'auto',
+        to: to == 'zh' ? 'zh-cn' : to,
+      );
+      final resultText = googleTranslateResult.text;
+      return resultText;
+    } catch (e, stack) {
+      logger.e('$e\n$stack');
     }
-
-    // return '$sourceText\n##########\n$rultText\n##########\n$rultOnDeviceTranslate';
-
-    return rultText;
+    return null;
   }
 }

@@ -1,18 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
 import 'package:executor/executor.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/fehviewer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
-import 'package:tuple/tuple.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 const String kDirPath = '/fehviewer';
@@ -41,12 +39,12 @@ class WebdavController extends GetxController {
   webdav.Client? _client;
   webdav.Client get client => _client ?? initClient();
 
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
 
   WebdavProfile get webdavProfile =>
       Global.profile.webdav ?? const WebdavProfile(url: '');
   set webdavProfile(WebdavProfile val) =>
-      Global.profile = Global.profile.copyWith(webdav: val);
+      Global.profile = Global.profile.copyWith(webdav: val.oN);
 
   final _validAccount = false.obs;
   bool get validAccount => _validAccount.value;
@@ -122,7 +120,7 @@ class WebdavController extends GetxController {
 
   void initExecutor() {
     webDAVExecutor =
-        Executor(concurrency: _ehConfigService.webDAVMaxConnections);
+        Executor(concurrency: _ehSettingService.webDAVMaxConnections);
   }
 
   void resetExecutorConcurrency(int concurrency) {
@@ -140,25 +138,25 @@ class WebdavController extends GetxController {
 
     syncHistory = webdavProfile.syncHistory ?? false;
     ever(_syncHistory, (bool val) {
-      webdavProfile = webdavProfile.copyWith(syncHistory: val);
+      webdavProfile = webdavProfile.copyWith(syncHistory: val.oN);
       Global.saveProfile();
     });
 
     syncReadProgress = webdavProfile.syncReadProgress ?? false;
     ever(_syncReadProgress, (bool val) {
-      webdavProfile = webdavProfile.copyWith(syncReadProgress: val);
+      webdavProfile = webdavProfile.copyWith(syncReadProgress: val.oN);
       Global.saveProfile();
     });
 
     syncGroupProfile = webdavProfile.syncGroupProfile ?? false;
     ever(_syncGroupProfile, (bool val) {
-      webdavProfile = webdavProfile.copyWith(syncGroupProfile: val);
+      webdavProfile = webdavProfile.copyWith(syncGroupProfile: val.oN);
       Global.saveProfile();
     });
 
     syncQuickSearch = webdavProfile.syncQuickSearch ?? false;
     ever(_syncQuickSearch, (bool val) {
-      webdavProfile = webdavProfile.copyWith(syncQuickSearch: val);
+      webdavProfile = webdavProfile.copyWith(syncQuickSearch: val.oN);
       Global.saveProfile();
     });
 
@@ -177,7 +175,7 @@ class WebdavController extends GetxController {
   }
 
   webdav.Client initClient() {
-    logger.v('initClient');
+    logger.t('initClient');
     _client = webdav.newClient(
       webdavProfile.url,
       user: webdavProfile.user ?? '',
@@ -211,7 +209,7 @@ class WebdavController extends GetxController {
   Future<void> checkDir({String dir = kDirPath}) async {
     try {
       final list = await client.readDir(dir);
-      logger.v('$dir\n${list.map((e) => '${e.name} ${e.mTime}').join('\n')}');
+      logger.t('$dir\n${list.map((e) => '${e.name} ${e.mTime}').join('\n')}');
     } on DioError catch (err) {
       if (err.response?.statusCode == 404) {
         logger.d('dir $dir 404, mkdir...');
@@ -280,20 +278,20 @@ class WebdavController extends GetxController {
 
   // 上传历史记录
   Future<void> uploadHistory(GalleryProvider his) async {
-    logger.v('uploadHistory');
+    logger.t('uploadHistory');
     final _path = path.join(Global.tempPath, his.gid);
     final File _file = File(_path);
     final _his = his.copyWith(
-      galleryComment: [],
-      galleryImages: [],
-      tagGroup: [],
+      galleryComment: <GalleryComment>[].o,
+      galleryImages: <GalleryImage>[].o,
+      tagGroup: <TagGroup>[].o,
     );
 
     try {
       final _text = jsonEncode(_his);
       // final base64Text = base64Encode(utf8.encode(_text));
       final encrypted = _encrypter.encrypt(_text, iv: _iv);
-      logger.v('encrypted.base64 ${encrypted.base64}');
+      logger.t('encrypted.base64 ${encrypted.base64}');
       _file.writeAsStringSync(encrypted.base64);
 
       await client.writeFromFile(
@@ -314,7 +312,7 @@ class WebdavController extends GetxController {
 
   // 下载历史记录
   Future<GalleryProvider?> downloadHistory(String fileName) async {
-    logger.v('downloadHistory');
+    logger.t('downloadHistory');
     final _path = path.join(Global.tempPath, fileName);
     try {
       await client.read2File('$kHistoryDtlDirPath/$fileName.json', _path);
@@ -356,13 +354,13 @@ class WebdavController extends GetxController {
       return;
     }
 
-    logger.v('upload Read [${read.toJson()}] ');
+    logger.t('upload Read [${read.toJson()}] ');
     chkTempDir(kLocalReadDirPath);
 
     final _path = path.join(Global.tempPath, 'read', read.gid);
     final File _file = File(_path);
     final _read = read.copyWith(
-      columnModeVal: '',
+      columnModeVal: ''.o,
     );
     final _text = jsonEncode(_read);
     // final base64Text = base64Encode(utf8.encode(_text));
@@ -371,7 +369,7 @@ class WebdavController extends GetxController {
 
     try {
       await client.writeFromFile(_path, '$kReadDirPath/${read.gid}.json');
-    } on DioError catch (err) {
+    } on DioException catch (err) {
       logger.d('${err.response?.statusCode}');
       if (err.response?.statusCode == 404) {
         logger.d('file 404');
@@ -386,7 +384,7 @@ class WebdavController extends GetxController {
 
   // 下载进度
   Future<GalleryCache?> downloadRead(String gid) async {
-    logger.v('downloadRead');
+    logger.t('downloadRead');
     chkTempDir(kLocalReadDirPath);
     final _path = path.join(Global.tempPath, 'read', gid);
     try {
@@ -463,7 +461,7 @@ class WebdavController extends GetxController {
 
   // 下载分组
   Future<CustomProfile?> downloadGroupProfile(CustomProfile profile) async {
-    logger.v('download group ${profile.syncFileName}');
+    logger.t('download group ${profile.syncFileName}');
     chkTempDir(kLocalGroupDirPath);
     final _path =
         path.join(Global.tempPath, kLocalGroupDirPath, profile.syncFileName);
@@ -497,7 +495,7 @@ class WebdavController extends GetxController {
     final profiles = list.map((e) {
       final name = e.name?.substring(0, e.name?.lastIndexOf('.'));
       final arr = name?.split(kGroupSeparator);
-      logger.v('getRemoteGroupList $arr');
+      logger.t('getRemoteGroupList $arr');
       // 名称
       final profileName = arr?.first ?? '';
       // uuid
@@ -556,7 +554,7 @@ class WebdavController extends GetxController {
     }
   }
 
-  Future<Tuple2<List<String>, int>?> downloadQuickSearch(int maxTime) async {
+  Future<(List<String>, int)?> downloadQuickSearch(int maxTime) async {
     logger.d('download $kQuickSearchFile');
     chkTempDir(kLocalSearchDirPath);
 
@@ -571,12 +569,13 @@ class WebdavController extends GetxController {
       }
       final String _fileText = _file.readAsStringSync();
 
-      return Tuple2(
-          _fileText
-              .split('\n')
-              .where((element) => element.trim().isNotEmpty)
-              .toList(),
-          maxTime);
+      return (
+        _fileText
+            .split('\n')
+            .where((element) => element.trim().isNotEmpty)
+            .toList(),
+        maxTime
+      );
     } catch (err) {
       logger.e('$err');
       return null;
@@ -648,7 +647,7 @@ class WebdavController extends GetxController {
       // 保存账号 rebuild
       WebdavProfile webdavUser =
           WebdavProfile(url: url, user: user, password: pwd);
-      Global.profile = Global.profile.copyWith(webdav: webdavUser);
+      Global.profile = Global.profile.copyWith(webdav: webdavUser.oN);
       Global.saveProfile();
       initClient();
     }

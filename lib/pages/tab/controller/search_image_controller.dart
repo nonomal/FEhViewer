@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../component/exception/error.dart';
-import '../../../fehviewer.dart';
+import '../../../index.dart';
 import '../../../network/request.dart';
 import 'default_tabview_controller.dart';
 import 'enum.dart';
@@ -33,7 +33,7 @@ class SearchImageController extends DefaultTabViewController {
     try {
       result = await FilePicker.platform.pickFiles(type: FileType.image);
     } on Exception catch (e) {
-      logger.e('Pick file failed', e);
+      logger.e('Pick file failed', error: e);
     }
     imagePath = result?.files.single.path ?? '';
     if (imagePath.isEmpty) {

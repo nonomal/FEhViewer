@@ -2,20 +2,21 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/const/storages.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/network/app_dio/http_config.dart';
+import 'package:eros_fe/store/db/isar_helper.dart';
+import 'package:eros_fe/store/hive/hive.dart';
+import 'package:eros_fe/store/hive/hive_cache.dart';
+import 'package:eros_fe/utils/http_override.dart';
+import 'package:eros_fe/utils/storage.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/const/storages.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/network/app_dio/http_config.dart';
-import 'package:fehviewer/store/db/isar_helper.dart';
-import 'package:fehviewer/store/get_store.dart';
-import 'package:fehviewer/store/hive/hive.dart';
-import 'package:fehviewer/store/hive/hive_cache.dart';
-import 'package:fehviewer/utils/http_override.dart';
-import 'package:fehviewer/utils/storage.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -107,9 +108,14 @@ class Global {
 
   static bool canCheckBiometrics = false;
 
+  static bool enableFirebase = false;
+
   User get user => profile.user;
 
   set user(User val) => profile = profile.copyWith(user: val);
+
+  static FirebaseApp? firebaseApp;
+  static FirebaseAnalytics? analytics;
 
   // init
   static Future<void> init() async {
@@ -165,14 +171,12 @@ class Global {
     //   await CustomHttpsProxy.instance.init();
     // }
 
-    // logger.v('doc $appDocPath \napps $appSupportPath \ntemp $tempPath');
+    // logger.t('doc $appDocPath \napps $appSupportPath \ntemp $tempPath');
 
     dbPath = path.join(Global.appSupportPath, EHConst.DB_NAME);
 
     // SP初始化
     await StorageUtil.init();
-
-    await GStore.init();
 
     if (Platform.isWindows) {
       await hiveHelper.init(EHConst.appTitle);
@@ -188,13 +192,14 @@ class Global {
     cookieJar = await Api.cookieJar;
 
     // 读取设备第一次打开
-    isFirstOpen = !StorageUtil().getBool(STORAGE_DEVICE_ALREADY_OPEN_KEY);
+    isFirstOpen =
+        !(StorageUtil().getBool(STORAGE_DEVICE_ALREADY_OPEN_KEY) ?? false);
     if (isFirstOpen) {
-      creatDirs();
+      createDirs();
       StorageUtil().setBool(STORAGE_DEVICE_ALREADY_OPEN_KEY, true);
     }
 
-    isDBinappSupportPath = StorageUtil().getBool(IS_DB_IN_SUPPORT_DIR);
+    isDBinappSupportPath = StorageUtil().getBool(IS_DB_IN_SUPPORT_DIR) ?? false;
 
     if (Platform.isAndroid) {
       await iaw.AndroidInAppWebViewController.setWebContentsDebuggingEnabled(
@@ -215,10 +220,10 @@ class Global {
     // globalDioConfig = globalDioConfig.copyWith(
     //   proxy: proxy,
     // );
-    Get.find<EhConfigService>().setProxy();
+    Get.find<EhSettingService>().setProxy();
   }
 
-  static void creatDirs() {
+  static void createDirs() {
     final Directory downloadDir = Directory(path.join(appDocPath, 'Download'));
     downloadDir.create();
   }
@@ -241,7 +246,7 @@ class Global {
 
   // 持久化Profile信息
   static void saveProfile() {
-    // logger.d(profile.layoutConfig?.toJson());
+    // logger.d(profile.mysqlConfig?.toJson());
     hiveHelper.profile = profile;
   }
 

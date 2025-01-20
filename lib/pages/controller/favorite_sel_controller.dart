@@ -1,13 +1,8 @@
-import 'package:fehviewer/common/controller/localfav_controller.dart';
-import 'package:fehviewer/common/controller/user_controller.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/generated/l10n.dart';
-import 'package:fehviewer/models/favcat.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/pages/tab/fetch_list.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/utility.dart';
+import 'package:eros_fe/common/controller/localfav_controller.dart';
+import 'package:eros_fe/common/controller/user_controller.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/pages/tab/fetch_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -55,7 +50,7 @@ class FavoriteSelectorController extends GetxController
 
     ever<List<Favcat>>(_favcatList, (value) {
       Global.profile = Global.profile
-          .copyWith(user: Global.profile.user.copyWith(favcat: value));
+          .copyWith(user: Global.profile.user.copyWith(favcat: value.oN));
       Global.saveProfile();
     });
   }
@@ -63,15 +58,15 @@ class FavoriteSelectorController extends GetxController
   void increase(String favId) {
     final _index = _favcatList.indexWhere((element) => element.favId == favId);
     final int _num = (_favcatList[_index].totNum ?? 0) + 1;
-    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num);
-    logger.v(' $_num');
+    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num.oN);
+    logger.t(' $_num');
     change(_favcatList, status: RxStatus.success());
   }
 
   void decrease(String favId) {
     final _index = _favcatList.indexWhere((element) => element.favId == favId);
     final int _num = (_favcatList[_index].totNum ?? 1) - 1;
-    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num);
+    _favcatList[_index] = _favcatList[_index].copyWith(totNum: _num.oN);
     change(_favcatList, status: RxStatus.success());
   }
 
@@ -87,18 +82,18 @@ class FavoriteSelectorController extends GetxController
     final _indexAll = _favcatList.indexWhere((element) => element.favId == 'a');
     if (_indexAll > -1) {
       _favcatList[_indexAll] =
-          _favcatList[_indexAll].copyWith(totNum: _allNetworkFavcatCount);
+          _favcatList[_indexAll].copyWith(totNum: _allNetworkFavcatCount.oN);
     }
 
     final _indexLocal =
         _favcatList.indexWhere((element) => element.favId == 'l');
     if (_indexLocal > -1) {
       _favcatList[_indexLocal] = _favcatList[_indexLocal]
-          .copyWith(totNum: _localFavController.loacalFavs.length);
+          .copyWith(totNum: _localFavController.loacalFavs.length.oN);
     }
 
     if (isUpdate) {
-      // logger.v(
+      // logger.t(
       //     '_favcatList isUpdate  \n${_favcatList.map((e) => jsonEncode(e)).join('\n')}');
       change(_favcatList, status: RxStatus.success());
     }
@@ -118,7 +113,7 @@ class FavoriteSelectorController extends GetxController
     if (favListFromSP.isNotEmpty) {
       _favcatList.clear();
       _favcatList.addAll(favListFromSP);
-      logger.v('_initFavItemBeans from sp');
+      logger.t('_initFavItemBeans from sp');
     } else {
       _favcatList.clear();
       for (final Map<String, String> catmap in EHConst.favList) {
@@ -130,7 +125,7 @@ class FavoriteSelectorController extends GetxController
         );
       }
 
-      logger.v('_initFavItemBeans new');
+      logger.t('_initFavItemBeans new');
     }
 
     if (!_favcatList.any((element) => element.favId == 'a')) {

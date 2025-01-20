@@ -1,6 +1,6 @@
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/group/custom_sublist_controller.dart';
-import 'package:fehviewer/pages/tab/controller/group/custom_tabbar_controller.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/tab/controller/group/custom_sublist_controller.dart';
+import 'package:eros_fe/pages/tab/controller/group/custom_tabbar_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -8,20 +8,20 @@ import 'package:get/get.dart';
 import '../../comm.dart';
 import '../constants.dart';
 import '../gallery_base.dart';
-import '../tab_base.dart';
+import '../list/tab_base.dart';
 
 class SubListView<T extends CustomSubListController> extends StatefulWidget {
   const SubListView({
-    Key? key,
+    super.key,
     required this.profileUuid,
     this.pinned = true,
-  }) : super(key: key);
+  });
 
   final String profileUuid;
   final bool pinned;
 
   @override
-  _SubListViewState createState() => _SubListViewState<T>();
+  State<SubListView> createState() => _SubListViewState<T>();
 }
 
 class _SubListViewState<T extends CustomSubListController>
@@ -33,7 +33,7 @@ class _SubListViewState<T extends CustomSubListController>
   @override
   void initState() {
     super.initState();
-    logger.v('Get.find ${T.runtimeType} tag:${widget.profileUuid}');
+    logger.t('Get.find ${T.runtimeType} tag:${widget.profileUuid}');
     subController = Get.find<T>(tag: widget.profileUuid)
       ..heroTag = widget.profileUuid;
     controller.subControllerMap[widget.profileUuid] = subController;
@@ -57,6 +57,7 @@ class _SubListViewState<T extends CustomSubListController>
   Widget build(BuildContext context) {
     super.build(context);
     return CustomScrollView(
+      cacheExtent: kTabViewCacheExtent,
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       slivers: [
@@ -71,9 +72,11 @@ class _SubListViewState<T extends CustomSubListController>
           sliver: _buildListView(),
         ),
         Obx(() {
-          return EndIndicator(
-            pageState: subController.pageState,
-            loadDataMore: subController.loadDataMore,
+          return SliverSafeArea(
+            sliver: EndIndicator(
+              pageState: subController.pageState,
+              loadDataMore: subController.loadDataMore,
+            ),
           );
         }),
       ],

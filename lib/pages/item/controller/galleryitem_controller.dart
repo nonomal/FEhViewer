@@ -1,21 +1,21 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:fehviewer/common/controller/history_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/controller/fav_controller.dart';
-import 'package:fehviewer/pages/item/item_base.dart';
-import 'package:fehviewer/pages/tab/controller/tabhome_controller.dart';
+import 'package:eros_fe/common/controller/history_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/component/setting_base.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/controller/fav_controller.dart';
+import 'package:eros_fe/pages/item/item_base.dart';
+import 'package:eros_fe/pages/tab/controller/tabhome_controller.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class GalleryItemController extends GetxController {
   GalleryItemController({required this.galleryProvider});
 
-  final EhConfigService _ehConfigService = Get.find();
+  final EhSettingService _ehSettingService = Get.find();
   final FavController _favDialogController = Get.find();
   final TabHomeController _tabHomeController = Get.find();
   final HistoryController _historyController = Get.find();
@@ -46,7 +46,7 @@ class GalleryItemController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    logger.v(
+    logger.t(
         'init GalleryProviderController ${galleryProvider.gid}  ${galleryProvider.englishTitle}');
     if (galleryProvider.favTitle != null &&
         galleryProvider.favTitle!.isNotEmpty) {
@@ -57,16 +57,16 @@ class GalleryItemController extends GetxController {
     colorRating = galleryProvider.colorRating ?? '';
 
     ratingFallBack = galleryProvider.ratingFallBack ?? 0.00;
-    logger.v('ratingFB=$ratingFallBack');
+    logger.t('ratingFB=$ratingFallBack');
 
     favCat = galleryProvider.favcat ?? '';
-    logger.v('favCat=$favCat');
+    logger.t('favCat=$favCat');
   }
 
   int get tagLine => max(
           1,
           (getLimitSimpleTags(galleryProvider.simpleTags,
-                          _ehConfigService.listViewTagLimit)
+                          _ehSettingService.listViewTagLimit)
                       ?.length ??
                   0) /
               4)
@@ -74,22 +74,22 @@ class GalleryItemController extends GetxController {
 
   /// 设置收藏夹
   void setFavTitleAndFavcat({String favTitle = '', String? favcat}) {
-    logger.v('设置收藏夹, 原 isFav :[$isFav]');
-    galleryProvider.copyWith(favTitle: favTitle);
+    logger.t('设置收藏夹, 原 isFav :[$isFav]');
+    galleryProvider.copyWith(favTitle: favTitle.oN);
     isFav = favTitle.isNotEmpty;
-    logger.v('设置收藏夹, 当前 isFav :[$isFav]');
+    logger.t('设置收藏夹, 当前 isFav :[$isFav]');
     if (favcat != null || (favcat?.isNotEmpty ?? false)) {
       favCat = favcat!;
-      galleryProvider.copyWith(favcat: favcat);
-      logger.v('item set favcat [$favcat]');
+      galleryProvider.copyWith(favcat: favcat.oN);
+      logger.t('item set favcat [$favcat]');
     } else {
       favCat = '';
-      galleryProvider.copyWith(favcat: '', favTitle: '');
+      galleryProvider.copyWith(favcat: ''.oN, favTitle: ''.oN);
     }
   }
 
   String get title {
-    // if ((_ehConfigService.isJpnTitle.value) &&
+    // if ((_ehSettingService.isJpnTitle.value) &&
     //     (galleryProvider.japaneseTitle?.isNotEmpty ?? false)) {
     //   return galleryProvider.japaneseTitle ?? '';
     // } else {
@@ -102,7 +102,7 @@ class GalleryItemController extends GetxController {
 
   /// 点击item
   void onTap(dynamic tabTag) {
-    logger.v('${galleryProvider.englishTitle} ');
+    logger.t('${galleryProvider.englishTitle} ');
     NavigatorUtil.goGalleryPage(
         galleryProvider: galleryProvider, tabTag: tabTag);
   }
@@ -122,12 +122,13 @@ class GalleryItemController extends GetxController {
   }
 
   void _updatePressedColor() {
-    colorTap.value = CupertinoDynamicColor.resolve(
-        CupertinoColors.systemGrey4, Get.context!);
+    // colorTap.value = CupertinoDynamicColor.resolve(
+    //     CupertinoColors.systemGrey4, Get.context!);
+    colorTap.value = getPressedColor(Get.context!);
   }
 
   set localFav(bool value) {
-    galleryProvider.copyWith(localFav: localFav);
+    galleryProvider.copyWith(localFav: localFav.oN);
     update();
   }
 
@@ -135,7 +136,7 @@ class GalleryItemController extends GetxController {
 
   void firstPutImage(List<GalleryImage> galleryImage) {
     if (galleryImage.isNotEmpty) {
-      galleryProvider.copyWith(galleryImages: galleryImage);
+      galleryProvider.copyWith(galleryImages: galleryImage.oN);
     }
 
     firstPageImage =
@@ -146,9 +147,9 @@ class GalleryItemController extends GetxController {
   Future<void> _showLongPressSheet() async {
     final BuildContext context = Get.overlayContext!;
     final curPage = Get.currentRoute;
-    logger.v('curPage $curPage');
+    logger.t('curPage $curPage');
     final curTab = _tabHomeController.currRoute;
-    logger.v('curTab $curTab');
+    logger.t('curTab $curTab');
     final topRoute = MainNavigatorObserver().history.lastOrNull?.settings.name;
 
     final isHistoryItem = curPage == EHRoutes.history ||

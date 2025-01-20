@@ -1,16 +1,15 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:fehviewer/common/controller/advance_search_controller.dart';
-import 'package:fehviewer/common/parser/eh_parser.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/archiver_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/torrent_controller.dart';
-import 'package:fehviewer/pages/tab/fetch_list.dart';
+import 'package:eros_fe/common/controller/advance_search_controller.dart';
+import 'package:eros_fe/common/parser/eh_parser.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/archiver_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/torrent_controller.dart';
+import 'package:eros_fe/pages/tab/fetch_list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide FormData, Response, MultipartFile;
 import 'package:http_parser/http_parser.dart' as http_parser;
@@ -21,7 +20,7 @@ import 'app_dio/pdio.dart';
 Options getCacheOptions({bool forceRefresh = false}) {
   final options = Api.cacheOption
       .copyWith(
-        policy: forceRefresh ? CachePolicy.refreshForceCache : null,
+        policy: forceRefresh ? CachePolicy.refresh : CachePolicy.request,
       )
       .toOptions();
 
@@ -45,10 +44,10 @@ Future<GalleryList?> getGallery({
   AdvanceSearch? advanceSearch,
   bool globalSearch = false,
 }) async {
-  final AdvanceSearchController _searchController = Get.find();
+  final AdvanceSearchController searchController = Get.find();
   DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
 
-  logger.v('globalSearch $globalSearch');
+  logger.t('globalSearch $globalSearch');
 
   late final String _url;
   switch (galleryListType) {
@@ -99,7 +98,7 @@ Future<GalleryList?> getGallery({
     _params.addAll(gidOrTimeParams);
   }
 
-  logger.v('advanceSearch ${advanceSearch?.param}  refresh $refresh');
+  logger.t('advanceSearch ${advanceSearch?.param}  refresh $refresh');
 
   /// 高级搜索处理
   if (advanceSearch != null) {
@@ -107,16 +106,16 @@ Future<GalleryList?> getGallery({
       _params['advsearch'] = 1;
       _params.addAll(advanceSearch.param);
     }
-  } else if (globalSearch && _searchController.enableAdvance) {
+  } else if (globalSearch && searchController.enableAdvance) {
     _params['advsearch'] = 1;
-    _params.addAll(_searchController.advanceSearchMap);
+    _params.addAll(searchController.advanceSearchMap);
   }
 
   if (search != null && isFav) {
-    _params.addAll(_searchController.favSearchMap);
+    _params.addAll(searchController.favSearchMap);
   }
 
-  logger.v('url:$_url $_params');
+  logger.t('url:$_url $_params');
 
   DioHttpResponse httpResponse = await dioHttpClient.get(
     _url,
@@ -165,6 +164,9 @@ Future<GalleryList?> getGallery({
     return httpResponse.data as GalleryList;
   } else {
     logger.d('${httpResponse.error.runtimeType}');
+    if (httpResponse.error is CancelException) {
+      return const GalleryList();
+    }
     throw httpResponse.error ?? EhError(error: 'getGallery error');
   }
 }
@@ -215,7 +217,7 @@ Future<GalleryProvider?> getGalleryDetail({
     options: getCacheOptions(forceRefresh: refresh),
     cancelToken: cancelToken,
   );
-  logger.v('httpResponse.ok ${httpResponse.ok}');
+  logger.t('httpResponse.ok ${httpResponse.ok}');
   if (httpResponse.ok && httpResponse.data is GalleryProvider) {
     return httpResponse.data as GalleryProvider;
   } else {
@@ -230,7 +232,68 @@ Future<GalleryProvider?> getGalleryDetail({
   }
 }
 
-Future<GalleryImage?> fetchImageInfo(
+Future<GalleryImage?> fetchImageInfoByApi(
+  String href, {
+  String? showKey,
+  bool refresh = false,
+  String? sourceId,
+  CancelToken? cancelToken,
+}) async {
+  final isMpv = regGalleryMpvPageUrl.hasMatch(href);
+
+  // 如果 showKey 为空 或者换源重载（sourceId不为空） ，直接使用常规请求，解析html
+  if (isMpv ||
+      showKey == null ||
+      showKey.isEmpty ||
+      (sourceId?.isNotEmpty ?? false)) {
+    logger.t('OOOOOOOld : showKey $showKey, sourceId $sourceId, isMpv $isMpv');
+    final _image = await _fetchImageInfo(
+      href,
+      refresh: refresh,
+      sourceId: sourceId,
+      cancelToken: cancelToken,
+    );
+    return _image;
+  }
+
+  logger.t(
+      'fetchImageInfoByApi: href $href, refresh $refresh, sourceId $sourceId');
+
+  final RegExp regExp =
+      RegExp(r'https://e[-x]hentai.org/s/([0-9a-z]+)/(\d+)-(\d+)');
+  final RegExpMatch? regRult = regExp.firstMatch(href);
+  final int gid = int.parse(regRult?.group(2) ?? '0');
+  final String imgkey = regRult?.group(1) ?? '';
+  final int page = int.parse(regRult?.group(3) ?? '0');
+
+  final Map<String, Object> reqMap = {
+    'method': 'showpage',
+    'gid': gid,
+    'page': page,
+    'imgkey': imgkey,
+    'showkey': showKey,
+  };
+
+  // const url = '/api.php';
+  // DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
+  final String reqJsonStr = jsonEncode(reqMap);
+
+  // 请求api
+  final response = await postEhApi(reqJsonStr, forceRefresh: refresh);
+
+  final image = paraShowPage(response);
+  // if (image.imageUrl!.endsWith('/509.gif') ||
+  //     image.imageUrl!.endsWith('/509s.gif')) {
+  //   throw EhError(type: EhErrorType.image509);
+  // }
+  if (RegExp(EHConst.REG_509_URL).hasMatch(image.imageUrl ?? '')) {
+    throw EhError(type: EhErrorType.image509);
+  }
+
+  return image;
+}
+
+Future<GalleryImage?> _fetchImageInfo(
   String href, {
   bool refresh = false,
   String? sourceId,
@@ -241,7 +304,7 @@ Future<GalleryImage?> fetchImageInfo(
     if (sourceId != null && sourceId.trim().isNotEmpty) 'nl': sourceId,
   };
 
-  logger.v('fetchImageInfo: href $href, refresh $refresh, sourceId $sourceId, '
+  logger.t('fetchImageInfo: href $href, refresh $refresh, sourceId $sourceId, '
       'debugLabel $debugLabel');
 
   String mpvSer = '1';
@@ -250,7 +313,7 @@ Future<GalleryImage?> fetchImageInfo(
     mpvSer = regGalleryMpvPageUrl.firstMatch(href)?.group(3) ?? '1';
   }
 
-  logger.v('url $href  isMpv:$isMpv');
+  logger.t('url $href  isMpv:$isMpv');
 
   DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
   DioHttpResponse httpResponse = await dioHttpClient.get(
@@ -264,7 +327,7 @@ Future<GalleryImage?> fetchImageInfo(
   );
 
   if (httpResponse.ok && httpResponse.data is GalleryImage) {
-    return (httpResponse.data as GalleryImage).copyWith(href: href);
+    return (httpResponse.data as GalleryImage).copyWith(href: href.oN);
   } else {
     // logger.d('error.runtimeType: ${httpResponse.error.runtimeType}');
     throw httpResponse.error ?? EhError(error: 'fetchImageInfo error');
@@ -367,13 +430,13 @@ Future<String> postArchiverLocalDownload(
 
 Future<EhSettings?> getEhSettings(
     {bool refresh = false, String? selectProfile}) async {
-  logger.v('getEhSettings ${ehDioConfig.baseUrl}');
+  logger.t('getEhSettings ${ehDioConfig.baseUrl}');
   DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
   const String url = '/uconfig.php';
 
   late DioHttpResponse httpResponse;
   for (int i = 0; i < 3; i++) {
-    logger.v('getUconfig sp:$selectProfile idx:$i');
+    logger.t('getUconfig sp:$selectProfile idx:$i');
     httpResponse = await dioHttpClient.get(
       url,
       httpTransformer: UconfigHttpTransformer(),
@@ -668,13 +731,16 @@ Future<GalleryImage?> mpvLoadImageDispatch({
 
 Future<void> ehDownload({
   required String url,
-  required savePath,
+  String? savePath,
+  SavePathBuild? savePathBuilder,
   CancelToken? cancelToken,
   bool? errToast,
   bool deleteOnError = true,
   VoidCallback? onDownloadComplete,
   ProgressCallback? progressCallback,
 }) async {
+  assert(savePath != null || savePathBuilder != null);
+
   late final String downloadUrl;
   DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
   if (!url.startsWith(RegExp(r'https?://'))) {
@@ -682,11 +748,21 @@ Future<void> ehDownload({
   } else {
     downloadUrl = url;
   }
-  logger.v('downloadUrl $downloadUrl');
+  logger.t('downloadUrl $downloadUrl');
+
+  late final DioSavePath dioSavePath;
+  if (savePath != null) {
+    dioSavePath = savePath.toDioSavePath;
+  } else if (savePathBuilder != null) {
+    dioSavePath = DioSavePath(pathBuilder: savePathBuilder);
+  } else {
+    throw ArgumentError('savePath and savePathBuild is null');
+  }
+
   try {
     await dioHttpClient.download(
       downloadUrl,
-      savePath,
+      dioSavePath,
       deleteOnError: deleteOnError,
       onReceiveProgress: (int count, int total) {
         progressCallback?.call(count, total);
@@ -695,6 +771,7 @@ Future<void> ehDownload({
         }
       },
       cancelToken: cancelToken,
+      options: getCacheOptions(forceRefresh: false),
     );
   } on CancelException catch (e) {
     logger.d('cancel');
@@ -780,11 +857,13 @@ Future<bool?> postComment({
     httpTransformer: HttpTransformerBuilder(
       (response) {
         logger.d('statusCode ${response.statusCode}');
-        return DioHttpResponse<bool>.success(response.statusCode == 302);
+        return DioHttpResponse<bool>.success(response.statusCode == 200 ||
+            response.statusCode == 302 ||
+            response.statusCode == 303);
       },
     ),
     options: getCacheOptions(forceRefresh: true)
-      ..followRedirects = false
+      ..followRedirects = true
       ..validateStatus = (status) => (status ?? 0) < 500,
   );
 
@@ -965,7 +1044,10 @@ Future<String> postEhApi(
   bool forceRefresh = true,
 }) async {
   const String url = '/api.php';
-  DioHttpClient dioHttpClient = DioHttpClient(dioConfig: globalDioConfig);
+  DioHttpClient dioHttpClient = DioHttpClient(
+      dioConfig: globalDioConfig.copyWith(
+    contentType: Headers.jsonContentType,
+  ));
   DioHttpResponse httpResponse = await dioHttpClient.post(
     url,
     data: data,

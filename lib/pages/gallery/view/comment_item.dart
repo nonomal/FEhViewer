@@ -1,12 +1,12 @@
-import 'package:fehviewer/common/controller/avatar_controller.dart';
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/comment_controller.dart';
-import 'package:fehviewer/widget/expandable_linkify.dart';
-import 'package:fehviewer/widget/text_avatar.dart';
+import 'package:eros_fe/common/controller/avatar_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/comment_controller.dart';
+import 'package:eros_fe/widget/expandable_linkify.dart';
+import 'package:eros_fe/widget/text_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide SelectableText;
@@ -52,41 +52,40 @@ class CommentItem extends StatelessWidget {
       builder: (_commentController) {
         return Container(
           margin: const EdgeInsets.only(top: 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
               color: ehTheme.commentBackgroundColor,
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.centerLeft,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CommentHead(
-                    commentController: _commentController,
-                    galleryComment: galleryComment,
-                    simple: simple,
-                  ),
-                  if (galleryComment.id != '0' && reptyComment != null)
-                    _CommentReply(reptyComments: reptyComments),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: simple
-                        ? _buildSimpleExpTextLinkify(
-                            context: context,
-                            style: _commentTextStyle,
-                            showTranslate:
-                                galleryComment.showTranslate ?? false,
-                          )
-                        : buildComment(_commentTextStyle, context),
-                  ),
-                  _CommentTail(
-                    commentController: _commentController,
-                    showRepty: galleryComment.id != '0' && !simple,
-                    simple: simple,
-                    galleryComment: galleryComment,
-                  ),
-                ],
-              ),
+            ),
+            padding: const EdgeInsets.all(8),
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _CommentHead(
+                  commentController: _commentController,
+                  galleryComment: galleryComment,
+                  simple: simple,
+                ),
+                if (galleryComment.id != '0' && reptyComment != null)
+                  _CommentReply(reptyComments: reptyComments),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: simple
+                      ? _buildSimpleExpTextLinkify(
+                          context: context,
+                          style: _commentTextStyle,
+                          showTranslate: galleryComment.showTranslate ?? false,
+                        )
+                      : buildComment(_commentTextStyle, context),
+                ),
+                _CommentTail(
+                  commentController: _commentController,
+                  showRepty: galleryComment.id != '0' && !simple,
+                  simple: simple,
+                  galleryComment: galleryComment,
+                ),
+              ],
             ),
           ),
         );
@@ -397,7 +396,7 @@ class _CommentTail extends StatelessWidget {
               commentController.commitVoteDown(galleryComment.id!);
             },
           ),
-        if (showRepty && !simple)
+        if (showRepty && !simple && commentController.isLogin)
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             minSize: 0,
@@ -434,7 +433,7 @@ class _CommentUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EhConfigService _ehConfigService = Get.find();
+    final EhSettingService _ehSettingService = Get.find();
     final AvatarController avatarController = Get.find();
 
     final _name = comment.name;
@@ -443,34 +442,35 @@ class _CommentUser extends StatelessWidget {
     final _future = avatarController.getUser(_userId);
 
     final _placeHold = Obx(() {
-      final radius = _ehConfigService.avatarBorderRadiusType ==
+      final radius = _ehSettingService.avatarBorderRadiusType ==
               AvatarBorderRadiusType.roundedRect
           ? 8.0
           : avatarSize / 2;
 
-      return _ehConfigService.avatarType == AvatarType.boringAvatar
-          ? BoringAvatars(
+      return _ehSettingService.avatarType == AvatarType.boringAvatar
+          ? BoringAvatar(
               name: _name,
-              colors: [...ThemeColors.catColorList],
-              type: _ehConfigService.boringAvatarsType,
-              square: true,
+              // colors: [...ThemeColors.catColorList],
+              palette: ThemeColors.boringAvatarPalette,
+              type: _ehSettingService.boringAvatarsType,
+              // square: true,
             )
           : TextAvatar(
               name: _name,
               colors: [...ThemeColors.catColorList],
-              type: _ehConfigService.textAvatarsType,
+              type: _ehSettingService.textAvatarsType,
               radius: radius,
             );
     });
 
     void tapName() {
-      logger.v('search uploader:$_name');
+      logger.t('search uploader:$_name');
       NavigatorUtil.goSearchPageWithParam(simpleSearch: 'uploader:$_name');
     }
 
     return Obx(() {
       final avatarUrl = avatarController.getAvatarUrl(_userId);
-      final radius = _ehConfigService.avatarBorderRadiusType ==
+      final radius = _ehSettingService.avatarBorderRadiusType ==
               AvatarBorderRadiusType.roundedRect
           ? 8.0
           : avatarSize / 2;
@@ -479,7 +479,7 @@ class _CommentUser extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_ehConfigService.showCommentAvatar)
+            if (_ehSettingService.showCommentAvatar)
               Container(
                 width: avatarSize,
                 height: avatarSize,
@@ -617,7 +617,7 @@ class _CommentHead extends StatelessWidget {
           child: Row(
             children: <Widget>[
               // 翻译
-              if (Get.find<EhConfigService>().commentTrans.value && !simple)
+              if (Get.find<EhSettingService>().commentTrans.value && !simple)
                 CupertinoTheme(
                   data: ehTheme.themeData!,
                   child: TranslateButton(
@@ -701,7 +701,7 @@ void _showScoreDetail(List<String>? scores, BuildContext context) {
     return;
   }
   vibrateUtil.light();
-  logger.v(scores.join('   '));
+  logger.t(scores.join('   '));
   showCupertinoDialog(
     context: context,
     barrierDismissible: true,

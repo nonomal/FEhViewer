@@ -1,14 +1,14 @@
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/component/setting_base.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/component/setting_base.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/item/gallery_item_grid.dart';
+import 'package:eros_fe/pages/item/item_base.dart';
+import 'package:eros_fe/pages/setting/setting_items/selector_Item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
-
-import '../item/gallery_item_grid.dart';
-import '../item/item_base.dart';
-import 'setting_items/selector_Item.dart';
 
 final _maybeAspectRatios = <double>[
   4 / 3,
@@ -31,22 +31,22 @@ List<double> _genAspectRatios([int? count]) {
 }
 
 class ItemWidthSettingPage extends StatefulWidget {
-  const ItemWidthSettingPage({Key? key}) : super(key: key);
+  const ItemWidthSettingPage({super.key});
 
   @override
   State<ItemWidthSettingPage> createState() => _ItemWidthSettingPageState();
 }
 
 class _ItemWidthSettingPageState extends State<ItemWidthSettingPage> {
-  EhConfigService get _ehConfigService => Get.find();
+  EhSettingService get _ehSettingService => Get.find();
   late ListModeEnum selectedMode;
-  late double customWidth;
+  late double _customWidth;
   late bool enableCustomWidth;
 
   @override
   void initState() {
     super.initState();
-    selectedMode = _ehConfigService.listMode.value;
+    selectedMode = _ehSettingService.listMode.value;
     if (![
       ListModeEnum.grid,
       ListModeEnum.waterfall,
@@ -70,118 +70,198 @@ class _ItemWidthSettingPageState extends State<ItemWidthSettingPage> {
   void _onModeChange(ListModeEnum mode) {
     selectedMode = mode;
     enableCustomWidth =
-        _ehConfigService.getItemConfig(selectedMode)?.enableCustomWidth ??
+        _ehSettingService.getItemConfig(selectedMode)?.enableCustomWidth ??
             false;
-    customWidth =
-        _ehConfigService.getItemConfig(selectedMode)?.customWidth?.toDouble() ??
-            defaultWidthMap()[mode] ??
-            200.0;
+    _customWidth = _ehSettingService
+            .getItemConfig(selectedMode)
+            ?.customWidth
+            ?.toDouble() ??
+        defaultWidthMap()[mode] ??
+        200.0;
+    logger.d('_customWidth of $mode is $_customWidth');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      return CupertinoPageScaffold(
-        backgroundColor: !ehTheme.isDarkMode
-            ? CupertinoColors.secondarySystemBackground
-            : null,
+    return CupertinoPageScaffold(
+        backgroundColor: CupertinoColors.systemGroupedBackground,
         navigationBar: CupertinoNavigationBar(
           middle: Text(L10n.of(context).custom_width),
         ),
-        child: SafeArea(
-          bottom: false,
-          top: true,
-          child: Container(
-            child: Column(
-              children: [
-                _buildListModeItem(
-                  context,
-                  initMode: selectedMode,
-                  onValueChanged: (val) {
-                    // logger.d('切换要修改的列表模式 listMode $val');
-                    setState(() {
-                      _onModeChange(val);
-                    });
-                  },
-                ),
+        child: CustomScrollView(
+          slivers: [
+            SliverSafeArea(
+              left: false,
+              right: false,
+              sliver: MultiSliver(
+                children: [
+                  SliverCupertinoListSection.listInsetGrouped(children: [
+                    _buildListModeItem(
+                      context,
+                      initMode: selectedMode,
+                      onValueChanged: (val) {
+                        // logger.d('切换要修改的列表模式 listMode $val');
+                        setState(() {
+                          _onModeChange(val);
+                        });
+                      },
+                    ),
+                  ]),
+                  SliverCupertinoListSection.listInsetGrouped(children: [
+                    CupertinoListTile(
+                      title: Text(L10n.of(context).custom_width),
+                      trailing: CupertinoSwitch(
+                        value: enableCustomWidth,
+                        onChanged: (bool val) {
+                          _ehSettingService.setItemConfig(
+                            selectedMode,
+                            (ItemConfig itemConfig) {
+                              return itemConfig.copyWith(
+                                enableCustomWidth: val.oN,
+                                customWidth: _customWidth.toInt().oN,
+                              );
+                            },
+                          );
+                          setState(() {
+                            enableCustomWidth = val;
+                          });
+                        },
+                      ),
+                    ),
 
-                // 开关
-                StatefulBuilder(builder: (context, setState) {
-                  return TextSwitchItem(
-                    L10n.of(context).custom_width,
-                    key: ValueKey(selectedMode),
-                    value: enableCustomWidth,
-                    onChanged: (bool val) {
-                      _ehConfigService.setItemConfig(
-                          selectedMode,
-                          (ItemConfig itemConfig) =>
-                              itemConfig.copyWith(enableCustomWidth: val));
-                      setState(() {
-                        enableCustomWidth = val;
-                      });
-                    },
-                    hideDivider: false,
-                  );
-                }),
-
-                Expanded(
-                  child: StatefulBuilder(builder: (context, setState) {
-                    return Column(
-                      children: [
-                        // 滑动条
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          constraints:
-                              const BoxConstraints(minHeight: kItemHeight),
-                          color: CupertinoDynamicColor.resolve(
-                              ehTheme.itemBackgroundColor!, context),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                alignment: Alignment.center,
-                                child: Text('${customWidth.toInt()}'),
-                              ),
-                              Expanded(
-                                child: CupertinoSlider(
-                                  value: customWidth,
-                                  min: 100,
-                                  max: 350,
-                                  divisions: 250,
-                                  onChanged: (double val) {
-                                    setState(() {
-                                      customWidth = val;
-                                    });
-                                  },
-                                  onChangeEnd: (double val) {
-                                    logger.d('onChangeEnd $val');
-                                    _ehConfigService.setItemConfig(
-                                        selectedMode,
-                                        (ItemConfig itemConfig) =>
-                                            itemConfig.copyWith(
-                                                customWidth: val.toInt()));
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ExampleView(
-                            selectedMode: selectedMode,
-                            customWidth: customWidth,
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ],
+                    // 滑动条
+                    _WidthSlide(
+                      key: ValueKey(selectedMode),
+                      enable: enableCustomWidth,
+                      customWidth: _customWidth.toInt(),
+                      onChanged: (int val) {
+                        _customWidth = val.toDouble();
+                        _ehSettingService.setItemConfig(
+                            selectedMode,
+                            (ItemConfig itemConfig) =>
+                                itemConfig.copyWith(customWidth: val.oN));
+                        setState(() {});
+                      },
+                    ),
+                  ]),
+                  ExampleView(
+                    selectedMode: selectedMode,
+                    customWidth: _customWidth,
+                  ),
+                ],
+              ),
             ),
+          ],
+        ));
+  }
+}
+
+class _WidthSlide extends StatefulWidget {
+  const _WidthSlide({
+    super.key,
+    required this.enable,
+    required this.customWidth,
+    this.onChanged,
+  });
+
+  final bool enable;
+  final int customWidth;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  State<_WidthSlide> createState() => _WidthSlideState();
+}
+
+class _WidthSlideState extends State<_WidthSlide> {
+  late double _customWidth;
+
+  late TextEditingController textEditingController;
+
+  static const kMaxRating = 400.0;
+  static const kMinRating = 100.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _customWidth = widget.customWidth.toDouble();
+
+    textEditingController = TextEditingController.fromValue(
+      TextEditingValue(
+        text: widget.customWidth.toString(),
+        selection: TextSelection.fromPosition(
+          TextPosition(
+            affinity: TextAffinity.downstream,
+            offset: widget.customWidth.toString().length,
           ),
         ),
-      );
-    });
+      ),
+    );
+  }
+
+  void _onEditComplete() {
+    _customWidth = _customWidth.clamp(kMinRating, kMaxRating);
+    textEditingController.text = _customWidth.toInt().toString();
+    setState(() {});
+    widget.onChanged?.call(_customWidth.toInt());
+
+    // close keyboard
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      constraints: const BoxConstraints(minHeight: kItemHeight),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: CupertinoSlider(
+                value: _customWidth,
+                min: kMinRating,
+                max: kMaxRating,
+                activeColor: widget.enable ? null : CupertinoColors.systemGrey,
+                onChanged: widget.enable
+                    ? (double val) {
+                        _customWidth = val;
+                        textEditingController.text =
+                            _customWidth.toInt().toString();
+                        widget.onChanged?.call(_customWidth.toInt());
+                        setState(() {});
+                      }
+                    : null,
+                onChangeEnd: (double val) {
+                  _customWidth = val;
+                  textEditingController.text = _customWidth.toInt().toString();
+                },
+              ),
+            ),
+            Container(
+              width: 50,
+              alignment: Alignment.center,
+              child: CupertinoTextField(
+                textAlign: TextAlign.center,
+                enabled: widget.enable,
+                style: TextStyle(
+                  color: widget.enable ? null : CupertinoColors.systemGrey,
+                ),
+                controller: textEditingController,
+                keyboardType: TextInputType.number,
+                onChanged: (String val) {
+                  final int _val = int.parse(val);
+                  _customWidth = _val.clamp(kMinRating, kMaxRating).toDouble();
+                  setState(() {});
+                },
+                onEditingComplete: () {
+                  _onEditComplete();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -200,29 +280,35 @@ class ExampleView extends StatelessWidget {
 
     switch (selectedMode) {
       case ListModeEnum.grid:
-        return GridView.builder(
+        return SliverPadding(
           padding: const EdgeInsets.all(EHConst.gridCrossAxisSpacing),
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: customWidth,
-            childAspectRatio: EHConst.gridChildAspectRatio,
-            mainAxisSpacing: 4.0,
-            crossAxisSpacing: 4.0,
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return const _GridItem();
+              },
+              childCount: kItemCount,
+            ),
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: customWidth,
+              childAspectRatio: EHConst.gridChildAspectRatio,
+              mainAxisSpacing: 4.0,
+              crossAxisSpacing: 4.0,
+            ),
           ),
-          itemBuilder: (context, index) {
-            return const _GridItem();
-          },
-          itemCount: kItemCount,
         );
       case ListModeEnum.waterfall:
-        return WaterfallFlowView(customWidth: customWidth);
+        return WaterfallFlowViewSliver(customWidth: customWidth);
       case ListModeEnum.waterfallLarge:
-        return WaterfallFlowView(
+        return WaterfallFlowViewSliver(
           customWidth: customWidth,
           large: true,
         );
 
       default:
-        return Container();
+        return const SliverToBoxAdapter(
+          child: SizedBox.shrink(),
+        );
     }
   }
 }
@@ -263,6 +349,47 @@ class WaterfallFlowView extends StatelessWidget {
   }
 }
 
+class WaterfallFlowViewSliver extends StatelessWidget {
+  const WaterfallFlowViewSliver({
+    super.key,
+    this.large = false,
+    required this.customWidth,
+  });
+
+  final bool large;
+  final double customWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverSafeArea(
+      minimum: EdgeInsets.all(large
+          ? EHConst.waterfallFlowLargeCrossAxisSpacing
+          : EHConst.waterfallFlowCrossAxisSpacing),
+      sliver: SliverWaterfallFlow(
+        gridDelegate: SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: customWidth,
+          crossAxisSpacing: large
+              ? EHConst.waterfallFlowLargeCrossAxisSpacing
+              : EHConst.waterfallFlowCrossAxisSpacing,
+          mainAxisSpacing: large
+              ? EHConst.waterfallFlowLargeMainAxisSpacing
+              : EHConst.waterfallFlowMainAxisSpacing,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final aspectRatio = _aspectRatioList[index];
+            return _WaterfallFlowItem(
+              aspectRatio: aspectRatio,
+              large: large,
+            );
+          },
+          childCount: _aspectRatioList.length,
+        ),
+      ),
+    );
+  }
+}
+
 class _WaterfallFlowItem extends StatelessWidget {
   const _WaterfallFlowItem({
     Key? key,
@@ -293,8 +420,8 @@ class _WaterfallFlowItem extends StatelessWidget {
                   ehTheme.itemBackgroundColor!, context),
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Column(
-                children: const [
+              child: const Column(
+                children: [
                   PlaceHolderLine(),
                   PlaceHolderLine(),
                 ],
@@ -330,8 +457,8 @@ class _GridItem extends StatelessWidget {
               child: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                child: Column(
-                  children: const [
+                child: const Column(
+                  children: [
                     PlaceHolderLine(),
                   ],
                 ),
@@ -347,7 +474,6 @@ class _GridItem extends StatelessWidget {
 /// 列表模式切换
 Widget _buildListModeItem(
   BuildContext context, {
-  bool hideDivider = false,
   required ListModeEnum initMode,
   ValueChanged<ListModeEnum>? onValueChanged,
 }) {
@@ -358,9 +484,8 @@ Widget _buildListModeItem(
     ListModeEnum.waterfall: L10n.of(context).listmode_waterfall,
     ListModeEnum.grid: L10n.of(context).listmode_grid,
   };
-  return SelectorItem<ListModeEnum>(
+  return SelectorCupertinoListTile<ListModeEnum>(
     title: _title,
-    hideDivider: hideDivider,
     actionMap: modeMap,
     initVal: initMode,
     onValueChanged: onValueChanged,

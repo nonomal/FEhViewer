@@ -4,13 +4,13 @@ import 'dart:ui';
 import 'package:archive_async/archive_async.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:fehviewer/common/controller/gallerycache_controller.dart';
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_controller.dart';
-import 'package:fehviewer/pages/gallery/controller/gallery_page_state.dart';
-import 'package:fehviewer/store/db/entity/gallery_image_task.dart';
+import 'package:eros_fe/common/controller/gallerycache_controller.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_controller.dart';
+import 'package:eros_fe/pages/gallery/controller/gallery_page_state.dart';
+import 'package:eros_fe/store/db/entity/gallery_image_task.dart';
 import 'package:get/get.dart';
 
 import '../common.dart';
@@ -23,7 +23,7 @@ class ViewExtState {
     // 设置加载类型
     if (Get.arguments is ViewRepository) {
       final ViewRepository vr = Get.arguments as ViewRepository;
-      logger.v('vr.loadType ${vr.loadType}, index: ${vr.index}');
+      logger.t('vr.loadType ${vr.loadType}, index: ${vr.index}');
       loadFrom = vr.loadType;
 
       switch (loadFrom) {
@@ -56,7 +56,7 @@ class ViewExtState {
 
   GalleryPageState? get pageState => galleryPageController?.gState;
 
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
   final GalleryCacheController _galleryCacheController = Get.find();
 
   final CancelToken getMoreCancelToken = CancelToken();
@@ -67,6 +67,8 @@ class ViewExtState {
   LoadFrom loadFrom = LoadFrom.gallery;
 
   late final String? gid;
+
+  String? realDirPath;
 
   /// 当前的index
   final _currentItemIndex = 0.obs;
@@ -94,13 +96,13 @@ class ViewExtState {
   }
 
   /// 单页双页模式
-  ViewColumnMode get columnMode => ehConfigService.viewColumnMode;
+  ViewColumnMode get columnMode => ehSettingService.viewColumnMode;
 
   set columnMode(ViewColumnMode val) {
-    ehConfigService.viewColumnMode = val;
+    ehSettingService.viewColumnMode = val;
   }
 
-  /// pageview下实际的index
+  /// pageView下实际的index
   int get pageIndex {
     switch (columnMode) {
       case ViewColumnMode.single:
@@ -114,9 +116,9 @@ class ViewExtState {
     }
   }
 
-  /// pageview下实际能翻页的总数
+  /// pageView下实际能翻页的总数
   int get pageCount {
-    final int imageCount = filecount;
+    final int imageCount = fileCount;
     switch (columnMode) {
       case ViewColumnMode.single:
         return imageCount;
@@ -134,7 +136,7 @@ class ViewExtState {
   /// imagePathList
   List<String> imagePathList = <String>[];
 
-  int get filecount {
+  int get fileCount {
     if (loadFrom == LoadFrom.download) {
       return imagePathList.length;
     } else if (loadFrom == LoadFrom.gallery) {
@@ -153,7 +155,7 @@ class ViewExtState {
   List<double> doubleTapScales = <double>[1.0, 2.0, 3.0];
 
   /// 显示页面间隔
-  RxBool get _showPageInterval => ehConfigService.showPageInterval;
+  RxBool get _showPageInterval => ehSettingService.showPageInterval;
 
   bool get showPageInterval => _showPageInterval.value;
 
@@ -176,23 +178,23 @@ class ViewExtState {
 
   /// 顶栏偏移
   double get topBarOffset {
-    final _paddingTop = Get.context!.mediaQueryPadding.top;
+    final paddingTop = Get.context!.mediaQueryPadding.top;
 
-    final double _offsetTopHide = kTopBarHeight + _paddingTop;
+    final double offsetTopHide = kTopBarHeight + paddingTop;
     if (showBar) {
       return 0;
     } else {
-      return -_offsetTopHide - 10;
+      return -offsetTopHide - 10;
     }
   }
 
   bool autoRead = false;
   Map<int, bool> loadCompleMap = <int, bool>{};
   int? lastAutoNextSer;
-  int serStart = 0;
+  int serFirst = 0;
 
   /// 阅读模式
-  Rx<ViewMode> get _viewMode => ehConfigService.viewMode;
+  Rx<ViewMode> get _viewMode => ehSettingService.viewMode;
   ViewMode get viewMode => _viewMode.value;
   set viewMode(ViewMode val) => _viewMode.value = val;
 
@@ -225,8 +227,8 @@ class ViewExtState {
   int maxImageIndex = 0;
 
   bool get isScrolling {
-    final _first = speedList.firstOrNull ?? 0.00;
-    return speedList.any((element) => element != _first);
+    final first = speedList.firstOrNull ?? 0.00;
+    return speedList.any((element) => element != first);
   }
 
   Map<String, AsyncArchive> asyncArchiveMap = {};

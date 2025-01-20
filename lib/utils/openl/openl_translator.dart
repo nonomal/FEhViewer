@@ -1,7 +1,7 @@
 import 'dart:convert' show jsonDecode, jsonEncode;
 
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/utils/openl/language.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/utils/openl/language.dart';
 import 'package:http/http.dart' as http;
 
 import '../logger.dart';
@@ -58,7 +58,7 @@ class OpenLTranslator {
     return rult;
   }
 
-  Future<String?> getfallbackService() async {
+  Future<String?> getFallbackService() async {
     for (final service in _fallbackServices) {
       final String _path = '/services/$service';
       final Uri url = Uri.https(_baseUrl, _path);
@@ -74,8 +74,10 @@ class OpenLTranslator {
       logger.d(jsonData);
       logger.d('${state.runtimeType}');
       if (state is String && state == 'ACTIVE') {
+        logger.d('getFallbackService: $service');
         return service;
       }
     }
+    return null;
   }
 }

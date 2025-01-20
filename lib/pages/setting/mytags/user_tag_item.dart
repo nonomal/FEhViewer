@@ -1,5 +1,5 @@
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/component/setting_base.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
+import 'package:eros_fe/component/setting_base.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -98,32 +98,6 @@ class _UserTagItemState extends State<UserTagItem> {
             child: Row(
               children: [
                 if (!widget.addItem) icon(),
-                // Container(
-                //   margin: const EdgeInsets.only(right: 10),
-                //   child: Column(
-                //     children: [
-                //       Icon(
-                //         FontAwesomeIcons.circleCheck,
-                //         size: 14,
-                //         color: widget.watch
-                //             ? CupertinoDynamicColor.resolve(
-                //                 CupertinoColors.activeGreen, context)
-                //             : CupertinoDynamicColor.resolve(
-                //                 CupertinoColors.systemGrey4, context),
-                //       ),
-                //       const SizedBox(height: 4),
-                //       Icon(
-                //         FontAwesomeIcons.circleCheck,
-                //         size: 14,
-                //         color: widget.hide
-                //             ? CupertinoDynamicColor.resolve(
-                //                 CupertinoColors.destructiveRed, context)
-                //             : CupertinoDynamicColor.resolve(
-                //                 CupertinoColors.systemGrey4, context),
-                //       ),
-                //     ],
-                //   ),
-                // ),
                 if (!widget.addItem)
                   Container(
                     margin: const EdgeInsets.only(right: 10),
@@ -151,7 +125,8 @@ class _UserTagItemState extends State<UserTagItem> {
                   ),
                 if (widget.addItem)
                   Container(
-                    child: Icon(FontAwesomeIcons.tag).paddingOnly(right: 12),
+                    child:
+                        const Icon(FontAwesomeIcons.tag).paddingOnly(right: 12),
                   ),
                 Expanded(
                   child: Column(
@@ -216,8 +191,7 @@ class _UserTagItemState extends State<UserTagItem> {
 
   void _updatePressedColor() {
     setState(() {
-      _color =
-          CupertinoDynamicColor.resolve(CupertinoColors.systemGrey4, context);
+      _color = getPressedColor(context);
     });
   }
 }

@@ -1,5 +1,5 @@
 import 'package:copy_with_extension/copy_with_extension.dart';
-import 'package:fehviewer/common/global.dart';
+import 'package:eros_fe/common/global.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -29,6 +29,7 @@ class GalleryTask {
     this.jsonString,
     this.tag,
     this.downloadOrigImage,
+    this.showKey,
   });
 
   factory GalleryTask.fromJson(Map<String, dynamic> json) =>
@@ -55,6 +56,7 @@ class GalleryTask {
   final String? jsonString;
   final String? tag;
   final bool? downloadOrigImage;
+  final String? showKey;
 
   String? get realDirPath {
     if (dirPath == null) {
@@ -62,7 +64,7 @@ class GalleryTask {
     }
     if (GetPlatform.isIOS) {
       final List<String> pathList = path.split(dirPath!).reversed.toList();
-      // logger.v('$pathList');
+      // logger.t('$pathList');
       return path.join(Global.appDocPath, pathList[1], pathList[0]);
     } else {
       return dirPath;
@@ -71,6 +73,6 @@ class GalleryTask {
 
   @override
   String toString() {
-    return 'GalleryTask{gid: $gid, token: $token, url: $url, title: $title, dirPath: $dirPath, fileCount: $fileCount, completCount: $completCount, status: $status, coverImage: $coverImage, addTime: $addTime, coverUrl: $coverUrl, rating: $rating, category: $category, uploader: $uploader, jsonString: $jsonString, tag: $tag, downloadOrigImage: $downloadOrigImage}';
+    return 'GalleryTask{gid: $gid, token: $token, url: $url, title: $title, dirPath: $dirPath, fileCount: $fileCount, completCount: $completCount, status: $status, coverImage: $coverImage, addTime: $addTime, coverUrl: $coverUrl, rating: $rating, category: $category, uploader: $uploader, jsonString: $jsonString, tag: $tag, downloadOrigImage: $downloadOrigImage, showKey: $showKey}';
   }
 }

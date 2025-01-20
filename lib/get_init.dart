@@ -1,4 +1,6 @@
-import 'package:fehviewer/common/controller/image_hide_controller.dart';
+import 'package:eros_fe/common/controller/block_controller.dart';
+import 'package:eros_fe/common/controller/image_block_controller.dart';
+import 'package:eros_fe/common/controller/mysql_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
@@ -18,7 +20,7 @@ import 'common/controller/user_controller.dart';
 import 'common/controller/webdav_controller.dart';
 import 'common/service/controller_tag_service.dart';
 import 'common/service/dns_service.dart';
-import 'common/service/ehconfig_service.dart';
+import 'common/service/ehsetting_service.dart';
 import 'common/service/layout_service.dart';
 import 'common/service/locale_service.dart';
 import 'common/service/theme_service.dart';
@@ -27,22 +29,19 @@ import 'pages/controller/favorite_sel_controller.dart';
 import 'pages/setting/controller/eh_mysettings_controller.dart';
 import 'pages/setting/controller/eh_mytags_controller.dart';
 import 'pages/tab/controller/download_view_controller.dart';
-import 'pages/tab/controller/favorite/favorite_controller.dart';
 import 'pages/tab/controller/favorite/favorite_tabbar_controller.dart';
 import 'pages/tab/controller/gallery_controller.dart';
 import 'pages/tab/controller/group/custom_tabbar_controller.dart';
 import 'pages/tab/controller/history_view_controller.dart';
-import 'pages/tab/controller/popular_controller.dart';
 import 'pages/tab/controller/search_image_controller.dart';
 import 'pages/tab/controller/setting_controller.dart';
 import 'pages/tab/controller/splash_controller.dart';
 import 'pages/tab/controller/tabhome_controller.dart';
 import 'pages/tab/controller/toplist_controller.dart';
 import 'pages/tab/controller/unlock_page_controller.dart';
-import 'pages/tab/controller/watched_controller.dart';
 
 void getinit() {
-  Get.lazyPut(() => EhConfigService(), fenix: true);
+  Get.lazyPut(() => EhSettingService(), fenix: true);
   Get.lazyPut(() => LocaleService(), fenix: true);
   Get.lazyPut(() => ThemeService(), fenix: true);
   Get.put(DnsService(), permanent: true);
@@ -52,13 +51,14 @@ void getinit() {
 
   /// 一些全局设置或者控制
   Get.lazyPut(() => WebdavController(), fenix: true);
+  Get.lazyPut(() => MysqlController(), fenix: true);
   Get.lazyPut(() => AutoLockController(), fenix: true);
   Get.lazyPut(() => LocalFavController(), fenix: true);
   Get.lazyPut(() => HistoryController(), fenix: true);
   Get.lazyPut(() => UserController(), fenix: true);
   Get.lazyPut(() => AvatarController(), fenix: true);
   Get.lazyPut(() => CacheController(), fenix: true);
-  Get.lazyPut(() => ImageHideController(), fenix: true);
+  Get.lazyPut(() => ImageBlockController(), fenix: true);
 
   Get.put(GalleryCacheController(), permanent: true);
 
@@ -67,17 +67,17 @@ void getinit() {
     Get.put(ArchiverDownloadController());
   }
 
-  debugPrint('getinit');
+  debugPrint('getInit');
   Get.put(TabHomeController(), permanent: true);
 
-  Get.lazyPut(() => PopularViewController(), fenix: true);
-  Get.lazyPut(() => WatchedViewController(), fenix: true);
+  // Get.lazyPut(() => PopularViewController(), fenix: true);
+  // Get.lazyPut(() => WatchedViewController(), fenix: true);
   Get.lazyPut(() => GalleryViewController(), fenix: true);
   Get.lazyPut(() => HistoryViewController(), fenix: true);
   Get.lazyPut(() => DownloadViewController(), fenix: true);
-  Get.lazyPut(() => FavoriteViewController(), fenix: true);
+  // Get.lazyPut(() => FavoriteViewController(), fenix: true);
   Get.lazyPut(() => TopListViewController(), fenix: true);
-  Get.lazyPut(() => FavoriteTabberController(), fenix: true);
+  Get.lazyPut(() => FavoriteTabBarController(), fenix: true);
   Get.lazyPut(() => CustomTabbarController(), fenix: true);
   Get.lazyPut(() => SettingViewController(), fenix: true);
   Get.lazyPut(() => FavoriteSelectorController(), fenix: true);
@@ -91,4 +91,5 @@ void getinit() {
   Get.lazyPut(() => EhMyTagsController(), fenix: true);
   Get.lazyPut(() => TagController(), fenix: true);
   Get.lazyPut(() => SearchImageController(), fenix: true);
+  Get.lazyPut(() => BlockController(), fenix: true);
 }

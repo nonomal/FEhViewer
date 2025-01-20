@@ -3,10 +3,10 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/tab/controller/download_view_controller.dart';
-import 'package:fehviewer/store/get_store.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/tab/controller/download_view_controller.dart';
+import 'package:eros_fe/utils/saf_helper.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
@@ -25,28 +25,20 @@ class ArchiverDownloadController extends GetxController {
   final Map<String, DownloadArchiverTaskInfo> archiverTaskMap =
       <String, DownloadArchiverTaskInfo>{};
 
-  final GStore _gStore = Get.find();
-
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
 
   @override
   void onInit() {
     super.onInit();
-    logger.v('ArchiverDownloadController onInit');
-    bindBackgroundIsolate(updateTask);
+    logger.t('ArchiverDownloadController onInit');
+    bindBackgroundIsolate(updateTaskCallback);
 
     // 初始化 taskMap
-    final _archiver = hiveHelper.getAllArchiverTaskMap() ??
-        _gStore.archiverTaskMap ??
+    final archiverMap = hiveHelper.getAllArchiverTaskMap() ??
         <String, DownloadArchiverTaskInfo>{};
 
-    // 清理GS里的内容
-    if (_gStore.archiverTaskMap?.isNotEmpty ?? false) {
-      _gStore.cleanArchiverTaskMap();
-    }
-
     archiverTaskMap.clear();
-    archiverTaskMap.addAll(_archiver);
+    archiverTaskMap.addAll(archiverMap);
 
     // 处理archiver任务
     _getArchiverTask();
@@ -59,47 +51,68 @@ class ArchiverDownloadController extends GetxController {
   }
 
   void bindBackgroundIsolate(DownloadCallback callback) {
-    ReceivePort _port = ReceivePort();
+    ReceivePort port = ReceivePort();
     bool isSuccess = IsolateNameServer.registerPortWithName(
-        _port.sendPort, flutterDownloadPortName);
+      port.sendPort,
+      flutterDownloadPortName,
+    );
     if (!isSuccess) {
       unbindBackgroundIsolate();
       bindBackgroundIsolate(callback);
       return;
     }
-    // logger.v('flutterDownloaderPort.listen');
-    _port.listen((dynamic data) {
-      // logger.v('update listen');
-      final dataList = data as List<dynamic>;
-      String taskId = dataList[0] as String;
-      DownloadTaskStatus status = dataList[1] as DownloadTaskStatus;
-      int progress = dataList[2] as int;
 
-      logger.v('$taskId $status $progress%');
+    logger.d('flutterDownloaderPort.listen');
+    // 设置监听 进行回调
+    port.listen(
+      (dynamic data) {
+        logger.t('^^^ flutterDownloaderPort.listen');
+        if (data is int) {
+          logger.d('data is int $data');
+          return;
+        }
 
-      // 更新任务状态
-      callback(taskId, status, progress);
-    });
-    // logger.v('FlutterDownloader.registerCallback');
-    FlutterDownloader.registerCallback(flutterDownloadCallback);
+        final para = data as List<dynamic>;
+        final (taskId, status, progress) =
+            (para[0] as String, para[1] as int, para[2] as int);
+
+        logger.t('$taskId $status $progress%');
+
+        // 更新任务状态
+        callback(taskId, status, progress);
+      },
+      onDone: () {
+        logger.d('flutterDownloaderPort.onDone');
+        port.close();
+      },
+      onError: (dynamic error) {
+        logger.d('flutterDownloaderPort.onError');
+        port.close();
+      },
+    );
+    logger.d('FlutterDownloader.registerCallback');
+    FlutterDownloader.registerCallback(flutterDownloadCallback, step: 0);
   }
 
   void unbindBackgroundIsolate() {
     IsolateNameServer.removePortNameMapping(flutterDownloadPortName);
   }
 
-  Future<void> updateTask(
+  Future<void> updateTaskCallback(
     String taskId,
-    DownloadTaskStatus status,
+    int statusValue,
     int progress,
   ) async {
     // 通过taskId找到任务
-    final _key = archiverTaskMap.entries
+    final key = archiverTaskMap.entries
         .firstWhereOrNull((element) => element.value.taskId == taskId)
         ?.key;
-    logger.v('updateTask _key $_key');
 
-    if (_key == null) {
+    logger.t('updateTask _key $key');
+
+    final status = intToDownloadStatus(statusValue);
+
+    if (key == null) {
       return;
     }
 
@@ -109,28 +122,37 @@ class ArchiverDownloadController extends GetxController {
     final url = _task?.url;
     final timeCreated = _task?.timeCreated;
 
-    if (fileName != null) {
-      logger.d('fileName $fileName');
+    if (_task != null) {
+      logger.t('_task $_task');
     }
 
-    final _resolution = regExpResolution.firstMatch(fileName ?? '')?.group(1);
+    if (fileName != null) {
+      logger.t('fileName $fileName');
+    }
 
-    archiverTaskMap[_key] = archiverTaskMap[_key]!.copyWith(
-      status: status.value,
-      progress: progress,
-      fileName: fileName != '<null>' ? fileName : null,
-      url: url,
-      timeCreated: timeCreated,
-      resolution: _resolution,
+    final resolution = regExpResolution.firstMatch(fileName ?? '')?.group(1);
+
+    final DownloadArchiverTaskInfo? taskInfo = archiverTaskMap[key];
+    if (taskInfo == null) {
+      return;
+    }
+
+    final task = taskInfo.copyWith(
+      status: statusValue.oN,
+      progress: progress.oN,
+      fileName: fileName != '<null>' ? fileName.oN : null,
+      url: url.oN,
+      timeCreated: timeCreated.oN,
+      resolution: resolution.oN,
     );
 
-    DownloadArchiverTaskInfo task = archiverTaskMap[_key]!;
+    archiverTaskMap[key] = task;
 
-    final _tag = task.tag;
+    final tag = task.tag;
 
     if (status == DownloadTaskStatus.complete && fileName == null) {
       await 200.milliseconds.delay();
-      await updateTask(taskId, status, progress);
+      await updateTaskCallback(taskId, statusValue, progress);
     }
 
     if (status == DownloadTaskStatus.complete &&
@@ -138,17 +160,19 @@ class ArchiverDownloadController extends GetxController {
       final safUri = await copyFileToSAF(task);
       if (safUri != null) {
         logger.d('safUri $safUri');
-        archiverTaskMap[_key] = archiverTaskMap[_key]!.copyWith(
-          safUri: safUri.toString(),
-        );
-        task = archiverTaskMap[_key]!;
+        final origTaskInfo = archiverTaskMap[key];
+        if (origTaskInfo != null) {
+          archiverTaskMap[key] = origTaskInfo.copyWith(
+            safUri: safUri.toString().oN,
+          );
+        }
       }
     }
-    hiveHelper.putArchiverTask(task);
+    hiveHelper.putArchiverTask(archiverTaskMap[key]);
 
     if (Get.isRegistered<DownloadViewController>()) {
       Get.find<DownloadViewController>()
-          .update(['${idDownloadArchiverItem}_$_tag']);
+          .update(['${idDownloadArchiverItem}_$tag']);
     }
   }
 
@@ -168,17 +192,26 @@ class ArchiverDownloadController extends GetxController {
     }
     final parentUri = Uri.parse(await _getArchiverDownloadPath());
     try {
-      final result = await ss.createFileAsBytes(
+      // final result = await ss.createFileAsBytes(
+      //   parentUri,
+      //   bytes: tempFile.readAsBytesSync(),
+      //   mimeType: 'application/zip',
+      //   displayName: fileName,
+      // );
+      // logger.d('write result ${result?.uri}');
+      // logger.d('copyFileToSAF success');
+      // return result?.uri;
+      final result = await safCreateDocumentFileFromPath(
         parentUri,
-        bytes: tempFile.readAsBytesSync(),
-        mimeType: 'application/zip',
+        sourceFilePath: tempFile.path,
         displayName: fileName,
+        mimeType: 'application/zip',
       );
-      logger.d('write result ${result?.uri}');
+      logger.d('write result $result');
       logger.d('copyFileToSAF success');
-      return result?.uri;
+      return Uri.parse(result ?? '');
     } catch (e, s) {
-      logger.e('copyFileToSAF', e, s);
+      logger.e('copyFileToSAF', error: e, stackTrace: s);
     } finally {
       tempFile.deleteSync();
     }
@@ -194,35 +227,39 @@ class ArchiverDownloadController extends GetxController {
     String? imgUrl,
     String? galleryUrl,
   }) async {
-    final String _tag = '$gid$dlType';
+    final String tag = '$gid$dlType';
 
-    if (archiverTaskMap.containsKey(_tag)) {
+    logger.d('downloadArchiverFile $tag');
+
+    if (archiverTaskMap.containsKey(tag)) {
       showToast('Download task already exists');
       return;
     }
 
-    final _downloadPath = await _getArchiverDownloadPath();
+    final downloadPath = await _getArchiverDownloadPath();
+    logger.d('_downloadPath $downloadPath');
 
-    final String? _taskId = await _downloadArchiverFile(url, _downloadPath);
+    final String? taskId = await _downloadArchiverFile(url, downloadPath);
 
-    logger.d('_downloadPath $_downloadPath');
-
-    archiverTaskMap[_tag] = kDefDownloadTaskInfo.copyWith(
-      tag: _tag,
-      gid: gid,
-      type: dlType,
-      taskId: _taskId,
-      title: title,
-      imgUrl: imgUrl,
-      galleryUrl: galleryUrl,
-      savedDir: _downloadPath,
+    final taskToAdd = kDefDownloadTaskInfo.copyWith(
+      tag: tag.oN,
+      gid: gid.oN,
+      type: dlType.oN,
+      taskId: taskId.oN,
+      title: title.oN,
+      imgUrl: imgUrl.oN,
+      galleryUrl: galleryUrl.oN,
+      savedDir: downloadPath.oN,
     );
+
+    archiverTaskMap[tag] = taskToAdd;
 
     _downloadViewAnimateListAdd(index: 0);
     if (Get.isRegistered<DownloadViewController>()) {
       Get.find<DownloadViewController>().update();
     }
-    hiveHelper.putArchiverTask(archiverTaskMap[_tag]!);
+
+    hiveHelper.putArchiverTask(taskToAdd);
     showToast('Download task added');
   }
 
@@ -243,33 +280,41 @@ class ArchiverDownloadController extends GetxController {
   }
 
   Future<String> _getArchiverDownloadPath() async {
-    final customDownloadPath = ehConfigService.downloadLocatino;
+    final customDownloadPath = ehSettingService.downloadLocatino;
     late String dirPath;
     if (GetPlatform.isIOS) {
       dirPath = path.join(Global.appDocPath, 'Download', 'Archiver');
     }
 
-    if (customDownloadPath.isNotEmpty && customDownloadPath.isContentUri) {
-      dirPath = customDownloadPath;
-    } else {
-      dirPath = path.join(customDownloadPath, 'Archiver');
+    if (!Platform.isIOS) {
+      if (customDownloadPath.isNotEmpty && customDownloadPath.isContentUri) {
+        dirPath = customDownloadPath;
+      } else {
+        dirPath = path.join(customDownloadPath, 'Archiver');
+      }
     }
 
     if (dirPath.isContentUri) {
       final domFile = await ss.findFile(Uri.parse(dirPath), 'Archiver');
-      logger.d('domFile name:${domFile?.name}, type:${domFile?.type}');
+      logger.t('domFile name:${domFile?.name}, type:${domFile?.type}');
       if (domFile == null) {
         final parentUri = Uri.parse(customDownloadPath);
+        logger.d('parentUri $parentUri');
+
+        // loop until the user grants permission
+        await showSAFPermissionRequiredDialog(loop: true, uri: parentUri);
+
         final result = await ss.createDirectory(parentUri, 'Archiver');
         logger.d('create dir result ${result?.uri}');
-        return result?.uri.toString() ?? '';
+        dirPath = result?.uri.toString() ?? '';
       } else {
         dirPath = domFile.uri.toString();
       }
     } else {
-      final _dir = Directory(dirPath);
-      if (!_dir.existsSync()) {
-        _dir.createSync(recursive: true);
+      final dir = Directory(dirPath);
+      if (!dir.existsSync()) {
+        logger.d('create dir $dir');
+        dir.createSync(recursive: true);
       }
     }
 
@@ -280,11 +325,11 @@ class ArchiverDownloadController extends GetxController {
   Future<String> _getArchiverDownloadPath_Old() async {
     late String _dirPath;
 
-    if (GetPlatform.isAndroid && ehConfigService.downloadLocatino.isNotEmpty) {
+    if (GetPlatform.isAndroid && ehSettingService.downloadLocatino.isNotEmpty) {
       // 自定义路径
       logger.d('自定义下载路径');
       await requestManageExternalStoragePermission();
-      _dirPath = path.join(ehConfigService.downloadLocatino, 'Archiver');
+      _dirPath = path.join(ehSettingService.downloadLocatino, 'Archiver');
     } else if (GetPlatform.isAndroid) {
       logger.d('无自定义下载路径');
       _dirPath =
@@ -310,7 +355,7 @@ class ArchiverDownloadController extends GetxController {
     String savePath, {
     String? fileName,
   }) async {
-    final Map<String, String> _httpHeaders = {
+    final Map<String, String> httpHeaders = {
       'Cookie': Global.profile.user.cookie,
     };
 
@@ -325,7 +370,7 @@ class ArchiverDownloadController extends GetxController {
       fileName: fileName,
       showNotification: false,
       openFileFromNotification: false,
-      headers: _httpHeaders,
+      headers: httpHeaders,
     );
   }
 
@@ -341,44 +386,52 @@ class ArchiverDownloadController extends GetxController {
   /// 不在 archiverDlMap 中的任务
   Future<void> _getArchiverTask() async {
     final List<DownloadTask> tasks = await FlutterDownloader.loadTasks() ?? [];
-    logger.v(
+    logger.t(
         'loadTasks \n${tasks.map((DownloadTask e) => e.toString().split(', ').join('\n')).join('\n----------\n')} ');
 
     for (final DownloadTask downloadTask in tasks) {
-      final int _index = archiverTaskMap.entries.toList().indexWhere(
+      final int index = archiverTaskMap.entries.toList().indexWhere(
           (MapEntry<String, DownloadArchiverTaskInfo> element) =>
               element.value.taskId == downloadTask.taskId);
 
       // 不在 archiverTaskMap 中的任务 直接删除任务
-      if (_index < 0) {
+      if (index < 0) {
         logger.d(
             'remove task \n${downloadTask.toString().split(', ').join('\n')}');
         FlutterDownloader.remove(
             taskId: downloadTask.taskId, shouldDeleteContent: true);
       } else {
+        logger.d(
+            'update task \n${downloadTask.toString().split(', ').join('\n')}');
         // 否则,根据 downloadTask 更新 archiverTaskMap 中的数据
-        final DownloadArchiverTaskInfo _taskInfo = archiverTaskMap.entries
+        final DownloadArchiverTaskInfo taskInfo = archiverTaskMap.entries
             .firstWhere(
                 (element) => element.value.taskId == downloadTask.taskId)
             .value;
 
-        final _resolution =
+        final resolution =
             regExpResolution.firstMatch(downloadTask.filename ?? '')?.group(1);
 
-        archiverTaskMap[_taskInfo.tag!] = _taskInfo.copyWith(
-          status: downloadTask.status.value,
-          progress: downloadTask.progress,
-          fileName: downloadTask.filename,
-          savedDir: downloadTask.savedDir.contains('saf_temp_archiver')
-              ? null
-              : downloadTask.savedDir,
-          url: downloadTask.url,
-          timeCreated: downloadTask.timeCreated,
-          resolution: _resolution,
+        final taskInfoP = taskInfo.copyWith(
+          status: downloadStatusToInt(downloadTask.status).oN,
+          progress: downloadTask.progress.oN,
+          fileName: downloadTask.filename.oN,
+          savedDir: (downloadTask.savedDir.contains('saf_temp_archiver')
+                  ? taskInfo.savedDir
+                  : downloadTask.savedDir)
+              .oN,
+          url: downloadTask.url.oN,
+          timeCreated: downloadTask.timeCreated.oN,
+          resolution: resolution.oN,
         );
 
+        final tag = taskInfo.tag;
+        if (tag != null) {
+          archiverTaskMap[tag] = taskInfoP;
+        }
+
         // 更新视图
-        Get.find<DownloadViewController>().update([_taskInfo.tag ?? '']);
+        Get.find<DownloadViewController>().update([taskInfo.tag ?? '']);
       }
     }
   }
@@ -386,11 +439,10 @@ class ArchiverDownloadController extends GetxController {
 
 /// flutterDownload下载进度回调顶级函数
 @pragma('vm:entry-point')
-void flutterDownloadCallback(
-    String id, DownloadTaskStatus status, int progress) {
-  final SendPort sendPort =
-      IsolateNameServer.lookupPortByName(flutterDownloadPortName)!;
+void flutterDownloadCallback(String id, int status, int progress) {
+  final sendPort = IsolateNameServer.lookupPortByName(flutterDownloadPortName)!;
   // print('_downloadCallback ${sendPort.runtimeType}');
-  print('$id $status $progress%');
+  // logger.t('$id $status $progress%');
+
   sendPort.send([id, status, progress]);
 }

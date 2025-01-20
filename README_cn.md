@@ -1,27 +1,16 @@
-# FEhViewer
-[English](https://github.com/honjow/FEhViewer/blob/master/README.md) | 简体中文
-
-[![](https://img.shields.io/github/downloads/honjow/FEhViewer/total.svg)](https://gitHub.com/honjow/FEhViewer/releases)
-[![](https://img.shields.io/github/downloads/honjow/FEhViewer/latest/total)](https://github.com/honjow/FEhViewer/releases/latest)
-[![](https://img.shields.io/github/v/release/honjow/FEhViewer)](https://github.com/honjow/FEhViewer/releases/latest)
-[![](https://img.shields.io/github/stars/honjow/FEhViewer)]()
-[![Telegram](https://img.shields.io/badge/chat-on%20Telegram-blue.svg)](https://t.me/joinchat/AEj27KMQe0JiMmUx)
-[![QQ](https://img.shields.io/badge/chat-QQ-blue.svg)](https://qm.qq.com/cgi-bin/qm/qr?k=fr6P5pYFbbdzh9djpE0QEMcX0sJd9ISj&jump_from=webapi)
+# Eros-FE
+[English](https://github.com/3003h/blob/master/README.md) | 简体中文
 
 ## 应用简介
 
 一个 flutter 编写的 e-hentai app
 
 ## iOS 安装
-1. 下载最新 ipa 文件 [Releases](https://github.com/honjow/FEhViewer/releases/latest).
+1. 下载最新 ipa 文件 [Releases](https://github.com/3003h/Eros-FE/releases/latest).
 2. 使用 [AltStore](https://altstore.io) 之类的 app 安装到设备上. 或者直接使用 [AltStore.json](https://config-feh.vercel.app/AltStore.json)
 
 
 ## 说明
-
-其实主要是想写给自己用，因为用的 ios，感觉现有的几个项目感觉不能满足自己的使用 \
-然后对原生开发不咋熟悉，就起了用 flutter 自己搞一个的想法 \
-就这样从入门到入土，有了现在的版本
 
 UI 方面主要参考的[E-HentaiViewer](https://github.com/kayanouriko/E-HentaiViewer)
 
@@ -31,10 +20,6 @@ UI 方面主要参考的[E-HentaiViewer](https://github.com/kayanouriko/E-Hentai
 **滑动掉帧**
 
 - 一部分是flutter问题，一部分是开发水平问题，只能说尽力优化
-
-**直连不好使**
-
-- 水平有限，后续会去掉域前置功能
 
 ## 感谢
 
@@ -48,25 +33,31 @@ ehentai译文数据库
 - [EhTagTranslation/Database](https://github.com/EhTagTranslation/Database)
 
 翻译
-- [KeepSOBP](https://github.com/KeepSOBP) 韩语翻译
+- [KeepSOBP](https://github.com/KeepSOBP) -- 韩语翻译
+- [pursel](https://github.com/pursel), [Gigas002](https://github.com/Gigas002) -- 俄语翻译
+- [cristal-node](https://github.com/cristal-node) -- 日语翻译
 
 ## 应用截图
 
 ### 主页列表
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/home1.jpg" >
+<img width="200" src="./screenshot/home.png" >
+
+### 设置
+
+<img width="200" src="./screenshot/setting.png" >
 
 ### 画廊
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery2.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/gallery3.jpg" >
+<img width="200" src="./screenshot/gallery1.png" > <img width="200" src="./screenshot/gallery2.png" > 
 
 ### 搜索
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search2.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/search3.jpg" >
+<img width="200" src="./screenshot/search1.png" > <img width="200" src="./screenshot/search2.png" >
 
 ### 阅读
 
-<img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/read1.jpg" > <img width="200" src="https://raw.githubusercontent.com/honjow/FEhViewer/master/screenshot/read2.jpg" >
+<img width="200" src="./screenshot/read1.png" > <img width="200" src="./screenshot/read2.png" >
 
 ## 功能
 
@@ -107,6 +98,6 @@ ehentai译文数据库
 
 ## 编译相关
 
-flutter版本为最新release版本 \
-`/lib/config/config.dart` 文件为存放敏感信息数据的文件，github里看到是加密处理的 \
-如果需要自行编译的话，复制 `/lib/config.dart.sample` 为 `/lib/config/config.dart` 进行操作
+如果需要自行编译的话 \
+复制 `lib/config.dart.sample` 为 `lib/config/config.dart` \
+复制 `lib/firebase_options_sample.dart` 为 `lib/firebase_options.dart`

@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/models/index.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:fehviewer/models/index.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -58,6 +58,7 @@ class GalleryPara {
     required Map<int, GalleryImage>? imageMap,
     required int itemSer,
     required int max,
+    String? showKey,
   }) async* {
     if (imageMap == null) {
       return;
@@ -66,7 +67,7 @@ class GalleryPara {
     for (int add = 1; add < max + 1; add++) {
       final int _ser = itemSer + add;
 
-      logger.v('开始预载 ser $_ser');
+      logger.t('开始预载 ser $_ser');
 
       if (_processingSerSet.contains(_ser)) {
         continue;
@@ -81,31 +82,39 @@ class GalleryPara {
       GalleryImage _image = _imageTemp;
 
       if (_image.completeCache ?? false) {
-        logger.v('ser $_ser 已预载完成 跳过');
+        logger.t('ser $_ser 已预载完成 跳过');
         continue;
       }
 
       if (_image.startPrecache ?? false) {
-        logger.v('ser $_ser 已开始预载 跳过');
+        logger.t('ser $_ser 已开始预载 跳过');
         continue;
       }
 
       String _url = '';
       if (_image.imageUrl?.isEmpty ?? true) {
+        if (showKey == null) {
+          logger.d('showKey is null, skip precache');
+          continue;
+        }
+
         _processingSerSet.add(_ser);
         final String _href = imageMap[_ser]?.href ?? '';
 
         // paraImageLageInfoFromHtml
-        final GalleryImage? _imageFromPage = await fetchImageInfo(_href);
+        // final GalleryImage? _imageFetch = await fetchImageInfo(_href);
+        final GalleryImage? _imageFetch =
+            await fetchImageInfoByApi(_href, showKey: showKey);
 
-        _url = _imageFromPage?.imageUrl ?? '';
+        _url = _imageFetch?.imageUrl ?? '';
 
         _image = _image.copyWith(
-          imageUrl: _url,
-          imageWidth: _imageFromPage?.imageWidth,
-          imageHeight: _imageFromPage?.imageHeight,
-          originImageUrl: _imageFromPage?.originImageUrl,
-          filename: _imageFromPage?.filename,
+          imageUrl: _url.oN,
+          imageWidth: _imageFetch?.imageWidth.oN,
+          imageHeight: _imageFetch?.imageHeight.oN,
+          originImageUrl: _imageFetch?.originImageUrl.oN,
+          filename: _imageFetch?.filename.oN,
+          showKey: _imageFetch?.showKey.oN,
         );
 
         _processingSerSet.remove(_ser);
@@ -125,7 +134,7 @@ class GalleryPara {
       if (_future != null) {
         final GalleryImage? value = await _future;
         // logger.d('yield rult ser ${value?.ser}  ${value?.toJson()}');
-        yield value?.copyWith(completeCache: true);
+        yield value?.copyWith(completeCache: true.oN);
         _map.remove(_url);
         continue;
       }
@@ -146,7 +155,7 @@ class GalleryPara {
     /// 预缓存图片
     try {
       await precacheImage(imageProvider, Get.context!);
-      return image.copyWith(completeCache: true);
+      return image.copyWith(completeCache: true.oN);
     } catch (e, stack) {
       logger.e('$e /n $stack');
       return null;

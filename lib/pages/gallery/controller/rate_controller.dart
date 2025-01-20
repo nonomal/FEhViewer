@@ -1,8 +1,8 @@
-import 'package:fehviewer/common/service/controller_tag_service.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/network/api.dart';
-import 'package:fehviewer/utils/logger.dart';
-import 'package:fehviewer/utils/toast.dart';
+import 'package:eros_fe/common/service/controller_tag_service.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/network/api.dart';
+import 'package:eros_fe/utils/logger.dart';
+import 'package:eros_fe/utils/toast.dart';
 import 'package:get/get.dart';
 
 import 'gallery_page_controller.dart';
@@ -29,9 +29,9 @@ class RateController extends GetxController {
       return;
     }
 
-    logger.v('rating $rate');
-    logger.v('${_item?.apiuid} ${_item?.apikey}');
-    logger.v('${(rate * 2).round()}');
+    logger.t('rating $rate');
+    logger.t('${_item?.apiuid} ${_item?.apikey}');
+    logger.t('${(rate * 2).round()}');
     final Map<String, dynamic> rultMap = await Api.setRating(
       apikey: _item!.apikey ?? '',
       apiuid: _item!.apiuid ?? '',
@@ -39,7 +39,7 @@ class RateController extends GetxController {
       token: _item!.token ?? '',
       rating: (rate * 2).round(),
     );
-    pageController.ratinged(
+    pageController.afterRating(
       ratingUsr: double.parse(rultMap['rating_usr'].toString()),
       ratingAvg: double.parse(rultMap['rating_avg'].toString()),
       ratingCnt: rultMap['rating_cnt'] as int,

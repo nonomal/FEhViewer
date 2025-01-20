@@ -1,6 +1,6 @@
-import 'package:fehviewer/const/theme_colors.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/pages/item/controller/galleryitem_controller.dart';
+import 'package:eros_fe/const/theme_colors.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/pages/item/controller/galleryitem_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -54,10 +54,10 @@ class GalleryItemFlow extends StatelessWidget {
           context);
 
       // 获取图片高度
-      double? _getHeigth() {
+      int? _getHeight() {
         if ((galleryProvider.imgWidth ?? 0) >= constraints.maxWidth) {
           return (galleryProvider.imgHeight ?? 0) *
-              constraints.maxWidth /
+              constraints.maxWidth ~/
               (galleryProvider.imgWidth ?? 0);
         } else {
           return galleryProvider.imgHeight;
@@ -101,8 +101,9 @@ class GalleryItemFlow extends StatelessWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    height:
-                        galleryProvider.imgWidth != null ? _getHeigth() : null,
+                    height: galleryProvider.imgWidth != null
+                        ? _getHeight()?.toDouble()
+                        : null,
                     child: CoverImg(imgUrl: galleryProvider.imgUrl!),
                   ),
                 ),

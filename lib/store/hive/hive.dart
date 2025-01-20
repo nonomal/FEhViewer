@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/models/base/eh_models.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/models/base/eh_models.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 const String historyBox = 'history_box';
@@ -38,7 +38,7 @@ class HiveHelper {
     await Hive.openBox<String>(
       historyBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('entries $entries');
+        logger.t('entries $entries');
         return entries > 10;
       },
     );
@@ -47,7 +47,7 @@ class HiveHelper {
     await Hive.openBox<String>(
       galleryCacheBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('entries $entries');
+        logger.t('entries $entries');
         return entries > 10;
       },
     );
@@ -55,20 +55,20 @@ class HiveHelper {
     await Hive.openBox<String>(
       historyDelBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('entries $entries');
+        logger.t('entries $entries');
         return entries > 10;
       },
     );
     await Hive.openBox<String>(searchHistoryBox,
         compactionStrategy: (int entries, int deletedEntries) {
-      logger.v('$searchHistoryBox entries $entries');
+      logger.t('$searchHistoryBox entries $entries');
       return true;
     });
 
     await Hive.openBox<String>(
       archiverTaskBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('entries $entries');
+        logger.t('entries $entries');
         return entries > 10;
       },
     );
@@ -76,21 +76,21 @@ class HiveHelper {
     await Hive.openBox<String>(
       configBox,
       compactionStrategy: (int entries, int deletedEntries) {
-        logger.v('$configBox entries $entries');
+        logger.t('$configBox entries $entries');
         return entries > 2;
       },
     );
   }
 
   List<GalleryProvider> getAllHistory() {
-    final _historys = <GalleryProvider>[];
+    final _histories = <GalleryProvider>[];
     for (final val in _historyBox.values) {
-      _historys.add(
+      _histories.add(
           GalleryProvider.fromJson(jsonDecode(val) as Map<String, dynamic>));
     }
-    _historys
+    _histories
         .sort((a, b) => (a.lastViewTime ?? 0).compareTo(b.lastViewTime ?? 0));
-    return _historys;
+    return _histories;
   }
 
   List<String> getAllSearchHistory() {
@@ -110,12 +110,12 @@ class HiveHelper {
   }
 
   List<HistoryIndexGid> getAllHistoryDel() {
-    final _delHistorys = <HistoryIndexGid>[];
+    final _delHistories = <HistoryIndexGid>[];
     for (final val in _historyDelBox.values) {
-      _delHistorys.add(
+      _delHistories.add(
           HistoryIndexGid.fromJson(jsonDecode(val) as Map<String, dynamic>));
     }
-    return _delHistorys;
+    return _delHistories;
   }
 
   Future<void> removeHistoryDel(String gid) async {
@@ -229,7 +229,7 @@ class HiveHelper {
       Map<String, DownloadArchiverTaskInfo>? taskInfoMap) {
     // len
     logger.d('set archiverTaskMap len ${taskInfoMap?.length}');
-    logger.v('set archiverDlMap \n'
+    logger.t('set archiverDlMap \n'
         '${taskInfoMap?.entries.map((e) => '${e.key} = ${e.value.toJson().toString().split(', ').join('\n')}').join('\n')} ');
 
     if (taskInfoMap == null) {
@@ -245,7 +245,7 @@ class HiveHelper {
     if (taskInfo == null) {
       return;
     }
-    logger.v('set archiverTask ${taskInfo.toJson()}');
+    logger.t('set archiverTask ${taskInfo.toJson()}');
     _archiverTaskBox.put(taskInfo.tag, jsonEncode(taskInfo));
   }
 
@@ -258,17 +258,18 @@ class HiveHelper {
       return null;
     }
 
-    final _map = <String, DownloadArchiverTaskInfo>{};
+    final map = <String, DownloadArchiverTaskInfo>{};
 
     for (final entry in _archiverTaskBox.toMap().entries) {
-      final _takInfo = DownloadArchiverTaskInfo.fromJson(
+      final takInfo = DownloadArchiverTaskInfo.fromJson(
           jsonDecode(entry.value) as Map<String, dynamic>);
-      if (_takInfo.tag != null) {
-        _map[_takInfo.tag!] = _takInfo;
+      logger.t('get archiverTask ${takInfo.toJson()}');
+      if (takInfo.tag != null) {
+        map[takInfo.tag!] = takInfo;
       }
     }
 
-    return _map;
+    return map;
   }
 
   GalleryCache? getCache(String gid) {
@@ -294,30 +295,32 @@ class HiveHelper {
     }
     // logger.d('get profile $val');
 
-    final Profile _profileObj =
+    final Profile profileObj =
         Profile.fromJson(jsonDecode(val) as Map<String, dynamic>);
 
     // logger.d(' ${_profileObj.layoutConfig?.toJson()}');
 
-    final Profile _profile = kDefProfile.copyWith(
-      user: _profileObj.user,
-      ehConfig: _profileObj.ehConfig,
-      lastLogin: _profileObj.lastLogin,
-      locale: _profileObj.locale,
-      theme: _profileObj.theme,
-      searchText: _profileObj.searchText,
-      localFav: _profileObj.localFav,
-      enableAdvanceSearch: _profileObj.enableAdvanceSearch,
-      advanceSearch: _profileObj.advanceSearch,
-      dnsConfig: _profileObj.dnsConfig,
-      downloadConfig: _profileObj.downloadConfig,
-      webdav: _profileObj.webdav,
-      autoLock: _profileObj.autoLock,
-      favConfig: _profileObj.favConfig,
-      customTabConfig: _profileObj.customTabConfig,
-      layoutConfig: _profileObj.layoutConfig,
-    );
-    return _profile;
+    // final Profile _profile = kDefProfile.copyWith(
+    //   user: _profileObj.user,
+    //   ehConfig: _profileObj.ehConfig,
+    //   lastLogin: _profileObj.lastLogin,
+    //   locale: _profileObj.locale,
+    //   theme: _profileObj.theme,
+    //   searchText: _profileObj.searchText,
+    //   localFav: _profileObj.localFav,
+    //   enableAdvanceSearch: _profileObj.enableAdvanceSearch,
+    //   advanceSearch: _profileObj.advanceSearch,
+    //   dnsConfig: _profileObj.dnsConfig,
+    //   downloadConfig: _profileObj.downloadConfig,
+    //   webdav: _profileObj.webdav,
+    //   autoLock: _profileObj.autoLock,
+    //   favConfig: _profileObj.favConfig,
+    //   customTabConfig: _profileObj.customTabConfig,
+    //   layoutConfig: _profileObj.layoutConfig,
+    // );
+    // return _profile;
+
+    return profileObj;
   }
 
   set profile(Profile? val) {

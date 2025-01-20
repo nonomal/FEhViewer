@@ -2,26 +2,27 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/const/const.dart';
-import 'package:fehviewer/extension.dart';
-import 'package:fehviewer/network/request.dart';
-import 'package:fehviewer/store/db/entity/tag_translat.dart';
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/const/const.dart';
+import 'package:eros_fe/extension.dart';
+import 'package:eros_fe/network/request.dart';
+import 'package:eros_fe/store/db/entity/tag_translat.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 
 import '../global.dart';
 
-const String kUrl =
+const String kApiUrl =
     'https://api.github.com/repos/EhTagTranslation/Database/releases/latest';
-const String kCDNurl =
-    'https://fastly.jsdelivr.net/gh/EhTagTranslation/DatabaseReleases/db.raw.json.gz';
+const String kCDNApiUrl =
+    'https://ghproxy.homeboyc.cn/https://api.github.com/repos/EhTagTranslation/Database/releases/latest';
+const String kCDNPrefix = 'https://ghproxy.homeboyc.cn/';
 const int kConnectTimeout = 20000;
 const int kReceiveTimeout = 30000;
 
 class TagTransController extends GetxController {
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
 
   String? _dbUrl;
   String? _remoteVer;
@@ -31,7 +32,10 @@ class TagTransController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getNamespace().then((value) => _namespaces = value);
+    getNamespace().then((value) {
+      logger.d('getNamespace $value');
+      return _namespaces = value;
+    });
   }
 
   Future<List<String?>> getNamespace() async {
@@ -40,19 +44,28 @@ class TagTransController extends GetxController {
 
   /// 检查更新
   Future<bool> checkUpdate({bool force = false}) async {
-    if (ehConfigService.enableTagTranslateCDN) {
-      logger.d('use CND');
-      return true;
+    late final String apiUrl;
+    if (ehSettingService.enableTagTranslateCDN) {
+      apiUrl = kCDNApiUrl;
+    } else {
+      apiUrl = kApiUrl;
     }
 
-    final _urlJson = await getGithubApi(kUrl);
-    // 获取发布时间 作为远程版本号
-    _remoteVer = _urlJson['published_at']?.trim() as String;
+    final _urlJson = await getGithubApi(apiUrl);
+
+    final _publishedTime = '${_urlJson['published_at']}';
+    final _tagName = '${_urlJson['tag_name']}';
+
+    // 远程版本号
+    _remoteVer = '$_tagName $_publishedTime';
 
     // 获取当前本地版本
-    final String localVer = ehConfigService.tagTranslatVer.value;
+    final String localVer = ehSettingService.tagTranslatVer.value;
+
+    logger.d('localVer $localVer, remoteVer $_remoteVer');
 
     if (_remoteVer == localVer && force == false) {
+      logger.d('tagTranslateVer is latest');
       return false;
     }
 
@@ -64,16 +77,17 @@ class TagTransController extends GetxController {
     }
     _dbUrl = assMap['db.raw.json.gz'] ?? '';
 
-    logger.v(_dbUrl);
+    if (ehSettingService.enableTagTranslateCDN) {
+      _dbUrl = '$kCDNPrefix$_dbUrl';
+    }
+
+    logger.d(_dbUrl);
     return true;
   }
 
   /// 获取数据
   Future<List> _fetchData({bool silence = false}) async {
-    logger.v('_fetchData start');
-    if (ehConfigService.enableTagTranslateCDN) {
-      _dbUrl = kCDNurl;
-    }
+    logger.t('_fetchData start');
 
     if (_dbUrl == null) {
       return [];
@@ -85,13 +99,14 @@ class TagTransController extends GetxController {
     List<int> data = GZipDecoder().decodeBytes(bytes);
     final String dbJson = utf8.decode(data);
 
-    final dbdataMap = jsonDecode(dbJson);
-    final List listData = dbdataMap['data'] as List;
+    final dbDataMap = jsonDecode(dbJson);
+    final List listData = dbDataMap['data'] as List;
 
-    final head = dbdataMap['head'] as Map;
-    final committer = head['committer'] as Map;
-    _remoteVer = committer['when'] as String;
-    logger.v('_remoteVer $_remoteVer');
+    // final head = dbDataMap['head'] as Map;
+    // final committer = head['committer'] as Map;
+
+    // _remoteVer = committer['when'] as String;
+    // logger.d('_remoteVer $_remoteVer');
 
     return listData;
   }
@@ -124,29 +139,12 @@ class TagTransController extends GetxController {
       });
     }
 
-    // loggerNoStack.d('tag中文翻译数量 ${tagTranslats.length}');
-
-    // tagTranslatDao.insertAllTagTranslats(tagTranslats);
-
-    // await isarHelper.removeAllTagTranslate();
-    await isarHelper.putAllTagTranslate(tagTranslats);
-    ehConfigService.tagTranslatVer.value = _remoteVer ?? '';
+    await isarHelper.putAllTagTranslateIsolate(tagTranslats);
+    ehSettingService.tagTranslatVer.value = _remoteVer ?? '';
   }
 
   /// 获取翻译结果
   Future<String?> _getTagTransStr(String key, {String? namespace}) async {
-    // final TagTranslatDao tagTranslatDao = await _getTagTranslatDao();
-    // TagTranslat? tr;
-    // if (namespace != null && namespace.isNotEmpty) {
-    //   tr = await tagTranslatDao.findTagTranslatByKey(
-    //       key.trim(), namespace.trim());
-    // } else {
-    //   final List<TagTranslat> trans =
-    //       await tagTranslatDao.findAllTagTranslatsByKey(key);
-    //   if (trans.isNotEmpty) {
-    //     tr = trans.last;
-    //   }
-    // }
     TagTranslat? tr =
         await isarHelper.findTagTranslate(key, namespace: namespace);
 
@@ -180,9 +178,9 @@ class TagTransController extends GetxController {
     if (!text.trim().contains(' ')) {
       return await getTranTagWithNameSpase(text);
     }
-    logger.v(text);
+    logger.t(text);
     final array = text.split(RegExp(r'\s+'));
-    logger.v(array.map((e) => '[$e]').join(','));
+    logger.t(array.map((e) => '[$e]').join(','));
 
     for (int i = 0; i < array.length; i++) {
       if (array[i].startsWith(RegExp(r'-?\w+:"?'))) {
@@ -198,7 +196,7 @@ class TagTransController extends GetxController {
       }
     }
 
-    logger.v(array.map((e) => '[$e]').join(''));
+    logger.t(array.map((e) => '[$e]').join(''));
 
     final _translateList = [];
     for (final text in array) {
@@ -209,17 +207,31 @@ class TagTransController extends GetxController {
     return _translateList.join('   ');
   }
 
-  Future<String?> getTagTranslateText(String text, {String? namespace}) async {
+  Future<String?> getTagTranslateText(
+    String text, {
+    String? namespace,
+    bool ignoreNamespace = false,
+  }) async {
     if (text.contains(':')) {
-      final RegExp rpfx = RegExp(r'(\w):(.+)');
-      final RegExpMatch? rult = rpfx.firstMatch(text.toLowerCase());
+      final RegExp regPfx = RegExp(r'(\w):(.+)');
+      final RegExpMatch? rult = regPfx.firstMatch(text.toLowerCase());
       final String pfx = rult?.group(1) ?? '';
       final String? _nameSpase = EHConst.prefixToNameSpaceMap[pfx];
       final String _tag = rult?.group(2) ?? '';
       final String? _transTag =
           await _getTagTransStr(_tag, namespace: _nameSpase);
 
-      return _transTag != null ? '$pfx:$_transTag' : text;
+      if (_transTag == null) {
+        return text;
+      }
+
+      if (ignoreNamespace) {
+        return _transTag;
+      } else {
+        return '$pfx:$_transTag';
+      }
+
+      // return _transTag != null ? '$pfx:$_transTag' : text;
     } else {
       String? _tempNamespace;
       if (_namespaces.contains(namespace)) {
@@ -231,44 +243,41 @@ class TagTransController extends GetxController {
   }
 
   Future<TagTranslat?> getTagTranslate(String text, String namespace) async {
-    // final TagTranslatDao tagTranslatDao = await _getTagTranslatDao();
-    // final TagTranslat? _translates =
-    //     await tagTranslatDao.findTagTranslatByKey(text, namespace);
-
     final TagTranslat? _translates =
         await isarHelper.findTagTranslate(text, namespace: namespace);
 
-    logger.v(_translates?.intro);
+    logger.d(_translates?.intro);
     // 查询code字段
     final qryMap = {};
-    final RegExp regCode = RegExp(r'`((\w+\s+?)*\w+)`');
+    final RegExp regCode = RegExp(r'`(([\w:]+\s+?)*[\w:]+)`');
     final matches = regCode.allMatches(_translates?.intro ?? '');
     for (final match in matches) {
       final _ori = match.group(1);
       if (_ori != null) {
-        final _translateCode = await getTagTranslateText(_ori);
+        final _translateCode = await getTagTranslateText(
+          _ori,
+          ignoreNamespace: true,
+        );
         if (_translateCode != null && _translateCode != _ori) {
+          logger.t('match $_ori $_translateCode');
           qryMap[_ori] = _translateCode;
         }
       }
     }
 
-    final _intro = _translates?.intro?.replaceAllMapped(
-        regCode, (match) => ' `${qryMap[match.group(1)]}(${match.group(1)})` ');
-    logger.v(_intro);
+    final _intro = _translates?.intro?.replaceAllMapped(regCode,
+        (match) => ' `${qryMap[match.group(1)]} (${match.group(1)})` ');
+    logger.t(_intro);
 
     return _translates?.copyWith(intro: _intro);
   }
 
   Future<List<TagTranslat>> getTagTranslatesLike(
       {String text = '', int limit = 100}) async {
+    logger.d('getTagTranslatesLike $text');
     if (text.isEmpty) {
       return [];
     }
-    // final TagTranslatDao tagTranslatDao = await _getTagTranslatDao();
-
-    // final List<TagTranslat> _translates = await tagTranslatDao
-    //     .findTagTranslatsWithLike('%$text%', '%$text%', '%$text%', limit);
 
     final List<TagTranslat> _translates =
         await isarHelper.findTagTranslateContains(text, limit);

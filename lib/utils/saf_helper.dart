@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:collection/collection.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/index.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as pp;
-import 'package:shared_storage/saf.dart';
+import 'package:saf/saf.dart';
 import 'package:shared_storage/shared_storage.dart' as ss;
 
 const kSafCacheDir = 'saf_cache';
@@ -17,7 +17,12 @@ const kDocumentFileColumns = <ss.DocumentFileColumn>[
   ss.DocumentFileColumn.mimeType,
 ];
 
-Future<String> safCacheSingle(Uri cacheUri, {bool overwrite = false}) async {
+Future<String> safCacheSingle_Old(Uri cacheUri,
+    {bool overwrite = false}) async {
+  logger.d('safCacheSingle: $cacheUri');
+
+  // await safTest(cacheUri);
+
   final exists = await ss.exists(cacheUri) ?? false;
   if (!exists) {
     throw Exception('safCacheSingle: $cacheUri not exists');
@@ -36,6 +41,73 @@ Future<String> safCacheSingle(Uri cacheUri, {bool overwrite = false}) async {
   }
 
   return cachePath;
+}
+
+Future<({String? cachePath, String parentPath})> safCacheSingle(Uri cacheUri,
+    {bool overwrite = false}) async {
+  final pathSegments = cacheUri.pathSegments;
+  logger.d('pathSegments: \n${pathSegments.join('\n')}');
+
+  if (!pathSegments.last.startsWith('primary:')) {
+    throw Exception('safCacheSingle: $cacheUri not primary');
+  }
+
+  final pathList = pathSegments.last.replaceFirst('primary:', '').split('/');
+  final filePath = pathList.join('/');
+  final parentPath = pathList.sublist(0, pathList.length - 1).join('/');
+  final fileName = pathList.last;
+
+  logger.d('parentPath: $parentPath, fileName: $fileName');
+
+  final saf = Saf(parentPath);
+  bool? isGranted = await saf.getDirectoryPermission(isDynamic: false);
+  if (isGranted == null || !isGranted) {
+    await Saf.releasePersistedPermissions();
+    await saf.getDirectoryPermission(isDynamic: false);
+  }
+
+  final cachePath = await saf.singleCache(filePath: filePath);
+  logger.d('cachePath: $cachePath');
+
+  return (cachePath: cachePath, parentPath: parentPath);
+}
+
+Future<String?> safCreateDocumentFileFromPath(
+  Uri parentUri, {
+  required String sourceFilePath,
+  required String? displayName,
+  required String? mimeType,
+  bool checkPermission = true,
+}) async {
+  final pathSegments = parentUri.pathSegments;
+  logger.d('pathSegments: \n${pathSegments.join('\n')}');
+
+  if (!pathSegments.last.startsWith('primary:')) {
+    throw Exception('safCreateDocumentFileFromPath: $parentUri not primary');
+  }
+
+  final treePath = pathSegments.last.replaceFirst('primary:', '');
+
+  logger.d('treePath: $treePath, sourceFilePath: $sourceFilePath');
+
+  final saf = Saf(treePath);
+
+  if (checkPermission) {
+    bool? isGranted = await saf.getDirectoryPermission(isDynamic: true);
+    if (isGranted == null || !isGranted) {
+      await Saf.releasePersistedPermissions();
+      await saf.getDirectoryPermission(isDynamic: true);
+    }
+  }
+
+  final documentFileUri = await saf.createDocumentFileFromPath(
+    sourceFilePath: sourceFilePath,
+    displayName: displayName,
+    mimeType: mimeType,
+  );
+  logger.d('documentFileUri: $documentFileUri');
+
+  return documentFileUri;
 }
 
 Future<String> safCache(Uri cacheUri, {bool overwrite = false}) async {
@@ -62,7 +134,7 @@ Future<String> safCache(Uri cacheUri, {bool overwrite = false}) async {
         }
       }
     } catch (e, stack) {
-      logger.e('safCache error', e, stack);
+      logger.e('safCache error', error: e, stackTrace: stack);
     }
   }
 
@@ -104,22 +176,36 @@ String _makeDirectoryPathToName(String path) {
   return path.replaceAll('/', '_').replaceAll(':', '_');
 }
 
-Uri safMakeUri({String path = '', String device='primary',  bool isTreeUri = false}) {
-  final fullPath =
+Uri safMakeUri({
+  String path = '',
+  String device = 'primary',
+  String? tree,
+  bool isTreeUri = false,
+}) {
+  final _path =
       path.replaceAll(RegExp(r'^(/storage/emulated/\d+/|/sdcard/)'), '');
-  final directoryPath = fullPath.replaceAll(RegExp(r'[^/]+$'), '');
+  final _tree =
+      tree?.replaceAll(RegExp(r'^(/storage/emulated/\d+/|/sdcard/)'), '');
+
+  final pathSegments = _path.split("/");
+  final treePath =
+      _tree ?? pathSegments.sublist(0, pathSegments.length - 1).join("/");
 
   const scheme = 'content';
   const host = 'com.android.externalstorage.documents';
+
+  final documentPathSegments = [
+    '$device:$treePath',
+    'document',
+    '$device:$_path',
+  ];
 
   Uri uri = Uri(
     scheme: scheme,
     host: host,
     pathSegments: [
       'tree',
-      if (isTreeUri) '$device:$fullPath' else '$device:$directoryPath',
-      if (!isTreeUri) 'document',
-      if (!isTreeUri) '$device:$fullPath',
+      if (isTreeUri) '$device:$_path' else ...documentPathSegments,
     ],
   );
 
@@ -130,7 +216,7 @@ Uri safMakeUri({String path = '', String device='primary',  bool isTreeUri = fal
 }
 
 Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
-  final List<UriPermission>? persistedUriList =
+  final List<ss.UriPermission>? persistedUriList =
       await ss.persistedUriPermissions();
   logger.d('persistedUriList:\n\n${persistedUriList?.join('\n')}');
   if (persistedUriList == null || persistedUriList.isEmpty) {
@@ -174,7 +260,7 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
     throw Exception('uri $uri is not saf uri');
   }
 
-  logger.v('device path: [$path]');
+  logger.t('device path: [$path]');
 
   final pathList = path.split(':');
   if (pathList.length != 2) {
@@ -182,7 +268,7 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
     throw Exception('uri $uri is not external saf tree uri');
   }
 
-  logger.v('path split:\n\n${pathList.join('\n')}');
+  logger.t('path split:\n\n${pathList.join('\n')}');
 
   final device = pathList[0];
   logger.d('device: $device');
@@ -195,7 +281,8 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
   for (int i = dirPathList.length - 1; i > 0; i--) {
     final dirName = dirPathList[i];
     final parentPath = dirPathList.sublist(0, i).join('/');
-    final parentUri = safMakeUri(path: parentPath, device: device, isTreeUri: true);
+    final parentUri =
+        safMakeUri(path: parentPath, device: device, isTreeUri: true);
 
     final childDocumentFile = await ss.findFile(parentUri, dirName);
     if (childDocumentFile != null && (childDocumentFile.isDirectory ?? false)) {
@@ -203,7 +290,7 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
       continue;
     }
 
-    logger.v('dirName: $dirName');
+    logger.t('dirName: $dirName');
     logger.d('parentPath: $parentPath');
     logger.d('parentUri: $parentUri');
     if (!persistedUriList.any(
@@ -213,7 +300,7 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
       }
       logger.d('parentUri: $parentUri not persisted');
       showToast('parentUri: $parentUri not persisted');
-      await openDocumentTree(initialUri: parentUri);
+      await ss.openDocumentTree(initialUri: parentUri);
     }
 
     for (int j = i; j < dirPathList.length; j++) {
@@ -221,7 +308,7 @@ Future<void> safCreateDirectory(Uri uri, {bool documentToTree = false}) async {
       final parentPath = dirPathList.sublist(0, j).join('/');
       final parentUri = safMakeUri(path: parentPath, isTreeUri: true);
 
-      logger.v(
+      logger.t(
           '#########\nparentUri: ${parentUri.toString()} \nchildDocumentFile dirName: $dirName');
 
       final documentFile = await ss.findFile(parentUri, dirName);

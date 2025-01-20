@@ -1,43 +1,39 @@
-import 'package:fehviewer/common/controller/tag_trans_controller.dart';
-import 'package:fehviewer/common/service/ehconfig_service.dart';
-import 'package:fehviewer/common/service/theme_service.dart';
-import 'package:fehviewer/component/setting_base.dart';
-import 'package:fehviewer/fehviewer.dart';
-import 'package:fehviewer/pages/setting/setting_items/selector_Item.dart';
+import 'package:eros_fe/common/controller/tag_trans_controller.dart';
+import 'package:eros_fe/common/service/ehsetting_service.dart';
+import 'package:eros_fe/index.dart';
+import 'package:eros_fe/pages/setting/setting_items/selector_Item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 class TagTranslatePage extends StatelessWidget {
-  const TagTranslatePage({Key? key}) : super(key: key);
+  const TagTranslatePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final Widget cps = Obx(() {
-      return CupertinoPageScaffold(
-          backgroundColor: !ehTheme.isDarkMode
-              ? CupertinoColors.secondarySystemBackground
-              : null,
-          navigationBar: const CupertinoNavigationBar(
-            middle: Text('标签翻译'),
-          ),
-          child: SafeArea(
-            child: ListViewTagTranslate(),
-            bottom: false,
-          ));
-    });
-
-    return cps;
+    return const CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('标签翻译'),
+      ),
+      child: CustomScrollView(
+        slivers: [
+          SliverSafeArea(sliver: ListViewTagTranslate()),
+        ],
+      ),
+    );
   }
 }
 
 class ListViewTagTranslate extends StatelessWidget {
-  ListViewTagTranslate({Key? key}) : super(key: key);
+  const ListViewTagTranslate({super.key});
 
-  final EhConfigService _ehConfigService = Get.find();
-  final TagTransController transController = Get.find();
+  EhSettingService get _ehSettingService => Get.find();
+
+  TagTransController get transController => Get.find();
 
   Future<void> _handleTagTranslatChanged(bool newValue) async {
-    _ehConfigService.isTagTranslat = newValue;
+    _ehSettingService.isTagTranslate = newValue;
     if (newValue) {
       try {
         if (await transController.checkUpdate()) {
@@ -45,7 +41,7 @@ class ListViewTagTranslate extends StatelessWidget {
           await transController.updateDB();
           showToast('更新完成');
         } else {
-          logger.v('do not need update');
+          logger.t('do not need update');
         }
       } catch (e) {
         logger.e('更新翻译异常 $e');
@@ -55,7 +51,7 @@ class ListViewTagTranslate extends StatelessWidget {
   }
 
   void _handleTagTranslatCDNChanged(bool newValue) {
-    _ehConfigService.enableTagTranslateCDN = newValue;
+    _ehSettingService.enableTagTranslateCDN = newValue;
   }
 
   Future<void> _forceUpdateTranslate() async {
@@ -68,25 +64,33 @@ class ListViewTagTranslate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool _tagTranslat = _ehConfigService.isTagTranslat;
+    return MultiSliver(children: [
+      SliverCupertinoListSection.listInsetGrouped(children: [
+        // _handleTagTranslatChanged switch
+        EhCupertinoListTile(
+          title: const Text('启用标签翻译'),
+          subtitle: Text('当前版本:${_ehSettingService.tagTranslatVer.value}'),
+          trailing: Obx(() {
+            return Row(
+              children: [
+                CupertinoButton(
+                  padding: const EdgeInsets.all(0),
+                  onPressed: _forceUpdateTranslate,
+                  child: const Icon(CupertinoIcons.refresh),
+                ),
+                CupertinoSwitch(
+                  value: _ehSettingService.isTagTranslate,
+                  onChanged: _handleTagTranslatChanged,
+                ),
+              ],
+            );
+          }),
+        ),
 
-    return Column(
-      children: [
-        Obx(() => TextSwitchItem(
-              '开启标签翻译',
-              value: _tagTranslat,
-              onChanged: _handleTagTranslatChanged,
-              desc: '当前版本:${_ehConfigService.tagTranslatVer.value}',
-              suffix: CupertinoButton(
-                padding: const EdgeInsets.all(0),
-                child: const Icon(CupertinoIcons.refresh),
-                onPressed: _forceUpdateTranslate,
-              ),
-            )),
         Obx(() {
           return AnimatedCrossFade(
             alignment: Alignment.center,
-            crossFadeState: _ehConfigService.isTagTranslat
+            crossFadeState: _ehSettingService.isTagTranslate
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             firstCurve: Curves.easeIn,
@@ -96,31 +100,29 @@ class ListViewTagTranslate extends StatelessWidget {
             secondChild: _buildTagIntroImgLvItem(context),
           );
         }),
-        TextSwitchItem(
-          '加速下载数据',
-          value: _ehConfigService.enableTagTranslateCDN,
-          onChanged: _handleTagTranslatCDNChanged,
-          desc: '使用CDN进行加速下载',
+
+        // enableTagTranslateCDN switch
+        EhCupertinoListTile(
+          title: const Text('加速下载数据'),
+          subtitle: const Text('使用CDN加速下载数据'),
+          trailing: Obx(() {
+            return CupertinoSwitch(
+              value: _ehSettingService.enableTagTranslateCDN,
+              onChanged: _handleTagTranslatCDNChanged,
+            );
+          }),
         ),
-        // SelectorSettingItem(
-        //   title: '自动更新策略',
-        //   onTap: () {},
-        //   selector: _tagTranslat ? L10n.of(context).on : L10n.of(context).off,
-        //   hideLine: true,
-        // ),
-        _buildTagTranslateDataUpdateModeItem(
-          context,
-          hideLine: true,
-        ),
-      ],
-    );
+
+        _buildTagTranslateDataUpdateModeItem(context),
+      ]),
+    ]);
   }
 }
 
 /// 标签介绍图片切换
-Widget _buildTagIntroImgLvItem(BuildContext context, {bool hideLine = false}) {
+Widget _buildTagIntroImgLvItem(BuildContext context) {
   const String _title = '标签介绍图片';
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
 
   final Map<TagIntroImgLv, String> descMap = <TagIntroImgLv, String>{
     TagIntroImgLv.disable: '禁用',
@@ -130,21 +132,19 @@ Widget _buildTagIntroImgLvItem(BuildContext context, {bool hideLine = false}) {
   };
 
   return Obx(() {
-    return SelectorItem<TagIntroImgLv>(
+    return SelectorCupertinoListTile<TagIntroImgLv>(
       title: _title,
-      hideDivider: hideLine,
       actionMap: descMap,
-      initVal: ehConfigService.tagIntroImgLv.value,
-      onValueChanged: (val) => ehConfigService.tagIntroImgLv.value = val,
+      initVal: ehSettingService.tagIntroImgLv.value,
+      onValueChanged: (val) => ehSettingService.tagIntroImgLv.value = val,
     );
   });
 }
 
 /// 自动更新策略切换
-Widget _buildTagTranslateDataUpdateModeItem(BuildContext context,
-    {bool hideLine = false}) {
+Widget _buildTagTranslateDataUpdateModeItem(BuildContext context) {
   const String _title = '自动更新策略';
-  final EhConfigService ehConfigService = Get.find();
+  final EhSettingService ehSettingService = Get.find();
 
   final Map<TagTranslateDataUpdateMode, String> modeMap =
       <TagTranslateDataUpdateMode, String>{
@@ -153,12 +153,12 @@ Widget _buildTagTranslateDataUpdateModeItem(BuildContext context,
   };
 
   return Obx(() {
-    return SelectorItem<TagTranslateDataUpdateMode>(
+    return SelectorCupertinoListTile<TagTranslateDataUpdateMode>(
       title: _title,
-      hideDivider: hideLine,
       actionMap: modeMap,
-      initVal: ehConfigService.tagTranslateDataUpdateMode,
-      onValueChanged: (val) => ehConfigService.tagTranslateDataUpdateMode = val,
+      initVal: ehSettingService.tagTranslateDataUpdateMode,
+      onValueChanged: (val) =>
+          ehSettingService.tagTranslateDataUpdateMode = val,
     );
   });
 }

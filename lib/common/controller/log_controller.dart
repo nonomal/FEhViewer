@@ -1,17 +1,23 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 
-import '../../fehviewer.dart';
+import '../../index.dart';
 
 const _kMaxTime = Duration(days: 7);
 const _kSuffix = '.log';
 
 class LogService extends GetxController {
   final logFiles = <File>[].obs;
+
+  // 添加自动滚动控制
+  final _autoScroll = true.obs;
+  bool get autoScroll => _autoScroll.value;
+  set autoScroll(bool val) => _autoScroll.value = val;
 
   final _curFileName = 'eh.log'.obs;
   String get curFileName => _curFileName.value;
@@ -24,6 +30,10 @@ class LogService extends GetxController {
   final Rx<Level> _logLevel = Level.error.obs;
   Level get logLevel => _logLevel.value;
   set logLevel(Level val) => _logLevel.value = val;
+
+  final _isLoading = false.obs;
+  bool get isLoading => _isLoading.value;
+  set isLoading(bool val) => _isLoading.value = val;
 
   @override
   void onInit() {
@@ -44,50 +54,15 @@ class LogService extends GetxController {
   }
 
   Future<void> loadFiles() async {
-    print('loadFiles log');
-    List<File> _files = [];
-    final Directory appDocDir = Directory(logPath);
-    final Stream<FileSystemEntity> entityList =
-        appDocDir.list(recursive: false, followLinks: false);
-    await for (final FileSystemEntity entity in entityList) {
-      if (entity.path.endsWith(_kSuffix)) {
-        final File _logFile = File(entity.path);
+    isLoading = true;
+    logFiles.value = await compute(loadFilesIsolate, logPath);
+    isLoading = false;
+    logger.d('loadFiles');
+  }
 
-        try {
-          // 超过最大时间的文件删除
-          final _fileName = path.basename(_logFile.path);
-
-          final _timeString = _fileName.replaceAll(_kSuffix, '');
-          // print('log file time $_timeString');
-
-          final DateTime _nowTime = DateTime.now();
-          final DateFormat formatter = DateFormat(kFilenameFormat);
-
-          final _fileTime = formatter.parse(_timeString);
-          // final _fileTime = DateTime.parse(_timeString);
-          final _diff = _nowTime.difference(_fileTime);
-          // print('diff $_diff');
-          if (_diff.compareTo(_kMaxTime) > 0) {
-            // logger.v('delete $_fileName');
-            _logFile.delete();
-          }
-          // update();
-        } catch (e, stack) {}
-
-        _files.add(_logFile);
-      }
-    }
-    _files
-        .sort((a, b) => path.basename(b.path).compareTo(path.basename(a.path)));
-    logFiles(_files);
-
-    for (final _logfile in logFiles) {
-      final ctx = await _logfile.length();
-      if (ctx < 8) {
-        _logfile.deleteSync();
-        logFiles.remove(_logfile);
-      }
-    }
+  Future<void> refreshFiles() async {
+    logFiles.value = await compute(loadFilesIsolate, logPath);
+    isLoading = false;
   }
 
   void removeLogAt(int index) {
@@ -101,4 +76,45 @@ class LogService extends GetxController {
     }
     logFiles.clear();
   }
+}
+
+// isolate
+Future<List<File>> loadFilesIsolate(String logPath) async {
+  print('loadFiles log');
+  List<File> _files = [];
+  final Directory appDocDir = Directory(logPath);
+  final Stream<FileSystemEntity> entityList =
+      appDocDir.list(recursive: false, followLinks: false);
+  await for (final FileSystemEntity entity in entityList) {
+    if (entity.path.endsWith(_kSuffix)) {
+      final File _logFile = File(entity.path);
+
+      try {
+        // 超过最大时间的文件删除
+        final _fileName = path.basename(_logFile.path);
+
+        final _timeString = _fileName.replaceAll(_kSuffix, '');
+        final DateTime _nowTime = DateTime.now();
+        final DateFormat formatter = DateFormat(kFilenameFormat);
+
+        final _fileTime = formatter.parse(_timeString);
+        final _diff = _nowTime.difference(_fileTime);
+        if (_diff.compareTo(_kMaxTime) > 0) {
+          _logFile.delete();
+        }
+      } catch (e, stack) {}
+
+      _files.add(_logFile);
+    }
+  }
+  _files.sort((a, b) => path.basename(b.path).compareTo(path.basename(a.path)));
+
+  for (final _logfile in _files) {
+    final ctx = await _logfile.length();
+    if (ctx < 8) {
+      _logfile.deleteSync();
+    }
+  }
+
+  return _files;
 }

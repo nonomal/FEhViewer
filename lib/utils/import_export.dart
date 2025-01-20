@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:fehviewer/common/controller/quicksearch_controller.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/common/controller/quicksearch_controller.dart';
+import 'package:eros_fe/index.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_storage/shared_storage.dart' as ss;
 
 Future<void> importQuickSearchFromFile() async {
@@ -42,7 +43,7 @@ Future<void> importQuickSearchFromFile() async {
   }
 
   if (_fileText.contains('#FEhViewer')) {
-    logger.v(_fileText);
+    logger.t(_fileText);
     final List<String> _importTexts = _fileText.split('\n');
     for (final element in _importTexts) {
       if (element.trim().isNotEmpty && !element.startsWith('#')) {
@@ -71,7 +72,21 @@ Future<void> exportQuickSearchToFile() async {
           logger.d('file: ${file?.uri}');
         }
       } else {
-        final saveToDirPath = await FilePicker.platform.getDirectoryPath();
+        if (Platform.isIOS) {
+          Share.shareXFiles([
+            XFile(
+              _tempFilePath,
+              mimeType: '*/*',
+              name: path.basename(_tempFilePath),
+            )
+          ]);
+          return;
+        }
+
+        logger.d('saveToDirPath');
+        final saveToDirPath = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: 'Save to',
+        );
         logger.d('$saveToDirPath');
         if (saveToDirPath != null) {
           final _dstPath =
@@ -126,10 +141,20 @@ Future<void> importAppDataFromFile() async {
 
   final user = Global.profile.user.clone();
 
+  final oriDownloadConfig = Global.profile.downloadConfig.clone();
+
   final Map<String, dynamic> jsonMap =
       jsonDecode(jsonStr) as Map<String, dynamic>;
   final Profile profile = Profile.fromJson(jsonMap);
-  Global.profile = profile.copyWith(user: user);
+
+  final _newDownloadConfig = profile.downloadConfig;
+
+  Global.profile = profile.copyWith(
+    user: user,
+    downloadConfig: _newDownloadConfig.copyWith(
+      downloadLocation: oriDownloadConfig.downloadLocation.oN,
+    ),
+  );
   Global.saveProfile();
   Get.reloadAll(force: true);
   showToast('Import success');
@@ -161,6 +186,17 @@ Future<void> exportAppDataToFile({bool base64 = true}) async {
         logger.d('file: ${file?.uri}');
       }
     } else {
+      if (Platform.isIOS) {
+        Share.shareXFiles([
+          XFile(
+            tempFilePath,
+            mimeType: '*/*',
+            name: path.basename(tempFilePath),
+          )
+        ]);
+        return;
+      }
+      logger.d('saveToDirPath');
       final saveToDirPath = await FilePicker.platform.getDirectoryPath();
       logger.d('saveToDirPath $saveToDirPath');
       if (saveToDirPath != null) {
@@ -179,7 +215,7 @@ Future<String?> writeQuickSearchTempFile() async {
   final List<String> _searchTextList = quickSearchController.searchTextList;
   if (_searchTextList.isNotEmpty) {
     final String _searchText = '#FEhViewer\n${_searchTextList.join('\n')}';
-    logger.v(_searchText);
+    logger.t(_searchText);
 
     final File _tempFile = await getTempQuickSearchFile();
     _tempFile.writeAsStringSync(_searchText);

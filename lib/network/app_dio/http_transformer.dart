@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
-import 'package:fehviewer/common/parser/eh_parser.dart';
-import 'package:fehviewer/component/exception/error.dart';
-import 'package:fehviewer/fehviewer.dart';
+import 'package:eros_fe/common/parser/eh_parser.dart';
+import 'package:eros_fe/component/exception/error.dart';
+import 'package:eros_fe/index.dart';
 import 'package:flutter/foundation.dart';
 
 import '../request.dart';
@@ -165,11 +165,15 @@ class GalleryImageHttpTransformer extends HttpTransformer {
     // 使用 compute 方式会内部的 EhError 无法正常抛出
     // final GalleryImage image = await compute(paraImage, html);
     final GalleryImage image = paraImage(html);
-    // throw EhError(type: EhErrorType.image509);
-    if (image.imageUrl!.endsWith('/509.gif') ||
-        image.imageUrl!.endsWith('/509s.gif')) {
+
+    // if (image.imageUrl!.endsWith('/509.gif') ||
+    //     image.imageUrl!.endsWith('/509s.gif')) {
+    //   throw EhError(type: EhErrorType.image509);
+    // }
+    if (RegExp(EHConst.REG_509_URL).hasMatch(image.imageUrl ?? '')) {
       throw EhError(type: EhErrorType.image509);
     }
+
     // final GalleryImage image = await paraImage(html);
     return DioHttpResponse<GalleryImage>.success(image);
   }
@@ -185,7 +189,8 @@ class GalleryMpvImageHttpTransformer extends HttpTransformer {
   FutureOr<DioHttpResponse<GalleryImage>> parse(
       Response<dynamic> response) async {
     final html = response.data as String;
-    final mpvPage = await compute(parserMpvPage, html);
+    // final mpvPage = await compute(parserMpvPage, html);
+    final mpvPage = parserMpvPage(html);
 
     if (mpvPage.mpvkey == null || mpvPage.mpvkey!.isEmpty) {
       return DioHttpResponse<GalleryImage>.failure(
@@ -307,11 +312,11 @@ class MyTagsHttpTransformer extends HttpTransformer {
   @override
   FutureOr<DioHttpResponse<EhMytags>> parse(Response<dynamic> response) async {
     final html = response.data as String;
-    final EhMytags mytags = await parseMyTags(html);
+    final EhMytags mytags = parseMyTags(html);
     // 查询翻译
     final userTags = await mytags.qryFullTagTranslate;
     return DioHttpResponse<EhMytags>.success(
-        mytags.copyWith(usertags: userTags));
+        mytags.copyWith(usertags: userTags.oN));
   }
 }
 
@@ -325,7 +330,8 @@ class ImageDispatchTransformer extends HttpTransformer {
   FutureOr<DioHttpResponse<GalleryImage>> parse(
       Response<dynamic> response) async {
     final json = response.data as String;
-    final GalleryImage image = await compute(parserMpvImageDispatch, json);
+    // final GalleryImage image = await compute(parserMpvImageDispatch, json);
+    final GalleryImage image = parserMpvImageDispatch(json);
     return DioHttpResponse<GalleryImage>.success(image);
   }
 }
@@ -341,8 +347,19 @@ class UserLoginTransformer extends HttpTransformer {
     final List<String> setcookie = response.headers['set-cookie'] ?? [];
     logger.d('setcookie: $setcookie');
 
-    final _cookies =
-        setcookie.map((str) => Cookie.fromSetCookieValue(str)).toList();
+    late final List<Cookie> _cookies;
+    if (setcookie.length > 1) {
+      _cookies =
+          setcookie.map((str) => Cookie.fromSetCookieValue(str)).toList();
+    } else {
+      final List<String> _setcookie = setcookie[0]
+          .split(RegExp(r'[,;]'))
+          .where((element) => element.contains('='))
+          .toList();
+      _cookies =
+          _setcookie.map((str) => Cookie.fromSetCookieValue(str)).toList();
+    }
+    logger.d('_cookies: $_cookies');
 
     final cookieStr =
         _cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
@@ -355,11 +372,11 @@ class UserLoginTransformer extends HttpTransformer {
     }
 
     final User user = kDefUser.copyWith(
-      memberId: cookieMap['ipb_member_id'],
-      passHash: cookieMap['ipb_pass_hash'],
-      igneous: cookieMap['igneous'],
-      hathPerks: cookieMap['hath_perks'],
-      sk: cookieMap['sk'],
+      memberId: cookieMap['ipb_member_id']?.oN,
+      passHash: cookieMap['ipb_pass_hash']?.oN,
+      igneous: cookieMap['igneous']?.oN,
+      hathPerks: cookieMap['hath_perks']?.oN,
+      sk: cookieMap['sk']?.oN,
     );
     return DioHttpResponse<User>.success(user);
   }
@@ -376,7 +393,7 @@ class UserInfoPageTransformer extends HttpTransformer {
     final html = response.data as String;
     final User user = await compute(parseUserProfile, html);
 
-    logger.v('UserInfoPageTransformer user ${user.toJson()}');
+    logger.t('UserInfoPageTransformer user ${user.toJson()}');
 
     return DioHttpResponse<User>.success(user);
   }

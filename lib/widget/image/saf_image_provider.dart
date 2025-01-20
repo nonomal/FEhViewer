@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui show Codec, ImmutableBuffer;
 
-import 'package:fehviewer/utils/logger.dart';
+import 'package:eros_fe/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_storage/shared_storage.dart' as ss;
@@ -26,9 +26,9 @@ class SafUriImage extends ImageProvider<SafUriImage> {
   }
 
   @override
-  ImageStreamCompleter load(SafUriImage key, DecoderCallback decode) {
+  ImageStreamCompleter loadImage(SafUriImage key, ImageDecoderCallback decode) {
     return MultiFrameImageStreamCompleter(
-      codec: _loadAsync(key, null, decode),
+      codec: _loadAsync(key, decode),
       scale: key.scale,
       debugLabel: uri.toString(),
       informationCollector: () => <DiagnosticsNode>[
@@ -37,21 +37,21 @@ class SafUriImage extends ImageProvider<SafUriImage> {
     );
   }
 
-  @override
-  ImageStreamCompleter loadBuffer(
-      SafUriImage key, DecoderBufferCallback decode) {
-    return MultiFrameImageStreamCompleter(
-      codec: _loadAsync(key, decode, null),
-      scale: key.scale,
-      debugLabel: uri.toString(),
-      informationCollector: () => <DiagnosticsNode>[
-        ErrorDescription('Path: ${uri.toString()}'),
-      ],
-    );
-  }
+  // @override
+  // ImageStreamCompleter loadBuffer(
+  //     SafUriImage key, ImageDecoderCallback decode) {
+  //   return MultiFrameImageStreamCompleter(
+  //     codec: _loadAsync(key, decode, null),
+  //     scale: key.scale,
+  //     debugLabel: uri.toString(),
+  //     informationCollector: () => <DiagnosticsNode>[
+  //       ErrorDescription('Path: ${uri.toString()}'),
+  //     ],
+  //   );
+  // }
 
-  Future<ui.Codec> _loadAsync(SafUriImage key, DecoderBufferCallback? decode,
-      DecoderCallback? decodeDeprecated) async {
+  Future<ui.Codec> _loadAsync(
+      SafUriImage key, ImageDecoderCallback decode) async {
     assert(key == this);
 
     logger.d('loadAsync ${uri.toString()}');
@@ -68,10 +68,7 @@ class SafUriImage extends ImageProvider<SafUriImage> {
       throw StateError('$uri is empty and cannot be loaded as an image.');
     }
 
-    if (decode != null) {
-      return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
-    }
-    return decodeDeprecated!(bytes);
+    return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
   }
 
   @override

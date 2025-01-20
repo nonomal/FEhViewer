@@ -1,4 +1,4 @@
-import 'package:fehviewer/common/service/theme_service.dart';
+import 'package:eros_fe/common/service/theme_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -38,7 +38,7 @@ void showToast(
             children: [
               Text(
                 msg,
-                textScaleFactor: 0.8,
+                textScaler: const TextScaler.linear(0.8),
                 style: CupertinoTheme.of(Get.context!).textTheme.textStyle,
               ),
             ],
@@ -79,7 +79,7 @@ void show509Toast() {
               ),
               Text(
                 'IMAGE 509',
-                textScaleFactor: 0.8,
+                textScaler: const TextScaler.linear(0.8),
                 style: CupertinoTheme.of(Get.context!).textTheme.textStyle,
               ),
             ],
@@ -93,6 +93,47 @@ void show509Toast() {
     widget,
     position: oktoast.ToastPosition.center,
     onDismiss: () => _isShowing509 = false,
+    duration: 3.seconds,
+  );
+}
+
+bool _isShowing429 = false;
+void show429Toast() {
+  if (_isShowing429) {
+    return;
+  }
+  _isShowing429 = true;
+  final Widget widget = ClipRect(
+    child: CupertinoTheme(
+      data: Get.find<ThemeService>().themeData!,
+      child: CupertinoPopupSurface(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                // LineIcons.toriiGate,
+                FontAwesomeIcons.roadBarrier,
+                size: 80,
+                color: CupertinoColors.systemPink,
+              ),
+              Text(
+                '429, Too Many Requests',
+                textScaler: const TextScaler.linear(0.8),
+                style: CupertinoTheme.of(Get.context!).textTheme.textStyle,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  oktoast.showToastWidget(
+    widget,
+    position: oktoast.ToastPosition.center,
+    onDismiss: () => _isShowing429 = false,
     duration: 3.seconds,
   );
 }
@@ -132,7 +173,7 @@ void showActionToast(String msg, {IconData? icon, VoidCallback? onPressed}) {
                 children: [
                   Text(
                     msg,
-                    textScaleFactor: 0.8,
+                    textScaler: const TextScaler.linear(0.8),
                     style: CupertinoTheme.of(Get.context!).textTheme.textStyle,
                     softWrap: true,
                   ),
